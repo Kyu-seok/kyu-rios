@@ -2,6 +2,7 @@ title: AI Engineering 101
 summary: A pre-reading primer for Chip Huyen's AI Engineering, from tokens and sampling to evaluation and RAG.
 published: true
 exclude: []
-relationships: []
+relationships:
+  - { from: "ai-engineering-101", to: "matt-pocock-skills", type: applies }
 review:
   exclude: []

@@ -2,6 +2,7 @@ title: Agent Orchestration
 summary: A map of harness, loop and graph engineering, and how to pick an orchestration shape for a task.
 published: true
 exclude: []
-relationships: []
+relationships:
+  - { from: "agent-orchestration", to: "ai-engineering-101", type: extends }
 review:
   exclude: []
