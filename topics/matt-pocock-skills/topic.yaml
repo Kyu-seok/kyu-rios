@@ -2,13 +2,6 @@ title: Matt Pocock's Skills
 summary: The idea-to-ship workflow for coding agents, from grilling and specs to tickets, TDD and review.
 published: true
 exclude: []
-relationships:
-  - { from: "0003-spec-to-tickets", to: "0002-grilling", type: requires }
-  - { from: "0006-on-ramps", to: "0001-the-map", type: extends }
-  - { from: "0007-codebase-health", to: "0001-the-map", type: extends }
-  - { from: "0008-capstone", to: "0001-the-map", type: applies }
-  - { from: "0005-phase-boundaries", to: "agent-orchestration/0004-context-engineering", type: requires }
-  - { from: "0007-codebase-health", to: "agent-orchestration/0005-harness-engineering", type: applies }
-  - { from: "0004-build", to: "agent-orchestration/0005-harness-engineering", type: applies }
+relationships: []
 review:
   exclude: []

@@ -2,13 +2,6 @@ title: Agent Orchestration
 summary: A map of harness, loop and graph engineering, and how to pick an orchestration shape for a task.
 published: true
 exclude: []
-relationships:
-  - { from: "0002-workflows-vs-agents", to: "0001-the-map", type: requires }
-  - { from: "0003-telling-shapes-apart", to: "0002-workflows-vs-agents", type: extends }
-  - { from: "0004-context-engineering", to: "0001-the-map", type: requires }
-  - { from: "0005-harness-engineering", to: "0001-the-map", type: requires }
-  - { from: "0004-context-engineering", to: "ai-engineering-101/0005-prompt-engineering", type: extends }
-  - { from: "0005-harness-engineering", to: "ai-engineering-101/0003-evaluation-methodology", type: applies }
-  - { from: "0004-context-engineering", to: "ai-engineering-101/0006-rag", type: applies }
+relationships: []
 review:
   exclude: []

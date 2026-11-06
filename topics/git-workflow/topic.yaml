@@ -2,11 +2,6 @@ title: Git Workflow
 summary: Branches, remotes, conflicts, PR review and rulesets, learned for working alongside AI agents.
 published: true
 exclude: []
-relationships:
-  - { from: "0002-remotes-fetch-pull-push", to: "0001-branches-and-your-first-pr", type: requires }
-  - { from: "0003-merge-conflicts", to: "0002-remotes-fetch-pull-push", type: requires }
-  - { from: "0005-checks-and-rulesets", to: "0004-reviewing-a-pr", type: extends }
-  - { from: "0005-checks-and-rulesets", to: "agent-orchestration/0005-harness-engineering", type: applies }
-  - { from: "0004-reviewing-a-pr", to: "matt-pocock-skills/0004-build", type: contrasts-with }
+relationships: []
 review:
   exclude: []
