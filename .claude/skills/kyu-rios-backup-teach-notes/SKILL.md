@@ -1,5 +1,5 @@
 ---
-name: backup-teach-notes
+name: kyu-rios-backup-teach-notes
 description: Copy the gitignored teacher-facing files (NOTES.md, RESOURCES.md, learning-records/) of every Topic to a backup folder.
 disable-model-invocation: true
 argument-hint: "[backup directory, default ~/Backups/kyu-rios-teach-notes]"

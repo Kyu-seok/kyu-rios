@@ -18,7 +18,7 @@ npm run test:browser  # browser-seam tests (Playwright; builds and serves the si
 
 ## Day-to-day skills
 
-Type `/rios` in Claude Code for the list: `/new-topic`, `/teach`, `/publish-topic`, `/ship`, `/propose-relationships`, `/backup-teach-notes`.
+Type `/kyu-rios` in Claude Code for the list: `/kyu-rios-new-topic`, `/teach`, `/kyu-rios-publish-topic`, `/kyu-rios-ship`, `/kyu-rios-propose-relationships`, `/kyu-rios-backup-teach-notes`.
 
 ## Publishing a Topic
 

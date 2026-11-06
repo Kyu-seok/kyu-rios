@@ -1,5 +1,5 @@
 ---
-name: propose-relationships
+name: kyu-rios-propose-relationships
 description: After a /teach session, propose typed Relationships (requires, extends, contrasts-with, applies) from the new or changed Lessons to Nodes in the same and other Topics, ask the author to accept or reject each, and append accepted ones to the Topic's topic.yaml. Use when the user says "propose relationships", "link this lesson", or has just finished a /teach session in this repo.
 ---
 
