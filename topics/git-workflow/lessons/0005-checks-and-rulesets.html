@@ -71,7 +71,7 @@ jobs:
 <p>“A green check means the PR is safe.” A check proves only what its tests test. The PR’s own branch also supplies the workflow file and the tests that run against it. An agent that deletes a failing test, or edits <code>tests.yml</code>, can turn the check green. Also, “a skipped job reports ‘Success’,” even when it’s a required check. You still need to review changes to <code>.github/workflows/</code> and to the tests.</p>
 </div>
 
-<p><strong>Why a new repo?</strong> On the Free plan, GitHub enforces rulesets only on <em>public</em> repos. Your private <code>git-sandbox</code> returned “Upgrade to GitHub Pro or make this repository public.” Its history also has your personal email on 12 commits. So I made <a href="https://github.com/Kyu-seok/git-sandbox-ci"><code>Kyu-seok/git-sandbox-ci</code></a>. It’s public, it contains the merged word-count code from PR #6, and it’s set up to commit with your GitHub <em>noreply</em> address.
+<p><strong>Why a new repo?</strong> On the Free plan, GitHub enforces rulesets only on <em>public</em> repos. Your private <code>git-sandbox</code> returned “Upgrade to GitHub Pro or make this repository public.” Its history also carries your personal email on every commit, which a public repo should not. So this Lesson uses a fresh public repo, <code>git-sandbox-ci</code>: it contains the merged word-count code from PR #6 and is set up to commit with your GitHub <em>noreply</em> address.
 <span class="sidenote">Commit email and privacy: <a href="https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address">GitHub Docs, “Setting your commit email address”</a>.</span></p>
 
 <h2>Drill: predict the guardrail</h2>

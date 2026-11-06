@@ -1,5 +1,7 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildSite } from '../src/lib/build';
+import { findPrivateStrings } from '../src/lib/private';
 
 const topicsDir = join(import.meta.dirname, '..', '..', 'topics');
 
@@ -15,5 +17,16 @@ describe("this repo's own Topics", () => {
     }
     expect(site.review.cards.length).toBeGreaterThan(0);
     expect(site.graph.relationships.some((r) => r.type === 'mentions')).toBe(true);
+  });
+
+  it('publish nothing that points at the author: no home paths, nothing from topics/.private-strings', () => {
+    // Patterns safe to publish live here. Names and handles stay out of the public repo: one per line in the
+    // gitignored topics/.private-strings, which makes the laptop run stricter than CI.
+    const patterns = ['/Users/', '~/Work/learn'];
+    const local = join(topicsDir, '.private-strings');
+    if (existsSync(local)) {
+      patterns.push(...readFileSync(local, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')));
+    }
+    expect(findPrivateStrings(buildSite(topicsDir), patterns)).toEqual([]);
   });
 });

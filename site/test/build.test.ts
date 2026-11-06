@@ -1,4 +1,5 @@
 import { buildSite, renderDocument } from '../src/lib/build';
+import { findPrivateStrings } from '../src/lib/private';
 import { lessonHtml, manifest, quizJs, topicsTree } from './helpers';
 
 describe('publishing', () => {
@@ -243,5 +244,24 @@ describe('Lesson pages', () => {
     expect(page).not.toContain('rel="prev"');
     expect(page).not.toContain('rel="next"');
     expect(page).toContain('focus=kafka%2Freference%2Fkeys');
+  });
+});
+
+describe('private strings', () => {
+  it('names every Published document, question and About that contains a private string', () => {
+    const dir = topicsTree({
+      'kafka/topic.yaml': manifest({ title: 'Kafka', published: true }),
+      'kafka/ABOUT.md': 'Written in /Users/someone/Work.\n',
+      'kafka/lessons/0001-where.html': lessonHtml({ title: 'Where', body: '<p>cd ~/Work/learn/app</p>' }),
+      'kafka/lessons/0001-where.quiz.js': quizJs([{ id: 'kafka/1/q1', stem: 'S?', options: ['a', 'b'], answer: 0, why: 'See /Users/someone/notes' }]),
+      'kafka/lessons/0002-who.html': lessonHtml({ title: 'Who', body: '<p>cd ~/Work/git-sandbox</p>' }),
+      'kafka/reference/keys.html': lessonHtml({ title: 'Keys', body: '<p>fine</p>' }),
+    });
+    const findings = findPrivateStrings(buildSite(dir), ['/Users/', '~/Work/learn']);
+    expect(findings).toEqual([
+      { where: 'kafka/ABOUT.md', pattern: '/Users/' },
+      { where: 'kafka/0001-where', pattern: '~/Work/learn' },
+      { where: 'kafka/1/q1', pattern: '/Users/' },
+    ]);
   });
 });

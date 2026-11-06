@@ -13,6 +13,13 @@ jobs:
         working-directory: site
     steps:
       - uses: actions/checkout@v7
+      - name: Teacher-facing and binary source files are never tracked
+        working-directory: .
+        run: |
+          if git ls-files | grep -E '^topics/[^/]+/(MISSION|NOTES|RESOURCES)\.md$|^topics/[^/]+/learning-records/|^topics/\.private-strings$|\.(epub|pdf)$'; then
+            echo "::error::the files above are gitignored on purpose; the ignore rule broke"
+            exit 1
+          fi
       - uses: actions/setup-node@v6
         with:
           node-version: 24

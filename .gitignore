@@ -6,6 +6,7 @@ topics/*/MISSION.md
 topics/*/NOTES.md
 topics/*/RESOURCES.md
 topics/*/learning-records/
+topics/.private-strings
 
 # Copyrighted or binary source material inside /teach workspaces is never committed
 *.epub
