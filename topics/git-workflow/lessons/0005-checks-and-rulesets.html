@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checks and Rulesets</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 5 · Git workflow in the age of agents</p>
+<h1>Make <code>main</code> say no</h1>
+<p class="subtitle">Review is a habit. A ruleset makes the rules mandatory. About 35 minutes.</p>
+
+<p><strong>Today’s win:</strong> a CI check that runs your tests on every PR, and a ruleset that blocks direct pushes to <code>main</code> and merges with failing tests. You’ll watch it block <em>you</em>, which means it would block an agent using your login too.</p>
+
+<h2>Warm-up: last lesson’s loose ends</h2>
+<p>From memory. These are the steps that were missing when you finished PR #6.</p>
+<div class="quiz" data-quiz-id="0005-warmup"></div>
+
+<h2>Why rules, not just reviews</h2>
+
+<p>An agent that uses your <code>gh</code> login has <em>your</em> permissions. It can push to <code>main</code>, merge its own PR, or delete a branch, and GitHub can’t tell it apart from you. In lesson 4 you found out you can’t approve your own PR, so a rule like “require one approval” would block you as well. What a solo developer can enforce is:</p>
+
+<ol>
+  <li><strong>Every change goes through a PR</strong>, with zero approvals required. “The pull request doesn’t necessarily have to be approved, but it must be opened.”</li>
+  <li><strong>The PR’s check must pass.</strong> “If a protected branch requires status checks, they must pass before the pull request can be merged.”</li>
+</ol>
+<p><span class="sidenote">Quotes: <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets">GitHub Docs, “Available rules for rulesets”</a> and <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks">“About status checks”</a>.</span></p>
+
+<h2>A check is a workflow file</h2>
+
+<p>GitHub Actions runs any YAML file in <code>.github/workflows/</code>. “You must save the workflow files in a directory called <code>.github/workflows</code>.” Each <strong>job</strong> in the file shows up on the PR as one <strong>check</strong>, with a green tick or a red cross.
+<span class="sidenote">Quote and example: <a href="https://docs.github.com/en/actions/get-started/quickstart">GitHub Actions quickstart</a>. Keys: <a href="https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax">workflow syntax reference</a>.</span></p>
+
+<pre><code>name: Tests                       # workflow name
+on:                               # when it runs
+  pull_request:                   #   every PR
+  push:
+    branches: [main]              #   and every push to main
+jobs:
+  test:                           # job id = the check’s name
+    runs-on: ubuntu-latest        # a fresh GitHub-hosted machine
+    steps:
+      - uses: actions/checkout@v7       # get the repo onto it
+      - uses: actions/setup-python@v7   # install Python
+        with:
+          python-version: "3.13"
+      - run: pip install pytest
+      - run: pytest -q                  # fails the job if a test fails</code></pre>
+
+<p>Remember the job id, <code>test</code>. That’s the name you’ll type into the ruleset as the required check. <code>uses:</code> runs an action someone else wrote, and <code>run:</code> runs a shell command. Each run starts on a clean machine, which is why you check out the code and install Python first.</p>
+
+<h2>A ruleset is a list of “no”s</h2>
+
+<p>A <strong>branch ruleset</strong> targets branches (here, the default branch) and turns on rules. You’ll turn on four:</p>
+
+<table class="ref-inline">
+  <tr><th>Rule</th><th>What it blocks</th></tr>
+  <tr><td>Restrict deletions</td><td>Deleting <code>main</code> on GitHub. Selected by default.</td></tr>
+  <tr><td>Block force pushes</td><td><code>git push --force</code> rewriting <code>main</code>. Enabled by default.</td></tr>
+  <tr><td>Require a pull request before merging</td><td>Any push straight to <code>main</code>. Set required approvals to 0.</td></tr>
+  <tr><td>Require status checks to pass</td><td>Merging a PR unless <code>test</code> is green.</td></tr>
+</table>
+
+<p>The <strong>bypass list</strong> starts out empty, and that includes you. Admins are only <em>eligible</em> for bypass. They aren’t exempt by default. Leave the list empty: if you add yourself, you’ve added every agent that uses your login.
+<span class="sidenote">Steps and bypass: <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository">GitHub Docs, “Creating rulesets for a repository”</a>.</span></p>
+
+<div class="box misconception">
+<p>“A green check means the PR is safe.” A check proves only what its tests test. The PR’s own branch also supplies the workflow file and the tests that run against it. An agent that deletes a failing test, or edits <code>tests.yml</code>, can turn the check green. Also, “a skipped job reports ‘Success’,” even when it’s a required check. You still need to review changes to <code>.github/workflows/</code> and to the tests.</p>
+</div>
+
+<p><strong>Why a new repo?</strong> On the Free plan, GitHub enforces rulesets only on <em>public</em> repos. Your private <code>git-sandbox</code> returned “Upgrade to GitHub Pro or make this repository public.” Its history also has your personal email on 12 commits. So I made <a href="https://github.com/Kyu-seok/git-sandbox-ci"><code>Kyu-seok/git-sandbox-ci</code></a>. It’s public, it contains the merged word-count code from PR #6, and it’s set up to commit with your GitHub <em>noreply</em> address.
+<span class="sidenote">Commit email and privacy: <a href="https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address">GitHub Docs, “Setting your commit email address”</a>.</span></p>
+
+<h2>Drill: predict the guardrail</h2>
+<p>All four rules are active. Is each action allowed or blocked?</p>
+<div class="rules-drill" id="drill"></div>
+
+<h2>Build it, then try to break it</h2>
+
+<ol class="steps" data-checklist="lesson-0005">
+  <li>
+    <div class="step-title">Add the workflow on a branch</div>
+<pre><code>cd ~/Work/git-sandbox-ci
+git switch -c ci/run-tests
+mkdir -p .github/workflows
+nvim .github/workflows/tests.yml     # type in the workflow above (don’t paste it)</code></pre>
+    <p>Typing it yourself makes you read every key, and YAML cares about indentation. Commit it, push the branch, and open a PR, all from memory (lesson 1).</p>
+  </li>
+  <li>
+    <div class="step-title">Watch the check run</div>
+<pre><code>gh pr checks --watch</code></pre>
+    <p>Predict first: what name will the check show? If it fails, open the log with <code>gh run view --log-failed</code>, fix the file, commit, and push again. The PR re-runs its checks on every push. Once it’s green, merge with <code>--merge --delete-branch</code>.</p>
+  </li>
+  <li>
+    <div class="step-title">Sync, without being given the commands</div>
+    <p>Get your local <code>main</code> up to date with the merge, and clean up the local branch and the stale remote-tracking branch. Check your work with <code>git branch -a</code>: you should see only <code>main</code> and <code>origin/main</code>.</p>
+  </li>
+  <li>
+    <div class="step-title">Create the ruleset</div>
+<pre><code>gh repo view --web     # then Settings → Rules → Rulesets → New ruleset → New branch ruleset</code></pre>
+    <ul>
+      <li><strong>Name</strong> <code>protect-main</code> · <strong>Enforcement status</strong> Active</li>
+      <li><strong>Target branches</strong> → Add target → <em>Include default branch</em></li>
+      <li>Keep <strong>Restrict deletions</strong> and <strong>Block force pushes</strong> ticked</li>
+      <li>Tick <strong>Require a pull request before merging</strong>. Required approvals: <strong>0</strong></li>
+      <li>Tick <strong>Require status checks to pass</strong> → Add checks → <code>test</code>. Leave “Require branches to be up to date” <em>unticked</em> for now (lesson 6 covers it)</li>
+      <li>Leave the <strong>bypass list</strong> empty → <strong>Create</strong></li>
+    </ul>
+<pre><code>gh ruleset check main     # lists the rules that now apply to main</code></pre>
+    <p><span class="sidenote"><code>gh ruleset</code>: <a href="https://cli.github.com/manual/gh_ruleset_check">gh manual</a>.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Push to <code>main</code> like a careless agent</div>
+<pre><code>echo "CI runs on every PR." &gt;&gt; README.md
+git commit -am "Note CI in README"
+git push                  # predict first: what happens?</code></pre>
+    <p>Read GitHub’s rejection message. Your commit is safe on local <code>main</code>, but <code>main</code> is now one commit ahead of <code>origin/main</code>. Branches are pointers (lesson 1), so give the commit its own branch and move <code>main</code> back:</p>
+<pre><code>git switch -c docs/ci-note             # new label on the same commit; HEAD moves with it
+git branch -f main origin/main         # move the main label back to origin/main
+git log --oneline --graph --all -3     # check: where do main, origin/main and HEAD point?</code></pre>
+    <p>Then push <code>docs/ci-note</code>, open a PR, wait for the check to go green, and merge. This is the only way <code>main</code> can move now.</p>
+  </li>
+  <li>
+    <div class="step-title">Watch a red check block a merge</div>
+<pre><code>git switch main &amp;&amp; git pull
+git switch -c break/split-bug
+# in wordcount.py, change text.split() back to text.split(" ")
+git commit -am "Reintroduce split bug on purpose"
+git push -u origin break/split-bug
+gh pr create --fill
+gh pr checks --watch
+gh pr merge --merge       # predict first</code></pre>
+    <p>The bug is the same one you caught in PR #6, and this time a machine catches it. Afterwards, close the PR without merging it: <code>gh pr close --delete-branch</code>. Then switch back to <code>main</code> and delete the local branch with <code>git branch -D break/split-bug</code>. The capital <code>-D</code> is needed because this branch was never merged.</p>
+  </li>
+  <li>
+    <div class="step-title">Get graded</div>
+    <p>In Claude Code, say <strong>“check lesson 5”</strong>. I’ll check through the API that the workflow is on <code>main</code>, read the ruleset’s settings, and check that you have a merged green PR and a closed red one.</p>
+  </li>
+</ol>
+
+<div class="box agent">
+<p><strong>What this stops, and what it doesn’t.</strong> An agent with your login can no longer push to <code>main</code>, force-push it, or merge a PR with failing tests. It <em>can</em> still run <code>gh pr merge</code> on a green PR, because you can, and it can weaken the tests inside its own PR. Closing those gaps is lesson 9: Claude Code hooks that block <code>gh pr merge</code> and pushes to <code>main</code> before they run, and an agent identity separate from yours.</p>
+</div>
+
+<h2>Recall it</h2>
+<p>No scrolling up.
+<span class="sidenote">Spaced review: retry the <a href="0004-reviewing-a-pr.html">Lesson 4 quiz</a> before this one.</span></p>
+
+<div class="quiz" data-quiz-id="0005"></div>
+
+<h2>Go deeper</h2>
+<p><strong>Primary source:</strong> <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets">GitHub Docs, “Available rules for rulesets”</a> (about 15 minutes). Skim it for rules you might want later, such as “Require linear history” and “Require signed commits”. For the YAML side, read the <a href="https://docs.github.com/en/actions/get-started/quickstart">Actions quickstart</a>.</p>
+<p><strong>Reference:</strong> <a href="../reference/github-flow-cheatsheet.html">Cheat sheet</a> (new checks and rulesets section) · <a href="../reference/glossary.html">Glossary</a>.</p>
+
+<p class="ask">Stuck on a YAML error, unsure what a rule does, or wondering how a team would set this up? Ask me in Claude Code. I can read your workflow run logs and ruleset through the API.</p>
+
+<nav class="lesson-nav">
+  <a href="0004-reviewing-a-pr.html">← Lesson 4: reviewing a PR</a>
+  <span>Next: Lesson 6, merge strategies and updating a branch (coming)</span>
+</nav>
+
+</main>
+
+<script src="../assets/checklist.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/rules-drill.js"></script>
+<script src="0005-checks-and-rulesets.quiz.js"></script>
+<script>
+  Quiz.mount('[data-quiz-id="0005-warmup"]', window.QUIZ.filter((q) => q.section === "warmup"));
+
+  RulesDrill.mount('#drill', {
+    title: 'Ruleset “protect-main” on the default branch · bypass list empty',
+    rules: ['Restrict deletions', 'Block force pushes', 'Require a pull request before merging (0 approvals)', 'Require status checks to pass: <code>test</code>'],
+    cases: [
+      { action: 'You commit on local <code>main</code> and run <code>git push</code>.', answer: 'blocked',
+        why: 'Changes must come through a PR. GitHub rejects the push, and your local commit stays put.' },
+      { action: 'An agent with your login opens a PR whose <code>test</code> check is red, then runs <code>gh pr merge</code>.', answer: 'blocked',
+        why: 'Required checks must pass first. Being the repo’s owner doesn’t help, because the bypass list is empty.' },
+      { action: 'You merge your own PR with a green <code>test</code> and no approvals.', answer: 'allowed',
+        why: 'Zero approvals are required: the PR just has to exist and its check has to pass. This is the solo setup.' },
+      { action: 'You push a new branch <code>agent/fix-typo</code> straight to GitHub.', answer: 'allowed',
+        why: 'The ruleset targets only the default branch. Other branches are unprotected, which is how PRs get started.' },
+      { action: 'An agent’s PR deletes the failing test, and <code>test</code> turns green. It merges.', answer: 'allowed',
+        why: 'The rules see a green check. They can’t tell whether the tests are any good. Only a review catches this.' },
+      { action: 'You run <code>git push --force</code> on <code>main</code> after rewriting history.', answer: 'blocked',
+        why: 'Block force pushes stops it. Requiring a PR would block the push anyway.' }
+    ]
+  });
+
+  Quiz.mount('[data-quiz-id="0005"]', window.QUIZ.filter((q) => q.section === "main"));
+</script>
+</body>
+</html>

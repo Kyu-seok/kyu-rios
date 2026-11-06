@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resolving Merge Conflicts</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 3 · Git workflow in the age of agents</p>
+<h1>A conflict is a question, not an error</h1>
+<p class="subtitle">Git asks for help when two people changed the same lines. Here you learn to read the markers, answer the question, and back out if you need to. About 30 minutes.</p>
+
+<p><strong>Today’s win:</strong> you’ll make a real conflict between two PRs, back out of it on purpose, then resolve it and merge. After that, conflicts should feel routine rather than alarming.</p>
+
+<h2>When Git stops and asks</h2>
+
+<p>Most merges are automatic. Git combines changes to different files, or to different parts of the same file, by itself. It stops only in one situation:
+<span class="sidenote">Quote: <a href="https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging"><em>Pro Git</em> §3.2, “Basic Merge Conflicts”</a>. GitHub adds the other common case: one side edits a file that the other side deleted (<a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts">GitHub Docs, “About merge conflicts”</a>).</span></p>
+
+<p class="idea">“If you changed the same part of the same file differently in the two branches you’re merging, Git won’t be able to merge them cleanly.”</p>
+
+<p>Nothing is broken when this happens. Git can’t know which change you wanted, so it puts <em>both</em> versions into the file, marks them, and waits for you to choose.</p>
+
+<h3>Reading the markers</h3>
+
+<p>Say you’re on <code>my-greeting</code> and you run <code>git merge origin/main</code>. The conflicted file looks like this:</p>
+
+<pre><code><span class="mk">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+Hello from me
+<span class="mk">=======</span>
+Hello from the teammate
+<span class="mk">&gt;&gt;&gt;&gt;&gt;&gt;&gt; origin/main</span></code></pre>
+
+<ul>
+  <li><strong>Top, between <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> and <code>=======</code></strong>: <em>your</em> side, from the branch HEAD is on (<code>my-greeting</code>).</li>
+  <li><strong>Bottom, between <code>=======</code> and <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code></strong>: <em>their</em> side, from whatever you named in the merge command (<code>origin/main</code>).</li>
+</ul>
+<p><span class="sidenote">“The part before the <code>=======</code> is typically your side, and the part afterwards is typically their side.” <a href="https://git-scm.com/docs/git-merge#_how_conflicts_are_presented">git-merge docs, “How conflicts are presented”</a>.</span>
+To resolve, edit that region into the version you actually want. You might keep one side, keep both, or combine them. Then <strong>delete all three marker lines</strong> and tell Git the file is done with <code>git add</code>.</p>
+
+<div class="box misconception">
+<p>“Resolving means picking a winner.” Often it doesn’t. If both sides made a real change, keeping only one quietly throws the other away. Git can’t notice that, so it falls to you. Drill 3 below shows the trap.</p>
+</div>
+
+<h3>Your three moves, in order</h3>
+<table class="ref-inline">
+  <tr><th>Moment</th><th>Command</th><th>What it does</th></tr>
+  <tr><td>See what’s conflicted</td><td><code>git status</code></td><td>Lists files under “Unmerged paths” as <code>both modified</code></td></tr>
+  <tr><td>Back out completely</td><td><code>git merge --abort</code></td><td>Puts everything back the way it was before the merge started</td></tr>
+  <tr><td>Finish</td><td>edit · <code>git add &lt;file&gt;</code> · <code>git commit --no-edit</code></td><td>Marks the file resolved, then creates the merge commit</td></tr>
+</table>
+<p><span class="sidenote"><code>--abort</code>: “try to reconstruct the pre-merge state.” The docs advise committing your work before any merge so the abort has nothing to lose. Finishing: “Edit the files into shape and <code>git add</code> them … Use <code>git commit</code> … to seal the deal.” <a href="https://git-scm.com/docs/git-merge">git-merge docs</a>.</span>
+<code>git merge --abort</code> is your escape route. If you’re confused partway through, abort, think it over, and merge again. Nothing is lost.</p>
+
+<h2>Drills: resolve in the browser</h2>
+
+<p>Each box is a conflicted file. Read the intent, edit the text, and press <em>Check</em>. Remove the marker lines yourself, because that’s what you’ll do in your editor.</p>
+
+<div class="conflict-drill" id="drills"></div>
+
+<div class="box agent">
+<p>Parallel agents are the most common source of conflicts. If two agents work on overlapping files at the same time, the second PR to merge will conflict. Two habits help. First, <strong>give agents tasks that touch separate areas</strong> of the code. Second, when a conflict does happen, <strong>merge one PR, then bring <code>main</code> into the other branch</strong> and resolve it there, just as you’ll do below. An agent can resolve the conflict for you, and GitHub can offer Copilot in the merge box, but you still check the merge result the way you did in Drill 3. Did <em>both</em> changes survive?
+<span class="sidenote">GitHub: “Simple line conflicts can often be resolved on GitHub … More complex conflicts must be resolved in a local clone and pushed back to the pull request branch.” <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts">About merge conflicts</a>. Parallel agents get their own lesson (worktrees).</span></p>
+</div>
+
+<h2>Do it for real</h2>
+
+<p>You’ll use both clones. The teammate changes <code>greeting.txt</code> and merges first. You change the same line on your own branch, so your PR conflicts.</p>
+
+<ol class="steps" data-checklist="lesson-0003">
+  <li>
+    <div class="step-title">Teammate: sync, and check your prediction</div>
+<pre><code>cd ~/Work/git-sandbox-teammate
+git status            <span class="c"># you predicted: up to date</span>
+git fetch
+git status            <span class="c"># you predicted: behind (by 3)</span>
+git pull</code></pre>
+    <p>You’re already on <code>main</code> here: last time, <code>gh pr merge --delete-branch</code> switched you back after deleting the branch you were on. <code>git pull</code> should report a <code>Fast-forward</code>.</p>
+  </li>
+  <li>
+    <div class="step-title">Teammate: change the greeting and merge it (loop from memory)</div>
+    <p>Branch <code>teammate-greeting</code>, replace the whole of <code>greeting.txt</code> with <code>Hello from the teammate</code>, commit, push, open a PR, and merge it with branch deletion.</p>
+    <details>
+    <summary>Check your commands (only after trying)</summary>
+<pre><code>git switch -c teammate-greeting
+echo "Hello from the teammate" &gt; greeting.txt
+git commit -am "Teammate greeting"
+git push -u origin teammate-greeting
+gh pr create --fill
+gh pr merge --merge --delete-branch</code></pre>
+    </details>
+  </li>
+  <li>
+    <div class="step-title">You: change the same line, without syncing first</div>
+<pre><code>cd ~/Work/git-sandbox
+git switch -c my-greeting
+echo "Hello from me" &gt; greeting.txt
+git commit -am "My greeting"
+git push -u origin my-greeting
+gh pr create --fill
+gh pr view --web</code></pre>
+    <p>On GitHub the PR says the branch has conflicts that must be resolved, and the merge button is disabled. “You must resolve all merge conflicts before you can merge a pull request.” From the terminal, <code>gh pr view --json mergeable</code> prints <code>CONFLICTING</code>. If it says <code>UNKNOWN</code>, GitHub is still checking, so try again after a few seconds.
+    <span class="sidenote">Quote: <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts">GitHub Docs, “About merge conflicts”</a>.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Bring main into your branch, and hit the conflict</div>
+<pre><code>git fetch
+git merge origin/main
+git status</code></pre>
+    <p><strong>Predict before running:</strong> which side will be on top in <code>greeting.txt</code>? You should see <code>CONFLICT (content): Merge conflict in greeting.txt</code>, and <code>status</code> lists it as <code>both modified</code>. This uses your Lesson 2 model directly. <code>fetch</code> updates the <code>origin/main</code> bookmark, and <code>merge</code> brings it into the branch you’re on.</p>
+  </li>
+  <li>
+    <div class="step-title">Practise the escape route</div>
+<pre><code>git merge --abort
+git status
+cat greeting.txt</code></pre>
+    <p>The status is clean and the file says <code>Hello from me</code> again, as if the merge never started. That’s why there’s no need to panic: you can always back out.</p>
+  </li>
+  <li>
+    <div class="step-title">Merge again and resolve it properly</div>
+<pre><code>git merge origin/main
+nvim greeting.txt      <span class="c"># or any editor</span></code></pre>
+    <p>The intent is that the team agreed the greeting should mention both of you. Make the file one line, <code>Hello from me and the teammate</code>, and delete all three marker lines. Then check that no markers are left and finish the merge:</p>
+<pre><code>grep -nE '^(&lt;&lt;&lt;&lt;&lt;&lt;&lt;|=======|&gt;&gt;&gt;&gt;&gt;&gt;&gt;)' greeting.txt   <span class="c"># no output = clean</span>
+git add greeting.txt
+git status             <span class="c"># "All conflicts fixed but you are still merging."</span>
+git commit --no-edit
+git log --oneline --graph --all</code></pre>
+    <p><code>--no-edit</code> keeps Git’s default “Merge remote-tracking branch ‘origin/main’ into my-greeting” message, so nvim doesn’t open.</p>
+  </li>
+  <li>
+    <div class="step-title">Push, merge the PR, sync</div>
+<pre><code>git push
+gh pr view --json mergeable   <span class="c"># now MERGEABLE</span>
+gh pr merge --merge --delete-branch
+git switch main
+git pull
+git fetch --prune
+cat greeting.txt
+git log --oneline --graph --all</code></pre>
+  </li>
+</ol>
+
+<div class="box">
+<p><strong>Close the feedback loop:</strong> paste the final <code>git log --oneline --graph --all</code> into Claude Code. This graph has a new shape, with one merge commit inside your PR and another that merges the PR itself. We’ll read it together.</p>
+</div>
+
+<h2>Recall it</h2>
+<p>No scrolling up.
+<span class="sidenote">Spaced review: try the <a href="0002-remotes-fetch-pull-push.html">Lesson 2 quiz</a> again before this one. Its ideas (fetch, <code>origin/main</code>) are what step 4 relied on.</span></p>
+
+<div class="quiz" data-quiz-id="0003"></div>
+
+<h2>Go deeper</h2>
+<p><strong>Primary source:</strong> <a href="https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging"><em>Pro Git</em> §3.2</a>, from “Basic Merge Conflicts” to the end (about 5 minutes). Then GitHub’s <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/resolving-a-merge-conflict-using-the-command-line">Resolving a merge conflict using the command line</a> covers the same steps, including the edit-versus-delete case.</p>
+<p><strong>Reference:</strong> <a href="../reference/github-flow-cheatsheet.html">Cheat sheet</a> (now with a conflicts section) · <a href="../reference/glossary.html">Glossary</a>.</p>
+
+<p class="ask">Want to know why there are two merge commits, or what happens if both sides <em>delete</em> lines? Ask me in Claude Code.</p>
+
+<nav class="lesson-nav">
+  <a href="0002-remotes-fetch-pull-push.html">← Lesson 2: remotes</a>
+  <a href="0004-reviewing-a-pr.html">Next: Lesson 4, reviewing a PR →</a>
+</nav>
+
+</main>
+
+<script src="../assets/checklist.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/conflict-drill.js"></script>
+<script src="0003-merge-conflicts.quiz.js"></script>
+<script>
+  ConflictDrill.mount('#drills', [
+    { title: 'Read the markers',
+      intent: 'You’re on <code>my-greeting</code> and merged <code>origin/main</code>. The team decided to use the <strong>teammate’s</strong> wording. Leave exactly one line.',
+      text: '<<<<<<< HEAD\nHello from me\n=======\nHello from the teammate\n>>>>>>> origin/main\n',
+      accept: ['Hello from the teammate'],
+      ours: 'Hello from me',
+      why: 'The teammate’s side is the part below <code>=======</code>, from the branch named after <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>.' },
+    { title: 'Keep both',
+      intent: 'You and an agent each added a task to the end of the list. <strong>Both tasks are real.</strong> Keep both, in either order.',
+      text: '# Tasks\n- write README\n<<<<<<< HEAD\n- add login page\n=======\n- add signup page\n>>>>>>> agent/signup\n',
+      accept: ['# Tasks\n- write README\n- add login page\n- add signup page', '# Tasks\n- write README\n- add signup page\n- add login page'],
+      ours: '# Tasks\n- write README\n- add login page',
+      theirs: '# Tasks\n- write README\n- add signup page',
+      why: 'Both people added to the same spot, so Git couldn’t decide the order. Keeping both is often the right resolution for lists, imports, and changelogs.' },
+    { title: 'Combine: the trap',
+      intent: 'You changed the greeting to <code>Hello, …!</code>. An agent fixed names to be capitalised with <code>name.title()</code>. <strong>Both changes must survive</strong> in one <code>return</code> line.',
+      text: 'def greet(name):\n<<<<<<< HEAD\n    return f"Hello, {name}!"\n=======\n    return "Hi, " + name.title()\n>>>>>>> agent/fix-names\n',
+      accept: ['def greet(name):\n    return f"Hello, {name.title()}!"', 'def greet(name):\n    return "Hello, " + name.title() + "!"'],
+      ours: 'def greet(name):\n    return f"Hello, {name}!"',
+      theirs: 'def greet(name):\n    return "Hi, " + name.title()',
+      why: 'Picking either side would have silently dropped the other change, and the code would still run. That’s why you review merge results, especially ones an agent produced.' }
+  ]);
+
+  Quiz.mount('[data-quiz-id="0003"]', window.QUIZ);
+</script>
+</body>
+</html>

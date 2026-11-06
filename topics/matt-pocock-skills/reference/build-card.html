@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>Build Card</h1>
+<p class="subtitle"><code>/implement</code>, <code>/tdd</code> and <code>/code-review</code>: one ticket, one run.</p>
+<p class="muted" style="font-size:.85rem">Sources: <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/implement/SKILL.md"><code>implement</code></a> (<a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md">guide</a>), <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md"><code>tdd</code></a> (<a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/tdd.md">guide</a>), <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md"><code>code-review</code></a> (<a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md">guide</a>), commit <code>5beb35b</code>.</p>
+
+<h2>One <code>/implement</code> run</h2>
+<ol>
+  <li>Fetch the ticket, <strong>state its title</strong>, and work out the seams. There's no interview and no re-planning.</li>
+  <li><code>/tdd</code> at the <strong>pre-agreed seams</strong>, one red → green slice at a time</li>
+  <li>Typecheck often, and run single test files</li>
+  <li>Run the full suite <strong>once</strong>, at the end</li>
+  <li><code>/code-review</code>, then <strong>commit to the current branch</strong></li>
+</ol>
+<p style="font-size:.9rem">One ticket per run, with <code>/clear</code> between runs. <strong>You</strong> create the branch, and <strong>you</strong> close the ticket, which is what opens the frontier. For parallel work, use <code>/implement-spec</code> (worktrees), not several sessions in one checkout. A non-trivial ticket can use over 100k tokens. If it's much more than that, split the ticket.</p>
+
+<h2><code>/tdd</code></h2>
+<ul>
+  <li><strong>Seam</strong> = the public boundary where you observe behaviour. <strong>No test at an unconfirmed seam.</strong></li>
+  <li>Red → green: one failing test, then just enough code to pass it, then repeat. <strong>No refactor phase</strong> (removed June 2026). Refactoring belongs to <code>/code-review</code>.</li>
+  <li>A good test reads like a spec, uses the public API only, and survives refactors.</li>
+  <li>Mock <strong>system boundaries only</strong>: external APIs, time, randomness, and sometimes the filesystem or DB. Never your own modules.</li>
+</ul>
+<div class="table-wrap"><table>
+  <tr><th>Anti-pattern</th><th>Tell</th></tr>
+  <tr><td>Implementation-coupled</td><td>It breaks on a rename even though behaviour didn't change. Look for mocked internals, call counts, or DB queries used to verify.</td></tr>
+  <tr><td>Tautological</td><td>The expected value is recomputed the way the code computes it. Use a literal, a worked example, or the spec.</td></tr>
+  <tr><td>Horizontal slicing</td><td>A batch of tests landed before any code.</td></tr>
+</table></div>
+
+<h2><code>/code-review &lt;fixed-point&gt;</code></h2>
+<div class="table-wrap"><table>
+  <tr><th></th><th>Standards</th><th>Spec</th></tr>
+  <tr><td>Asks</td><td>Built right?</td><td>Right thing?</td></tr>
+  <tr><td>Finds</td><td>Documented breaches (can be hard) and smells (always judgement calls)</td><td>Missing or partial requirements, scope creep, and requirements done wrong</td></tr>
+  <tr><td>Cites</td><td>The rule and its file, or the smell plus the hunk</td><td>The spec line</td></tr>
+</table></div>
+<p style="font-size:.9rem">Each axis runs in its own parallel subagent. The axes are <strong>never merged or re-ranked</strong>, and the report gives a worst issue per axis. The repo overrides the smell baseline.</p>
+<p style="font-size:.9rem"><strong>Smell baseline</strong> (Fowler, <em>Refactoring</em> ch. 3): Mysterious Name · Duplicated Code · Feature Envy · Data Clumps · Primitive Obsession · Repeated Switches · Shotgun Surgery · Divergent Change · Speculative Generality · Message Chains · Middle Man · Refused Bequest</p>
+
+<h2>Gotchas</h2>
+<ul>
+  <li><code>...HEAD</code> leaves out uncommitted work, so <strong>commit before reviewing</strong>.</li>
+  <li>Review in a <strong>fresh session</strong>, because self-review is confirmation bias.</li>
+  <li>The review <strong>never converges</strong>. Act on the cited findings, then stop.</li>
+  <li>The name clashes with Claude Code's built-in <code>/code-review</code> (a bug hunter). The plugin uses <code>mattpocock-skills:code-review</code>.</li>
+  <li>Subagents can re-invoke <code>/code-review</code> and fan out. When running unattended, watch the agent count.</li>
+  <li>If the agent writes code before the test, that happens. If strictness matters for a slice, watch the run.</li>
+  <li>Write browser and E2E tests <em>after</em> the behaviour works. Put that rule in <code>CLAUDE.md</code>.</li>
+</ul>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a> · <a href="skill-map.html">Skill Map</a> · <a href="planning-card.html">Planning Card</a></p>
+</main>
+</body>
+</html>

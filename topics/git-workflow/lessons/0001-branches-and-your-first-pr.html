@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branches and Your First PR</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 1 · Git workflow in the age of agents</p>
+<h1>A branch is a sticky note, not a folder</h1>
+<p class="subtitle">One mental model, then one full trip around GitHub flow: branch, commit, push, pull request, merge, sync. About 25 minutes.</p>
+
+<p><strong>Today’s win:</strong> you’ll merge your first pull request into a real GitHub repo, and you’ll know what every command did to your branches.</p>
+
+<h2>The one idea</h2>
+
+<p>So far you’ve used Git as a row of save points on one line. That line is called <code>main</code>. The idea that unlocks everything else is how small a branch really is:
+<span class="sidenote">Quote: Chacon &amp; Straub, <a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell"><em>Pro Git</em> §3.1, “Branches in a Nutshell”</a>. The book adds that a branch is “a simple file that contains the 40 character SHA-1 checksum of the commit it points to.”</span></p>
+
+<p class="idea">“A branch in Git is simply a lightweight movable pointer to one of these commits.”</p>
+
+<p>A branch is a label stuck on a commit. When you commit, Git moves the label you are <em>on</em> forward to the new commit. How does Git know which label you’re on? Through one more pointer, <code>HEAD</code>: “a pointer to the local branch you’re currently on.”
+<span class="sidenote">The HEAD definition is from the same <a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell">Pro Git §3.1</a>. In diagrams, <span style="color:var(--head)">HEAD →</span> marks the branch you have checked out.</span></p>
+
+<div class="box misconception">
+<p>“Making a branch copies my project.” It doesn’t. Creating a branch writes one tiny file holding a commit ID. That’s why branches are cheap enough to make one per task, or one per agent.</p>
+</div>
+
+<h3>Watch the labels move</h3>
+
+<div class="graph-row wide">
+  <figure class="graph" id="g1"></figure>
+  <figure class="graph" id="g2"></figure>
+</div>
+
+<p><strong>Predict before you reveal:</strong> you’re on <code>add-greeting</code> and you make one commit. Which label moves, and where does <code>main</code> end up?</p>
+
+<details>
+<summary>Reveal the answer</summary>
+<figure class="graph" id="g3"></figure>
+<p>Only the branch HEAD points to moves. <code>main</code> stays exactly where it was. Your work is now off to the side, and <code>main</code> doesn’t change until you decide to merge.</p>
+</details>
+
+<div class="box agent">
+<p>This is the core safety habit for working with AI agents. Every task, whether yours or an agent’s, gets its own branch, so <code>main</code> moves only when someone merges a reviewed pull request. Claude Code works this way too: <code>claude --worktree feature-auth</code> runs the agent on a new branch named <code>worktree-feature-auth</code>, away from your checkout.
+<span class="sidenote">Branch-per-change: <a href="https://docs.github.com/en/get-started/using-github/github-flow">GitHub Docs, “GitHub flow”</a>. Agent branches: <a href="https://code.claude.com/docs/en/worktrees">Claude Code docs, “Run parallel sessions with worktrees”</a>. Worktrees get their own lesson later.</span></p>
+</div>
+
+<h2>The loop you’ll use forever</h2>
+
+<p>GitHub’s official workflow is six steps. You’ll do all six below.
+<span class="sidenote">Steps paraphrased from <a href="https://docs.github.com/en/get-started/using-github/github-flow">GitHub Docs, “GitHub flow”</a>, which recommends “a separate branch for each set of unrelated changes” so reviews stay focused and one delayed change doesn’t hold up the others.</span></p>
+
+<ol>
+  <li><strong>Branch</strong> off <code>main</code>, with a short descriptive name like <code>add-greeting</code>.</li>
+  <li><strong>Commit</strong> small, self-contained changes, then <strong>push</strong> the branch to GitHub.</li>
+  <li><strong>Open a pull request (PR)</strong>: a request to merge your branch, with a summary of what changed and why.</li>
+  <li><strong>Address review</strong> by pushing more commits to the same branch. The PR updates itself.</li>
+  <li><strong>Merge</strong> once it’s approved and the checks pass.</li>
+  <li><strong>Delete the branch.</strong> The PR and its history stay on GitHub.</li>
+</ol>
+
+<h2>Do it: your first trip around the loop</h2>
+
+<div class="box warn">
+<p>Build the sandbox in <code>~/Work/git-sandbox</code>, <em>not</em> inside <code>~/Work/project</code>. That folder is already a Git repo, and a repo nested inside another causes confusion. Run every command yourself. Typing them is part of the practice.</p>
+</div>
+
+<ol class="steps" data-checklist="lesson-0001">
+  <li>
+    <div class="step-title">Create the sandbox repo, locally and on GitHub</div>
+<pre><code>cd ~/Work &amp;&amp; mkdir git-sandbox &amp;&amp; cd git-sandbox
+git init
+echo "# git-sandbox" &gt; README.md
+git add README.md
+git commit -m "Initial commit"
+gh repo create git-sandbox --private --source=. --push</code></pre>
+    <p>The last line creates a private repo on GitHub, adds it as a remote called <code>origin</code>, and pushes <code>main</code> to it.
+    <span class="sidenote">Flags from <code>gh repo create --help</code> (gh 2.58): <code>--source</code> uses an existing local repo, <code>--push</code> pushes its commits. See the <a href="https://cli.github.com/manual/gh_repo_create">gh manual</a>.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Make a branch and see where HEAD is</div>
+<pre><code>git switch -c add-greeting   <span class="c"># create the label AND move HEAD to it</span>
+git branch</code></pre>
+    <p>The <code>*</code> next to <code>add-greeting</code> is HEAD. You’re now in the middle diagram above: two labels on the same commit.</p>
+  </li>
+  <li>
+    <div class="step-title">Commit on the branch, then look at the graph</div>
+<pre><code>echo "Hello from a branch" &gt; greeting.txt
+git add greeting.txt
+git commit -m "Add greeting file"
+git log --oneline --graph --all</code></pre>
+    <p>Find the line with <code>(HEAD -&gt; add-greeting)</code> and the line below it with <code>main</code>. That’s the “reveal” diagram, printed by Git. <code>--all</code> shows every branch, not only the one you’re on.</p>
+  </li>
+  <li>
+    <div class="step-title">Push the branch to GitHub</div>
+<pre><code>git push -u origin add-greeting</code></pre>
+    <p>This sends the new commit and the <code>add-greeting</code> label to <code>origin</code>. The <code>-u</code> flag links your local branch to the remote one, so later a plain <code>git push</code> knows where to go. Lesson 2 covers remotes properly.</p>
+  </li>
+  <li>
+    <div class="step-title">Open the pull request and read its diff</div>
+<pre><code>gh pr create --fill
+gh pr view --web</code></pre>
+    <p><code>--fill</code> uses your commit message as the PR’s title and body. In the browser, open the <strong>Files changed</strong> tab. That’s the <em>diff</em>: green lines were added, red lines were removed. Reading this tab carefully is your most important job once agents write the code.
+    <span class="sidenote"><code>--fill</code>: “Use commit info for title and body.” <a href="https://cli.github.com/manual/gh_pr_create">gh manual, <code>gh pr create</code></a>.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Merge it and delete the branch</div>
+<pre><code>gh pr merge --merge --delete-branch</code></pre>
+    <p><code>--merge</code> keeps your commit and records the merge with a merge commit (GitHub’s default method). <code>--delete-branch</code> removes the branch both locally and on GitHub. Squash and rebase merges come in a later lesson.
+    <span class="sidenote">Merge methods: <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github">GitHub Docs, “About merge methods on GitHub”</a>.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Bring local <code>main</code> up to date, then verify</div>
+<pre><code>git switch main
+git pull
+git log --oneline --graph --all
+ls</code></pre>
+    <p>The merge happened <em>on GitHub</em>, so your local <code>main</code> was behind until <code>git pull</code> brought it up to date. You should see a merge commit at the top, <code>greeting.txt</code> in <code>ls</code>, and no <code>add-greeting</code> branch left.</p>
+  </li>
+</ol>
+
+<div class="box">
+<p><strong>Close the feedback loop:</strong> paste the output of the last <code>git log --oneline --graph --all</code> into Claude Code. I’ll check it with you and explain any line that looks surprising.</p>
+</div>
+
+<h2 id="recall">Recall it</h2>
+<p>No scrolling up. Retrieving from memory is what makes this stick.
+<span class="sidenote">Effortful recall builds long-term retention better than rereading. Try this quiz again in two or three days.</span></p>
+
+<div class="quiz" data-quiz-id="0001"></div>
+
+<h2>Go deeper</h2>
+<p><strong>Primary source:</strong> <a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell"><em>Pro Git</em> §3.1, “Branches in a Nutshell”</a> (about 10 minutes, with the diagrams this lesson is based on). Then skim <a href="https://docs.github.com/en/get-started/using-github/github-flow">GitHub flow</a>, which you just did by hand.</p>
+<p><strong>Optional extra practice:</strong> the first three levels of the “Introduction Sequence” on <a href="https://learngitbranching.js.org/">Learn Git Branching</a>, a visual sandbox.</p>
+<p><strong>Cheat sheet:</strong> <a href="../reference/github-flow-cheatsheet.html">GitHub flow commands</a>, for when you need a command quickly.</p>
+
+<p class="ask">Something unclear, or a command printed something unexpected? Ask me in Claude Code. I’m your teacher for this course. Questions like “why did <code>git pull</code> say fast-forward?” are exactly what I’m here for.</p>
+
+<nav class="lesson-nav">
+  <span>Lesson 1 of the course</span>
+  <a href="0002-remotes-fetch-pull-push.html">Next: Lesson 2, remotes: fetch, pull, push →</a>
+</nav>
+
+</main>
+
+<script src="../assets/graph.js"></script>
+<script src="../assets/checklist.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="0001-branches-and-your-first-pr.quiz.js"></script>
+<script>
+  const base = [{ id: 'c1', col: 0 }, { id: 'c2', col: 1, parents: ['c1'] }];
+  Graph.render('#g1', {
+    commits: base, refs: [{ name: 'main', at: 'c2' }], head: 'main',
+    caption: 'Start: one label, main, and HEAD is on it.'
+  });
+  Graph.render('#g2', {
+    commits: base, refs: [{ name: 'main', at: 'c2' }, { name: 'add-greeting', at: 'c2' }], head: 'add-greeting',
+    caption: 'git switch -c add-greeting: a second label on the same commit, and HEAD moves to it. No files are copied.'
+  });
+  Graph.render('#g3', {
+    commits: [...base, { id: 'c3', col: 2, lane: 1, parents: ['c2'] }],
+    refs: [{ name: 'main', at: 'c2' }, { name: 'add-greeting', at: 'c3' }], head: 'add-greeting',
+    caption: 'git commit: only the checked-out label moves forward.'
+  });
+
+  Quiz.mount('[data-quiz-id="0001"]', window.QUIZ);
+</script>
+</body>
+</html>

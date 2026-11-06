@@ -1,0 +1,58 @@
+---
+import Graph from '../../../components/Graph.astro';
+import Site from '../../../layouts/Site.astro';
+import { base, getSite, getTopic, missionHtml } from '../../../lib/site';
+
+export function getStaticPaths() {
+  return getSite().topics.map((t) => ({ params: { topic: t.slug } }));
+}
+
+const topic = getTopic(Astro.params.topic!);
+const cards = getSite().review.cards.filter((c) => c.topic === topic.slug).length;
+---
+
+<Site title={topic.title} description={topic.summary}>
+  <p class="kicker">Topic</p>
+  <h1>{topic.title}</h1>
+  <p class="lede">{topic.summary}</p>
+  <p>
+    <a class="button" href={`${base}review/?topic=${encodeURIComponent(topic.slug)}`} data-testid="review-topic">Review this Topic</a>
+    <span class="muted"> {cards} Review cards</span>
+  </p>
+
+  {topic.mission && (
+    <>
+      <h2>Mission</h2>
+      <section class="mission" aria-label="Mission: why this Topic" set:html={missionHtml(topic)} />
+    </>
+  )}
+
+  <h2>Lessons</h2>
+  {topic.lessons.length === 0 && <p class="muted">No Lessons Published yet.</p>}
+  <ol class="doc-list">
+    {topic.lessons.map((l) => (
+      <li>
+        <a href={`${base}${l.path}`}>{l.title}</a>
+        {l.summary && <div class="summary">{l.summary}</div>}
+      </li>
+    ))}
+  </ol>
+
+  {topic.references.length > 0 && (
+    <>
+      <h2>Reference sheets</h2>
+      <ul class="doc-list">
+        {topic.references.map((r) => (
+          <li>
+            <a href={`${base}${r.path}`}>{r.title}</a>
+            {r.summary && <div class="summary">{r.summary}</div>}
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <h2>Where this Topic fits</h2>
+  <p class="muted">This Topic's Nodes and the Nodes one Relationship away in other Topics.</p>
+  <Graph mode="topic" topic={topic.slug} height={420} />
+</Site>

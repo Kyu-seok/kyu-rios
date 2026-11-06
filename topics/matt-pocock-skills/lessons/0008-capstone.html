@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capstone Run</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/walk.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 8 · Matt Pocock's Skills · Capstone</p>
+<h1>Capstone: Your First Real Run</h1>
+<p class="subtitle">Install the skills, set up one repo, and plan one feature through the whole flow. After this, the teacher is the run itself.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>The plugin is installed, <code>Flask/habit-tracker</code> is set up, and you have a written plan for the <strong>daily streaks</strong> feature. The plan says which skill runs at each step and which boundary move comes after it. Then you run it.</p>
+</div>
+
+<h2>0. Warm-up: everything, mixed</h2>
+<p class="muted" style="font-size:.9rem">These are drawn from all seven lessons and set in the project you're about to build. No lesson labels.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. The target: why <code>habit-tracker</code></h2>
+
+<p>I looked at the four candidates in <code>~/Work/project</code>:</p>
+<div class="table-wrap"><table>
+  <tr><th>Candidate</th><th>What's there</th><th>Verdict</th></tr>
+  <tr><td><code>learn-bullmq</code></td><td>A teaching workspace (lessons and notes), not code</td><td>Nothing to build in</td></tr>
+  <tr><td><code>Go/</code></td><td>Eleven separate exercise folders</td><td>No single app to grow</td></tr>
+  <tr><td><code>LLD/</code></td><td>One source file</td><td>Too thin</td></tr>
+  <tr><td><code>Flask/habit-tracker</code></td><td>A 17-line Flask app: two routes, templates, and a venv with Flask 3.0. No storage and no tests.</td><td><strong>Pick this</strong></td></tr>
+</table></div>
+
+<p>It's a stub with a clear domain (<em>habits</em>, <em>check-ins</em>, <em>streaks</em>). That gives grilling real decisions to make, gives <code>/tdd</code> a real seam (the streak logic), and makes the feature big enough for a few tracer-bullet tickets. It also has no test runner and no guardrail, which <code>/retro</code> will rightly flag. That's useful for you to see.</p>
+
+<div class="note">
+  <p class="label">The feature</p>
+  <p><strong>Daily streaks</strong>: add a habit, check in for today, and see each habit's current streak. Hold the details loosely. Grilling will settle what "a day" means, what breaks a streak, and where data lives. Your job is to answer its questions, not to arrive with a spec.</p>
+</div>
+
+<h2>2. Install and set up (once)</h2>
+
+<ol>
+  <li><strong>Install the plugin</strong> (it updates itself):<a class="cite" href="https://github.com/mattpocock/skills#installation-30-second-setup">[1]</a>
+    <pre><code>claude plugin install mattpocock-skills@claude-plugins-official</code></pre>
+    Check it with <code>claude plugin list</code>. You'll now see a second <code>teach</code>, because the plugin ships one too. That's harmless.</li>
+  <li><strong>Open Claude Code in the project:</strong>
+    <pre><code>cd ~/Work/project/Flask/habit-tracker &amp;&amp; claude</code></pre></li>
+  <li><strong>Run <code>/setup-matt-pocock-skills</code></strong>. It explores, proposes, waits for you, then writes.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/setup-matt-pocock-skills/SKILL.md">[2]</a> Start with one sentence of context: <em>"Treat <code>Flask/habit-tracker</code> as the project root."</em> The git root is <code>~/Work/project</code>, the parent repo with a GitHub remote, so without that sentence it may write its files there.</li>
+</ol>
+
+<p>Your expected answers:</p>
+<div class="table-wrap"><table>
+  <tr><th>It asks</th><th>It will propose</th><th>Your answer</th></tr>
+  <tr><td>Issue tracker</td><td>GitHub (it sees the parent's remote)</td><td><strong>Local markdown</strong>. A solo project inside a shared learning repo shouldn't fill <code>parent-repo</code>'s issues. Tickets go to <code>.scratch/&lt;feature&gt;/issues/</code>, as in Lesson 3.</td></tr>
+  <tr><td>Triage labels</td><td>Keep the five defaults</td><td><strong>Yes</strong>. With a local tracker there's nothing to create.</td></tr>
+  <tr><td>Domain docs</td><td>Single-context (it shouldn't ask)</td><td>Accept. One <code>GLOSSARY.md</code> plus <code>docs/adr/</code>.</td></tr>
+  <tr><td>Which instruction file</td><td>Neither file exists, so it asks</td><td><strong><code>CLAUDE.md</code></strong>, because you're on Claude Code.</td></tr>
+</table></div>
+
+<p><strong>It's working if</strong><a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/setup-matt-pocock-skills.md">[3]</a></p>
+<ul>
+  <li><code>docs/agents/issue-tracker.md</code>, <code>domain.md</code>, and <code>triage-labels.md</code> exist inside <code>habit-tracker/</code>.</li>
+  <li><code>CLAUDE.md</code> has an <code>## Agent skills</code> block with three one-line pointers, and nothing more.</li>
+  <li>No <code>GLOSSARY.md</code> yet. That's normal: it's created the first time grilling settles a term.</li>
+  <li>No skill file changed. If setup edited a <code>SKILL.md</code>, something went wrong.</li>
+</ul>
+<p class="muted" style="font-size:.88rem">One discrepancy, as of commit <code>5beb35b</code>: the guide says setup <em>never</em> creates tracker labels, but the skill file now says it creates missing ones on GitHub and GitLab. It doesn't matter here (the tracker is local), but if you use GitHub later, check the labels exist after setup.</p>
+
+<h2>3. The run plan</h2>
+<p>This is the whole flow, with the boundary move written between steps. Print it, or keep it beside the terminal.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[4]</a></p>
+
+<div class="table-wrap"><table>
+  <tr><th>#</th><th>Run</th><th>What good looks like</th><th>Then</th></tr>
+  <tr><td>1</td><td><code>/grill-with-docs</code> "daily streaks for habits"</td><td>One question at a time. It reads <code>app.py</code> itself instead of asking you facts. <code>GLOSSARY.md</code> gains <em>Habit</em>, <em>Check-in</em>, and <em>Streak</em>. Maybe one ADR (storage?), but only if it passes all three tests.</td><td>Continue</td></tr>
+  <tr><td>1b</td><td><em>Only if</em> a question won't settle on paper (for example "does a 00:30 check-in count for yesterday?")</td><td><code>/handoff</code> out, then <code>/prototype</code> (logic branch) in its own directory, then <code>/handoff</code> back</td><td>Back to the thread</td></tr>
+  <tr><td>2</td><td><code>/to-spec</code></td><td>No new interview. Nothing in it you didn't decide. Seams first, ideally one: the streak calculation.</td><td>Continue</td></tr>
+  <tr><td>3</td><td><code>/to-tickets</code></td><td>About 3–5 vertical slices, each one demoable. Look for something like: add and list a habit (stored) → check in today → show the streak → a missed day breaks it. Blocking edges are declared. Setting up pytest is folded into the first slice, not a ticket of its own.</td><td><code>/clear</code></td></tr>
+  <tr><td>4</td><td><code>/implement</code> on the frontier ticket (blockers first)</td><td>Red → green at the agreed seam. Mocks only at real system boundaries. A commit, then the two-axis review inside the run.</td><td><code>/clear</code>, then the next ticket</td></tr>
+  <tr><td>5</td><td>Optional: a whole-branch review with <code>mattpocock-skills:code-review</code> (not the built-in <code>/code-review</code>)</td><td>Standards and Spec reported separately, never merged</td><td>Subagent, or a fresh session</td></tr>
+  <tr><td>6</td><td><code>/retro</code>, after the roughest ticket's session, before you clear</td><td>Every candidate traces to a moment in the session. Expect "no guardrail": wire <code>pytest</code> into a pre-commit hook.</td><td><code>/clear</code></td></tr>
+  <tr><td>7</td><td>After the feature: <code>/improve-codebase-architecture</code> "don't grill me, just show the report"</td><td>Cards name your nouns ("the Streak module"). If they're all <code>Speculative</code>, the code is fine.</td><td>One candidate becomes a new idea for step 1</td></tr>
+</table></div>
+
+<p><strong>Signals to stop and correct</strong> (each comes from an earlier lesson):</p>
+<ul>
+  <li>Grilling asks you something the code could answer → "check the code yourself" (Lesson 2).</li>
+  <li>Tickets cut by layer (model / route / template) → ask for vertical slices again (Lesson 3).</li>
+  <li>The agent theorises about a failing behaviour with no red command → <code>/diagnosing-bugs</code> (Lesson 6).</li>
+  <li>You're tempted to <code>/triage</code> your own tickets → don't (Lesson 6).</li>
+  <li>You're tempted to add a line to <code>CLAUDE.md</code> after a mistake → it's a check or a standard instead (Lesson 7).</li>
+</ul>
+
+<h2>4. Practice: rehearse the run</h2>
+
+<h3>Drill A: boundary moves on this run</h3>
+<p>These are the same five questions as Lesson 5, now at your run's real boundaries.</p>
+<div class="walk" data-walk="run"></div>
+
+<h3>Drill B: the mission, from memory</h3>
+<p>Write the four failure modes and the fix for each. Then write the main flow with its branches and both on-ramps, without looking at the run plan above.</p>
+<div class="recall">
+  <textarea aria-label="Your answer" style="min-height:9rem"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <p><strong>Failures → fixes:</strong> 1. It didn't do what I want → grilling (<code>/grill-with-docs</code>). 2. Way too verbose → a shared language (<code>GLOSSARY.md</code>). 3. The code doesn't work → feedback loops (<code>/tdd</code>, <code>/diagnosing-bugs</code>). 4. Ball of mud → deep modules (<code>/improve-codebase-architecture</code>).</p>
+    <p><strong>Main flow:</strong> <code>/grill-with-docs</code> → (prototype detour via <code>/handoff</code> if talking can't settle it) → multi-session? <em>yes</em>: <code>/to-spec</code> → <code>/to-tickets</code> → <code>/implement</code> per ticket with <code>/clear</code> between (or <code>/implement-spec</code>); <em>no</em>: <code>/implement</code> right there. Inside: <code>/tdd</code> + <code>/code-review</code>. Close with <code>/retro</code>.</p>
+    <p><strong>On-ramps:</strong> <code>/triage</code> (others' issues → <code>/implement</code>), <code>/diagnosing-bugs</code> (→ fix + <code>/retro</code>), <code>/wayfinder</code> (→ <code>/to-spec</code>). <strong>Upkeep:</strong> <code>/improve-codebase-architecture</code>.</p>
+  </div>
+</div>
+
+<h2>5. Mission check</h2>
+<div class="table-wrap"><table>
+  <tr><th>Mission success criterion</th><th>Where</th><th>Status</th></tr>
+  <tr><td>Name the 4 failure modes and their fixes</td><td><a href="0001-the-map.html">L1</a>, Drill B</td><td>Done (8/8 in L1)</td></tr>
+  <tr><td>Walk the main flow and its branches</td><td><a href="0002-grilling.html">L2</a>–<a href="0004-build.html">L4</a>, <a href="0006-on-ramps.html">L6</a>, Drill B</td><td>Done</td></tr>
+  <tr><td>Pick the right phase-boundary move</td><td><a href="0005-phase-boundaries.html">L5</a>, Drill A</td><td>Done</td></tr>
+  <tr><td>Install, set up, and take one real feature through the flow</td><td>This lesson, then the run</td><td><strong>Yours to do</strong></td></tr>
+</table></div>
+
+<h3>After the run (the real feedback loop)</h3>
+<p>Come back to this workspace and tell me how it went. Good things to report: where grilling surprised you, how many tickets <code>/to-tickets</code> made, the first moment you overrode the agent, and what <code>/retro</code> found. I'll write it up as a learning record and decide with you what's next. Candidates include <code>/implement-spec</code> with parallel worktrees, wayfinder on a bigger effort, or nothing at all, if the flow just works.</p>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md"><code>ask-matt/SKILL.md</code></a> in full (8 minutes). It's Pocock's own map of everything you've learned, and you can now read every line of it. Keep the <a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/setup-matt-pocock-skills.md">setup guide</a> open while you run setup.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code, during the run too. Good questions: "grilling asked me X, is that a fact or a decision?", "are these tickets vertical?", or "which boundary move now?". In the project you can also run <code>/ask-matt</code>, the plugin's own router.</p>
+</div>
+
+<p>Keep these beside the terminal: the <a href="../reference/skill-map.html">Skill Map</a>, the <a href="../reference/context-card.html">Context Card</a>, the <a href="../reference/planning-card.html">Planning Card</a>, the <a href="../reference/build-card.html">Build Card</a>, the <a href="../reference/on-ramps-card.html">On-ramps Card</a>, and the <a href="../reference/health-card.html">Health Card</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0007-codebase-health.html">← Lesson 7: Codebase Health</a>
+  <a href="../index.html">Course index</a>
+</nav>
+
+</main>
+<script src="0008-capstone.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ);
+
+Walk.register("run", {
+  steps: [
+    { q: "Does the next phase need this one verbatim, or is there room left for it?", outcome: "Continue" },
+    { q: "Is everything in this context disposable for what comes next?", outcome: "/clear" },
+    { q: "Does the work have to travel (harness, directory, colleague, fork)?", outcome: "/handoff" },
+    { q: "Can the next task run AFK, with no steering from you?", outcome: "Subagent" },
+    { q: "Relevant context, same place, and you stay in the loop?", outcome: "/compact, with an instruction" }
+  ],
+  scenarios: [
+    { text: "Grilling on daily streaks is done at 60k tokens. <code>GLOSSARY.md</code> has Habit, Check-in, and Streak. Next: <code>/to-spec</code>.", stop: 0,
+      why: { 0: "Lesson 5's rule: keep grilling → spec → tickets in one window. The spec wants the reasoning verbatim." } },
+    { text: "Mid-grilling: \"does a 00:30 check-in count for yesterday?\" won't settle on paper. You want a clickable logic prototype in its own directory, and you want to keep grilling here.", stop: 2,
+      why: { 0: "The prototype needs its own window and directory.", 1: "No. This grilling thread is the thing you're keeping.", 2: "A new directory and a mid-phase fork. Hand off out, prototype, then hand off back." } },
+    { text: "Ticket 01 (add and list a habit, stored) is committed. The window is at 110k, mostly Flask and SQLite exploration. Next: ticket 02, which is self-contained.", stop: 1,
+      why: { 0: "Ticket 02 reads its ticket, not this session, and there's little smart zone left.", 1: "Tickets are sized to stand alone, so this exploration is disposable." } },
+    { text: "All four tickets are in. You want one Standards + Spec review of the whole branch, and you'll fix the findings here afterwards.", stop: 3,
+      why: { 0: "Reviewing in the context that wrote the code invites confirmation bias.", 1: "No. You need this context to apply the fixes.", 2: "Nothing is leaving this harness or directory.", 3: "Reading a diff against a written spec is the standard AFK case." } },
+    { text: "The fixes are done. The session was rough: 25 tool calls to find the templates, and a test the agent kept running from the wrong folder. Next: <code>/retro</code>.", stop: 0,
+      why: { 0: "Retro wants the session it reviews as a primary source, so run it before you clear." } },
+    { text: "The retro's changes (a pre-commit hook and a pointer in <code>CLAUDE.md</code>) are committed. Tomorrow you start an unrelated \"weekly summary email\" feature.", stop: 1,
+      why: { 0: "The new feature doesn't need today's session.", 1: "What mattered is now on disk: code, glossary, hook. The rest is disposable." } }
+  ]
+});
+</script>
+</body>
+</html>

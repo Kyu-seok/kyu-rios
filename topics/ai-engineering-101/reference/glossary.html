@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Engineering Glossary</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  dt { font-weight: 600; margin-top: 1.1rem; }
+  dd { margin: .2rem 0 0; }
+  .avoid { font: .82rem var(--sans); color: var(--muted); display: block; margin-top: .15rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>Glossary</h1>
+<p class="subtitle">The canonical terms for this course, following Huyen's usage. A term is added only after you've shown you can use it.</p>
+<p class="meta">Reference</p>
+
+<h2>Foundations</h2>
+<dl>
+<dt>Token</dt>
+<dd>The basic unit a language model reads and writes: a character, a word, or part of a word. About ¾ of a word for GPT-4, so 100 tokens ≈ 75 words.</dd>
+
+<dt>Language model</dt>
+<dd>A model encoding the statistics of language. In this course it always means an <em>autoregressive</em> one, which predicts the next token from the preceding tokens.<span class="avoid">Ambiguity: masked models (e.g. BERT) fill in blanks instead; they're mentioned but not our focus.</span></dd>
+
+<dt>Self-supervision</dt>
+<dd>Training where the labels come from the input itself: each next token is the label for the tokens before it. This is what let language models scale.<span class="avoid">Avoid: unsupervised learning (that needs no labels at all)</span></dd>
+
+<dt>Foundation model</dt>
+<dd>A large general-purpose model (an LLM or large multimodal model) that applications are built on top of.<span class="avoid">Avoid: “LLM” when the model also handles images or audio</span></dd>
+
+<dt>AI engineering</dt>
+<dd>Building applications on top of foundation models: less about model development, more about adapting and evaluating models.<span class="avoid">Avoid: LLMOps, AIOps</span></dd>
+
+<dt>AI stack</dt>
+<dd>The three layers of any AI application: application development, model development, and infrastructure. Work starts at the top and moves down as needed.</dd>
+</dl>
+
+<h2>Adaptation</h2>
+<dl>
+<dt>Model adaptation</dt>
+<dd>Making an existing model fit your task. Its two families are prompt-based techniques (no weight change) and finetuning (weights change).</dd>
+
+<dt>Prompt engineering</dt>
+<dd>Adapting a model through its input alone (instructions, examples, context) without changing its weights.<span class="avoid">Avoid: “training” or “finetuning” ChatGPT by pasting text into it</span></dd>
+
+<dt>RAG (retrieval-augmented generation)</dt>
+<dd>A prompt-based technique that retrieves relevant information (e.g. from a database) and adds it to the model's context.</dd>
+
+<dt>Pre-training</dt>
+<dd>Training a model from randomly initialized weights. For LLMs this means training for text completion. By far the most expensive stage.</dd>
+
+<dt>Finetuning</dt>
+<dd>Continuing to train an already-trained model, which updates its weights.</dd>
+
+<dt>Post-training</dt>
+<dd>Training after pre-training, done by the <em>model developer</em> (e.g. to follow instructions).<span class="avoid">Ambiguity: conceptually the same as finetuning. In this course, “post-training” is what the model provider does and “finetuning” is what you as the app developer do.</span></dd>
+</dl>
+
+<h2>Sampling</h2>
+<dl>
+<dt>Sampling</dt>
+<dd>How a model picks each output token from its probability distribution over the vocabulary. It is the source of AI's probabilistic behavior.</dd>
+
+<dt>Greedy sampling</dt>
+<dd>Always picking the most likely token, equivalent to temperature 0. Consistent but bland.</dd>
+
+<dt>Top-p (nucleus) sampling</dt>
+<dd>Sampling only from the smallest set of top tokens whose probabilities add up to p, so the candidate pool grows or shrinks with the context.</dd>
+
+<dt>Stopping condition</dt>
+<dd>A rule that ends generation: a maximum token count, or stop tokens. It caps cost and latency but can truncate structured output.</dd>
+
+<dt>Test-time compute</dt>
+<dd>Spending more inference on a query, e.g. generating N candidates and keeping the best (best-of-N). Costs roughly N×.<span class="avoid">Ambiguity: “test time” here means inference in general, not only testing.</span></dd>
+
+<dt>Inconsistency</dt>
+<dd>A model giving different outputs for the same or nearly the same input. It can't be fully removed even with temperature 0 and a fixed seed, because the serving hardware matters.</dd>
+<dt>Temperature</dt>
+<dd>A sampling knob that divides the logits before softmax. <em>Lower</em> temperature sharpens the distribution, so the top token gets likelier and output is more consistent. <em>Higher</em> temperature flattens it, so output is more varied (“creative”). 0 means greedy.</dd>
+
+<dt>Hallucination</dt>
+<dd>A model stating something not grounded in fact or in its context. Huyen gives two hypotheses. <em>Self-delusion</em>: the model can't tell its own generated text from given facts, so one wrong token snowballs. <em>Knowledge mismatch</em>: SFT taught it to imitate labelers' answers that used knowledge the model doesn't have, so it learns to make things up.</dd>
+</dl>
+
+<h2>Prompting</h2>
+<dl>
+<dt>In-context learning</dt>
+<dd>A model learning a task from instructions and examples in its prompt, with no weight update. Each example is a <em>shot</em>: zero-shot has none, few-shot has a handful.</dd>
+
+<dt>System prompt</dt>
+<dd>The developer's instructions, sent separately from the user prompt. Both are joined into one sequence before the model sees them.</dd>
+
+<dt>Chat template</dt>
+<dd>The model-specific format (special tokens, roles) that joins system, user and assistant messages into one sequence. A mismatch fails silently.<span class="avoid">Not the same as a prompt template, which is your own fill-in-the-blanks string.</span></dd>
+
+<dt>Chain-of-thought (CoT)</dt>
+<dd>Asking the model to reason step by step before answering. It improves accuracy but costs output tokens and latency.</dd>
+
+<dt>Prompt injection / jailbreaking</dt>
+<dd>Getting a model to ignore its intended instructions. Huyen uses “jailbreaking” for both. <em>Indirect</em> prompt injection delivers the instruction through tool outputs or retrieved content.</dd>
+
+<dt>Instruction hierarchy</dt>
+<dd>Training a model to prioritize instructions: system prompt &gt; user prompt &gt; model outputs &gt; tool outputs.</dd>
+</dl>
+
+<p class="lesson-nav"><a href="book-map.html">Book Map</a><a href="sampling.html">Sampling</a><a href="prompting.html">Prompting</a><a href="rag.html">RAG</a></p>
+</main>
+</body>
+</html>

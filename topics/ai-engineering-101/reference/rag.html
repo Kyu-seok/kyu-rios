@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Cheat Sheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+<h1>Retrieval-Augmented Generation</h1>
+<p class="subtitle">Retriever + generator: how to build it, measure it and fix it.</p>
+<p class="meta">Reference · Chapter 6 (RAG)</p>
+
+<h2>Shape</h2>
+<ul>
+  <li><strong>Indexing</strong> (ahead of time): documents → chunks → index (inverted index for terms; vector DB for embeddings).</li>
+  <li><strong>Querying</strong> (per request): query → retriever → top-k chunks → generator (query + chunks) → answer.</li>
+  <li>Knowledge base under ~200K tokens (~500 pages, Anthropic's guidance for Claude)? Try putting it all in the prompt first.</li>
+</ul>
+
+<h2>Retrievers</h2>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Term-based (TF-IDF, BM25)</th><th>Embedding-based</th></tr></thead>
+<tbody>
+<tr><td>Matches</td><td>Words</td><td>Meaning</td></tr>
+<tr><td>Strength</td><td>Fast, cheap, strong baseline; exact codes and names</td><td>Paraphrases and natural queries; improvable by finetuning</td></tr>
+<tr><td>Weakness</td><td>Synonyms; ambiguous terms</td><td>Exact strings; cost (embedding, storage, ANN search)</td></tr>
+</tbody></table></div>
+<p><strong>Hybrid search</strong>: in sequence (cheap fetch → precise rerank) or in parallel (reciprocal rank fusion: Σ 1/(k + rank), k ≈ 60).</p>
+
+<h2>Measure</h2>
+<ul>
+  <li><strong>Context precision</strong> = relevant retrieved ÷ retrieved. Easy: judge only what was retrieved.</li>
+  <li><strong>Context recall</strong> = relevant retrieved ÷ all relevant. Hard: every document must be labeled per query.</li>
+  <li>Ranking-aware metrics: NDCG, MAP, MRR. Embedding benchmark: MTEB.</li>
+  <li>Evaluate retrieval, embeddings and the final answer <strong>separately</strong>. A correct chunk that was never retrieved is a retriever bug.</li>
+</ul>
+
+<h2>Fix</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Symptom</th><th>Tactic</th></tr></thead>
+<tbody>
+<tr><td>Exact codes or names missed by embeddings</td><td>Hybrid search</td></tr>
+<tr><td>Facts cut at chunk boundaries; chunks too big or small</td><td>Chunking: recursive splits, overlap, tune size</td></tr>
+<tr><td>Too many candidates; stale results</td><td>Reranking (precision or recency)</td></tr>
+<tr><td>Follow-ups like “How about Emily?”</td><td>Query rewriting</td></tr>
+<tr><td>Chunks lack their document's context; users phrase things differently from the docs</td><td>Contextual retrieval: add tags, questions answered, a 50–100-token summary</td></tr>
+</tbody></table></div>
+
+<h2>Beyond text</h2>
+<ul>
+  <li><strong>Multimodal</strong>: retrieve images by caption or with joint embeddings (CLIP).</li>
+  <li><strong>Tabular</strong>: text-to-SQL → execute → generate.</li>
+  <li>Retrieved content is untrusted: indirect prompt injection (see <a href="prompting.html">Prompting</a>).</li>
+</ul>
+
+<p class="lesson-nav"><a href="../lessons/0006-rag.html">← Lesson 6</a><a href="evaluation.html">Evaluation</a><a href="glossary.html">Glossary</a></p>
+</main>
+</body>
+</html>

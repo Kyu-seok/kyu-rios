@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six Orchestration Shapes</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/patterns.js"></script>
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Agent Orchestration</p>
+<h1>Six Orchestration Shapes</h1>
+<p class="subtitle">From Anthropic's "Building effective agents." Pick the simplest one that works.</p>
+
+<p><strong>Workflow</strong> = you design the path in code. <strong>Agent</strong> = the model directs its own path. <strong>Graph</strong> = a workflow whose nodes may be agents. All are built from the <em>augmented LLM</em> (model + retrieval + tools + memory). <a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[source]</a></p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>Shape</th><th>Who decides path</th><th>Use when</th></tr>
+  <tr><td>① Prompt chaining</td><td>You</td><td>Same fixed steps every time; add code gates between steps</td></tr>
+  <tr><td>② Routing</td><td>You (classifier picks branch)</td><td>Distinct input categories, reliably classifiable</td></tr>
+  <tr><td>③ Parallelization</td><td>You</td><td>Independent parts (sectioning) or several attempts (voting)</td></tr>
+  <tr><td>④ Orchestrator-workers</td><td>You fix the shape; the orchestrator picks subtasks</td><td>Subtasks only known at runtime</td></tr>
+  <tr><td>⑤ Evaluator-optimizer</td><td>You</td><td>Clear criteria; refining measurably helps (the evaluator may be tests)</td></tr>
+  <tr><td>⑥ Autonomous agent</td><td>Model</td><td>Open-ended, unpredictable number of steps; needs a strong harness</td></tr>
+</table>
+</div>
+
+<div class="pattern-card"><h3>① Prompt chaining</h3><div class="pattern" data-pattern="chain"></div></div>
+<div class="pattern-card"><h3>② Routing</h3><div class="pattern" data-pattern="route"></div></div>
+<div class="pattern-card"><h3>③ Parallelization</h3><div class="pattern" data-pattern="parallel"></div></div>
+<div class="pattern-card"><h3>④ Orchestrator-workers</h3><div class="pattern" data-pattern="orchestrator"></div></div>
+<div class="pattern-card"><h3>⑤ Evaluator-optimizer</h3><div class="pattern" data-pattern="evaluator"></div></div>
+<div class="pattern-card"><h3>⑥ Autonomous agent</h3><div class="pattern" data-pattern="agent"></div></div>
+
+<h3>Decision key: ask in order, stop at the first yes</h3>
+<ol>
+  <li>Model picks its own steps, unknown count? → <strong>Autonomous agent</strong></li>
+  <li>Work sent <em>back</em> to be redone? → <strong>Evaluator-optimizer</strong></li>
+  <li>Each input takes one branch of several? → <strong>Routing</strong></li>
+  <li>Simultaneous calls, list fixed by you in code? → <strong>Parallelization</strong></li>
+  <li>Simultaneous calls, list decided by a model after seeing input? → <strong>Orchestrator-workers</strong></li>
+  <li>Otherwise, fixed sequence (gates only stop, never send back) → <strong>Prompt chaining</strong></li>
+</ol>
+<h3>Choosing, simplest first</h3>
+<ol>
+  <li>One call (+ retrieval, examples)</li>
+  <li>Chaining / routing / parallelization</li>
+  <li>+ evaluator-optimizer if criteria are clear</li>
+  <li>Orchestrator-workers if subtasks emerge at runtime</li>
+  <li>Autonomous agent if steps are unpredictable</li>
+</ol>
+<p class="muted">Introduced in <a href="../lessons/0002-workflows-vs-agents.html">Lesson 2: Workflows vs Agents</a>; decision key from <a href="../lessons/0003-telling-shapes-apart.html">Lesson 3</a>.</p>
+</main>
+</body>
+</html>

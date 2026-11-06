@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Health Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>Health Card</h1>
+<p class="subtitle">Keep the next feature easy: deepen the code, and fix the agent's environment.</p>
+<p class="muted" style="font-size:.85rem">Sources: <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md"><code>codebase-design</code></a> (+ <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/DEEPENING.md"><code>DEEPENING.md</code></a>), <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md"><code>improve-codebase-architecture</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/retro/SKILL.md"><code>retro</code></a>, and their <a href="https://github.com/mattpocock/skills/tree/main/docs/engineering">guides</a>, commit <code>5beb35b</code>.</p>
+
+<h2>Vocabulary (use these words exactly)</h2>
+<div class="table-wrap"><table>
+  <tr><th>Say</th><th>Means</th><th>Not</th></tr>
+  <tr><td>Module</td><td>Anything with an interface and an implementation, at any scale</td><td>unit, component, service</td></tr>
+  <tr><td>Interface</td><td>Everything a caller must know: types, invariants, ordering, errors, config, performance</td><td>API, signature</td></tr>
+  <tr><td>Seam</td><td>Where an interface lives; you can change behaviour there without editing there</td><td>boundary</td></tr>
+  <tr><td>Adapter</td><td>A concrete thing filling the slot at a seam (a role)</td><td></td></tr>
+  <tr><td>Depth</td><td>Behaviour per unit of interface learned. Deep = small interface, lots behind it</td><td>lines ratio</td></tr>
+  <tr><td>Leverage / Locality</td><td>What callers get / what maintainers get from depth</td><td></td></tr>
+</table></div>
+
+<h2>Four principles</h2>
+<ol>
+  <li><strong>Deletion test</strong>: if complexity vanishes, the module was a pass-through; if it reappears across callers, it earns its keep.</li>
+  <li><strong>The interface is the test surface.</strong> Wanting to test past it means the module is the wrong shape.</li>
+  <li><strong>One adapter = hypothetical seam; two = real.</strong></li>
+  <li><strong>Depth belongs to the interface.</strong> Internal seams stay private.</li>
+</ol>
+
+<h2>Testing across the seam, by dependency</h2>
+<div class="table-wrap"><table>
+  <tr><th>Dependency</th><th>Test with</th></tr>
+  <tr><td>In-process</td><td>Merge and test directly; no adapter</td></tr>
+  <tr><td>Local-substitutable</td><td>A local stand-in (PGLite, in-memory FS)</td></tr>
+  <tr><td>Remote but owned</td><td>A port: HTTP adapter for production, in-memory adapter for tests</td></tr>
+  <tr><td>True external</td><td>An injected port with a mock adapter</td></tr>
+</table></div>
+<p>Replace, don't layer: once tests at the deepened interface exist, delete the old shallow unit tests.</p>
+
+<h2><code>/improve-codebase-architecture</code></h2>
+<ol>
+  <li>Scope: take your direction, or read <code>git log</code> for hot spots. Best prompt: point it at the next spec and ask "how can we make this change easy?"</li>
+  <li>A subagent explores; each candidate must pass the deletion test.</li>
+  <li>An HTML report in <code>$TMPDIR</code>, with badges <code>Strong</code> / <code>Worth exploring</code> / <code>Speculative</code>. It then <strong>stops and asks</strong>. It changes no code.</li>
+  <li>Grill one candidate → decision → <code>/to-spec</code> → <code>/to-tickets</code> → <code>/implement</code>. Use one candidate per session.</li>
+</ol>
+<ul>
+  <li>All <code>Speculative</code> means it found nothing.</li>
+  <li>If it over-grills, say "don't grill me, just show the report."</li>
+  <li>A rejection with a lasting reason becomes an ADR.</li>
+  <li>Never drive a session with <code>/codebase-design</code> alone. It's a reference, not a process.</li>
+</ul>
+
+<h2><code>/retro</code>: where each finding goes</h2>
+<div class="table-wrap"><table>
+  <tr><th>Session symptom</th><th>Fix</th></tr>
+  <tr><td>Slow to find a file or fact</td><td>Navigation pointer</td></tr>
+  <tr><td>A mistake a tool could catch (mechanical)</td><td>Deterministic check: lint, hook, or CI</td></tr>
+  <tr><td>The reviewer missed a judgement call</td><td><code>CODING_STANDARDS.md</code> (read by the reviewer)</td></tr>
+  <tr><td>Couldn't reach information</td><td>Widen access (tee logs, read-only service access)</td></tr>
+  <tr><td>Bloated <code>CLAUDE.md</code>/<code>AGENTS.md</code></td><td>Move steering out; delete no-ops</td></tr>
+</table></div>
+<ul>
+  <li>Check the existing guardrails first: an unwired check gets wired up. No guardrail at all is a finding in itself.</li>
+  <li>Run it in the same session; past the smart zone, <code>/clear</code> and point it at the log.</li>
+  <li>It only proposes. Discard any candidate you can't trace to a specific moment.</li>
+  <li><code>CLAUDE.md</code> is for navigation pointers only.</li>
+</ul>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a> · <a href="skill-map.html">Skill Map</a> · <a href="on-ramps-card.html">On-ramps Card</a> · <a href="build-card.html">Build Card</a></p>
+</main>
+</body>
+</html>

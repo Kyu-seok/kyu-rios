@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill Map</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/flow.js"></script>
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>Skill Map</h1>
+<p class="subtitle">The core skills, grouped by where they sit in the workflow.</p>
+<p class="muted" style="font-size:.85rem">Source: <a href="https://github.com/mattpocock/skills">mattpocock/skills</a> README and the <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md"><code>ask-matt</code></a> router, at commit <code>5beb35b</code> (2026-10-19). When in doubt, type <code>/ask-matt</code>.</p>
+
+<h2>Setup (once per repo)</h2>
+<pre><code>claude plugin install mattpocock-skills@claude-plugins-official
+# then, inside Claude Code, in the repo:
+/setup-matt-pocock-skills   # issue tracker, triage labels, where docs go</code></pre>
+
+<h2>Four failures → fixes</h2>
+<div class="table-wrap"><table>
+  <tr><th>Failure</th><th>Fix</th></tr>
+  <tr><td>Didn't do what I want (misalignment)</td><td><code>/grill-with-docs</code> · <code>/grill-me</code></td></tr>
+  <tr><td>Way too verbose (no shared language)</td><td><code>GLOSSARY.md</code> via <code>/grill-with-docs</code>, <code>/domain-modeling</code></td></tr>
+  <tr><td>Code doesn't work (no feedback)</td><td><code>/tdd</code> · <code>/diagnosing-bugs</code></td></tr>
+  <tr><td>Ball of mud (entropy)</td><td><code>/improve-codebase-architecture</code> · <code>/codebase-design</code></td></tr>
+</table></div>
+
+<h2>Main flow: idea → ship</h2>
+<div class="flow"></div>
+<p style="font-size:.9rem">Keep grill → spec → tickets in <strong>one unbroken context</strong>. Each <code>/implement</code> starts fresh.</p>
+
+<h2>Catalogue</h2>
+<div class="table-wrap"><table>
+  <tr><th>Skill</th><th>Who</th><th>What it does</th></tr>
+  <tr><td colspan="3"><strong>Align</strong></td></tr>
+  <tr><td><code>/grill-with-docs</code></td><td><span class="inv user">user</span></td><td>Interview that also updates <code>GLOSSARY.md</code> and ADRs. Use it in a repo.</td></tr>
+  <tr><td><code>/grill-me</code></td><td><span class="inv user">user</span></td><td>Same interview, stateless. Use it without a repo.</td></tr>
+  <tr><td><code>/grilling</code></td><td><span class="inv model">model</span></td><td>The interview primitive: design tree, rounds, frontier</td></tr>
+  <tr><td><code>/prototype</code></td><td><span class="inv model">model</span></td><td>Throwaway code that answers one design question</td></tr>
+  <tr><td><code>/research</code></td><td><span class="inv model">model</span></td><td>A background agent writes a cited Markdown file from primary sources</td></tr>
+  <tr><td colspan="3"><strong>Plan</strong></td></tr>
+  <tr><td><code>/to-spec</code></td><td><span class="inv user">user</span></td><td>Turns the conversation into a spec on the tracker. No interview.</td></tr>
+  <tr><td><code>/to-tickets</code></td><td><span class="inv user">user</span></td><td>Splits the plan into tracer-bullet tickets with blocking edges</td></tr>
+  <tr><td colspan="3"><strong>Build</strong></td></tr>
+  <tr><td><code>/implement</code></td><td><span class="inv user">user</span></td><td>Builds a spec or ticket: <code>/tdd</code>, then <code>/code-review</code>, then commit</td></tr>
+  <tr><td><code>/implement-spec</code></td><td><span class="inv user">user</span></td><td>Builds a whole spec as a task graph with parallel subagents on one integration branch</td></tr>
+  <tr><td><code>/tdd</code></td><td><span class="inv model">model</span></td><td>Red → green, one vertical slice at a time, only at pre-agreed seams (refactor step removed June 2026; refactoring now lives in <code>/code-review</code>)</td></tr>
+  <tr><td><code>/code-review</code></td><td><span class="inv model">model</span></td><td>Reviews the diff on two axes, Standards and Spec, in parallel subagents</td></tr>
+  <tr><td><code>/pr</code></td><td><span class="inv model">model</span></td><td>PR body: smallest visual, before/after evidence, one-way or two-way door call</td></tr>
+  <tr><td colspan="3"><strong>Improve</strong></td></tr>
+  <tr><td><code>/retro</code></td><td><span class="inv user">user</span></td><td>Suggests fixes to the agent's environment after a session</td></tr>
+  <tr><td><code>/improve-codebase-architecture</code></td><td><span class="inv user">user</span></td><td>Surveys the codebase for deepening opportunities. Run it every few days.</td></tr>
+  <tr><td><code>/codebase-design</code></td><td><span class="inv model">model</span></td><td>Deep-module vocabulary: module, interface, depth, seam, adapter</td></tr>
+  <tr><td><code>/domain-modeling</code></td><td><span class="inv model">model</span></td><td>Sharpens domain terms in <code>GLOSSARY.md</code> and records ADRs</td></tr>
+  <tr><td colspan="3"><strong>On-ramps (they join the main flow)</strong></td></tr>
+  <tr><td><code>/triage</code></td><td><span class="inv user">user</span></td><td>Turns raw issues you didn't write into agent-ready ones</td></tr>
+  <tr><td><code>/diagnosing-bugs</code></td><td><span class="inv model">model</span></td><td>For hard bugs: get a red feedback loop, then minimise → hypothesise → instrument → fix</td></tr>
+  <tr><td><code>/wayfinder</code></td><td><span class="inv user">user</span></td><td>Maps work too big for one session as decision tickets</td></tr>
+  <tr><td colspan="3"><strong>Session tools</strong></td></tr>
+  <tr><td><code>/handoff</code></td><td><span class="inv user">user</span></td><td>Writes a portable doc for a new harness, directory or colleague</td></tr>
+  <tr><td><code>/wait-what</code></td><td><span class="inv user">user</span></td><td>Re-explains the agent's last message in plain English</td></tr>
+  <tr><td><code>/ask-matt</code></td><td><span class="inv user">user</span></td><td>Router: "which skill fits my situation?"</td></tr>
+</table></div>
+
+<p style="font-size:.9rem"><span class="inv user">user</span> = runs only when you type it, and orchestrates. <span class="inv model">model</span> = the agent may also pick it up, and it holds reusable discipline. A user-invoked skill may call model-invoked skills, but never another user-invoked one.</p>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a></p>
+</main>
+</body>
+</html>

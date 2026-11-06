@@ -1,0 +1,23 @@
+---
+import Site from '../../layouts/Site.astro';
+import { getSite } from '../../lib/site';
+
+const site = getSite();
+---
+
+<Site title="Review" description="Spaced-repetition Review of every Published Lesson's quiz questions. Progress stays in your browser.">
+  <p class="kicker">Review</p>
+  <h1>Review what is due</h1>
+  <p class="lede">{site.review.cards.length} Review cards from {site.topics.length} Topics, scheduled with FSRS. Your Progress is saved in this browser only.</p>
+
+  <div data-review>
+    <p class="muted">Loading…</p>
+  </div>
+</Site>
+
+<script>
+  import { clientBase } from '../../lib/base';
+  import { mountReview } from '../../client/review';
+  const base = clientBase;
+  mountReview(document.querySelector<HTMLElement>('[data-review]')!, base);
+</script>

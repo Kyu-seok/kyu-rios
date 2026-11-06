@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Events Land</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<p class="kicker">CCDAK · Lesson 1 · About 15 minutes</p>
+<h1>Where does an event land?</h1>
+<p class="lede">By the end, you can look at a key and a partition count and say what Kafka does and does not promise about order.</p>
+<p>Most ordering questions come down to one thing: which partition an event went to. Four rules cover it.</p>
+
+<h2>The four rules</h2>
+<div class="rule">
+  <strong>1. Order exists inside a partition, not across a topic.</strong>
+  A consumer reads a partition's events in exactly the order they were written. A topic with several partitions has no overall order.
+  <span class="cite"><a href="https://kafka.apache.org/44/getting-started/introduction/">Apache Kafka: Introduction</a></span>
+</div>
+<div class="rule">
+  <strong>2. Same key, same partition, for as long as the partition count stays the same.</strong>
+  The client computes <code>toPositive(murmur2(keyBytes)) % numPartitions</code>. The reverse isn't true: different keys can share a partition.
+  <span class="cite"><a href="https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/producer/internals/BuiltInPartitioner.java">Kafka source: BuiltInPartitioner</a></span>
+</div>
+<div class="rule">
+  <strong>3. No key means sticky, not per-record round-robin.</strong>
+  The default producer stays on one partition until about <code>batch.size</code> bytes have gone to it, then moves on. There is no per-key order to rely on.
+  <span class="cite"><a href="https://kafka.apache.org/44/configuration/producer-configs/">Apache Kafka: partitioner.class</a></span>
+</div>
+<div class="rule">
+  <strong>4. Partitions can only grow, and growing remaps keys.</strong>
+  Shrinking is not supported. After growing, a key may route to a different partition, and existing data does not move, so that key's old and new events can sit in different partitions.
+  <span class="cite"><a href="https://kafka.apache.org/44/operations/basic-kafka-operations/">Apache Kafka: Basic Operations</a></span>
+</div>
+<div class="callout"><strong>Watch out:</strong> older material, including <a href="https://developer.confluent.io/courses/apache-kafka/partitions/">Confluent's Kafka 101</a>, describes keyless events as round-robin. Current Apache docs describe sticky behaviour, and only the explicit <code>RoundRobinPartitioner</code> spreads consecutive records. Both descriptions agree that keyless events spread across partitions with no ordering guarantee.</div>
+
+<h2>Try it: break an ordering guarantee</h2>
+<p>This simulator routes keys with Kafka's real hash. Say your prediction out loud before each step.</p>
+<ol>
+  <li>Send <code>alice</code> twice, then <code>bob</code>, then <code>carol</code>. Which two keys collide? Does that break anything?</li>
+  <li>Click <b>Remove partition</b>. What happens?</li>
+  <li>Click <b>Add partition</b>, then send <code>alice</code> again. Where does it go, and did the old events move?</li>
+  <li>Click <b>Send without key</b> eight times. What pattern do you see?</li>
+</ol>
+<div id="sim"></div>
+
+<h2>Now on a real broker</h2>
+<p>Run this from the <code>learn-kafka</code> folder with Docker running. It starts its own throwaway broker and won't touch your other containers.</p>
+<pre><code>source assets/kafka-lab.sh
+kafka_lab_up
+k kafka-topics.sh --create --topic orders \
+  --partitions 3 --replication-factor 1
+
+printf 'alice:o1\nbob:o2\nalice:o3\ncarol:o4\nalice:o5\nbob:o6\n' | \
+  k kafka-console-producer.sh --topic orders \
+  --reader-property parse.key=true --reader-property key.separator=:
+
+k_peek orders 3</code></pre>
+<p>Compare the output with the simulator. Next, try to shrink the topic, grow it, and send more events. Predict where <code>alice</code> lands first.</p>
+<pre><code>k kafka-topics.sh --alter --topic orders --partitions 2
+k kafka-topics.sh --alter --topic orders --partitions 4
+
+printf 'alice:o7\nbob:o8\ncarol:o9\n' | \
+  k kafka-console-producer.sh --topic orders \
+  --reader-property parse.key=true --reader-property key.separator=:
+
+k_peek orders 4
+kafka_lab_down</code></pre>
+<p>You should see the shrink fail with <code>InvalidPartitionsException</code>, and <code>alice</code> split across partitions 0 and 1. Each <code>k_peek</code> takes a few seconds per partition.</p>
+
+<h2>Check yourself</h2>
+<p>Answer from memory without scrolling up. Getting these slightly wrong now is useful, because the effort of recalling is what makes it stick.</p>
+<div id="quiz"></div>
+
+<h2>Keep going</h2>
+<p><strong>Read next:</strong> the <a href="https://kafka.apache.org/44/getting-started/introduction/">"Main Concepts and Terminology" section of the Apache Kafka introduction</a>. It's short and comes from the project itself.</p>
+<p><strong>Keep for review:</strong> <a href="../reference/keys-and-partitions.html">Keys and partitions cheat sheet</a> and the <a href="../reference/ccdak-roadmap.html">CCDAK exam facts and 4-week roadmap</a>.</p>
+<p><strong>Ask your teacher:</strong> anything unclear is worth asking about in the chat, however small. When you finish, send your quiz score and which questions you missed, so the next lesson starts in the right place.</p>
+<footer>Next: <a href="0002-who-reads-which-partition.html">Lesson 2, Who reads which partition?</a></footer>
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/partition-sim.js"></script>
+<script src="0001-where-does-an-event-land.quiz.js"></script>
+<script>
+PartitionSim.mount(document.getElementById('sim'), { partitions: 3 });
+const INTRO = 'https://kafka.apache.org/44/getting-started/introduction/';
+const OPS = 'https://kafka.apache.org/44/operations/basic-kafka-operations/';
+const PROD = 'https://kafka.apache.org/44/configuration/producer-configs/';
+Quiz.mount(document.getElementById('quiz'), window.QUIZ);
+</script>
+</body>
+</html>

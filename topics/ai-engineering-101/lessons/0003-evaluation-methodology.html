@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Methodology</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+</style>
+</head>
+<body>
+<main>
+
+<h1>Evaluation Methodology</h1>
+<p class="subtitle">How to tell whether an open-ended answer is any good, and where each method fails.</p>
+<p class="meta">Lesson 3 · Previews Chapter 3 · about 18 min</p>
+
+<div class="box win">
+  <span class="box-label">Your win today</span>
+  Given an AI feature, you'll be able to pick the evaluation method that fits it (functional correctness, exact match, lexical or semantic similarity, AI judge, comparative ranking) and name the trap that comes with it.
+</div>
+
+<h2>Warm-up · re-test from Lesson 2</h2>
+<p>These cover the four ideas that didn't stick the first time, asked in new ways. Answer from memory.</p>
+
+<p><strong>Match each kind of training data to the stage that uses it.</strong></p>
+<div class="sorter"
+  data-categories='["Pre-training","Supervised finetuning (SFT)","Preference finetuning"]'
+  data-items='[
+    {"text":"Trillions of tokens of web text, nobody labels anything","answer":"Pre-training","why":"Self-supervised: each next token is its own label. This stage teaches the model to <em>complete</em> text."},
+    {"text":"A labeler writes the ideal reply to “How to make pizza”","answer":"Supervised finetuning (SFT)","why":"(prompt, response) demonstrations teach the model to <em>answer</em> instead of continuing the text."},
+    {"text":"A labeler sees two replies and picks the better one","answer":"Preference finetuning","why":"(prompt, winner, loser) comparison data trains the reward model used in RLHF, or is used directly by DPO."},
+    {"text":"The LLM is optimized to get high scores from a reward model","answer":"Preference finetuning","why":"This is the second half of RLHF: the reward model scores responses and the LLM learns to maximize that score."}
+  ]'></div>
+
+<div class="quiz" data-quiz="check-1"></div>
+
+<h2>1 · Why evaluation is the bottleneck</h2>
+<p>Huyen says the biggest hurdle to shipping AI is often evaluation, which can take up “the majority of the development effort.” Yet many teams just <em>eyeball</em> results with a few favorite prompts. <a class="cite" href="#src">Ch3 intro</a> Foundation models are harder to evaluate than classic ML for several reasons: <a class="cite" href="#src">Ch3 · Challenges</a></p>
+<ul>
+  <li><strong>Smarter is harder to grade.</strong> Anyone can spot a first grader's math error. Checking a coherent book summary may mean reading the book.</li>
+  <li><strong>Open-ended outputs have no single ground truth</strong> to compare against.</li>
+  <li><strong>Black boxes.</strong> You often can't see the training data or architecture, only the outputs.</li>
+  <li><strong>Benchmarks saturate fast.</strong> GLUE (2018) was saturated within a year.</li>
+</ul>
+
+<h2>2 · Perplexity: grading the language model itself</h2>
+<p><strong>Perplexity</strong> measures how uncertain a model is when predicting the next token of a text. <strong>Lower means more confident.</strong> It's the exponential of cross entropy. Structured text such as HTML gets lower perplexity than everyday prose, and a perplexity of 3 roughly means a 1-in-3 guess. <a class="cite" href="#src">Ch3 · Perplexity</a> You won't use it to grade an app, but it shows up in three places:</p>
+<ul>
+  <li><strong>A proxy for capability:</strong> bigger GPT-2 models had consistently lower perplexity.</li>
+  <li><strong>Detecting data contamination:</strong> suspiciously low perplexity on a benchmark suggests the model trained on it.</li>
+  <li><strong>Spotting abnormal text:</strong> gibberish (“home cat go eye”) has very high perplexity.</li>
+</ul>
+<p class="box"><span class="box-label">Caveat</span>Perplexity usually <em>rises</em> after post-training (SFT, RLHF), because a model that has learned to do tasks is no longer just predicting raw text. So it's a poor proxy for chat models. <a class="cite" href="#src">Ch3 · Perplexity Interpretation</a></p>
+
+<h2>3 · Exact evaluation</h2>
+<p>Exact evaluation gives a judgment with no ambiguity. Huyen covers two kinds. <a class="cite" href="#src">Ch3 · Exact Evaluation</a></p>
+
+<h3>Functional correctness: does it actually work?</h3>
+<p>This is “the ultimate metric”: did the website get built, did the reservation go through? It's easy to automate for code, which you can run against unit tests, as HumanEval and text-to-SQL benchmarks do. <strong>pass@k</strong> counts a problem as solved if any of k samples passes all its tests: solve 5 of 10 problems with k = 3 and pass@3 = 50%.</p>
+
+<h3>Similarity against reference data</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Method</th><th>How</th><th>Trap</th></tr></thead>
+<tbody>
+<tr><td><strong>Exact match</strong></td><td>The output equals a reference answer. Fine for short answers like “What's 2 + 3?”</td><td>The lenient “contains the answer” variant passes “September 12, 1929” for Anne Frank's birth year, even though the date is wrong.</td></tr>
+<tr><td><strong>Lexical similarity</strong></td><td>Token or n-gram overlap, or edit distance (fuzzy matching). BLEU and ROUGE are examples.</td><td>Correct answers missing from the reference set score low. OpenAI found BLEU barely differed between correct and incorrect code.</td></tr>
+<tr><td><strong>Semantic similarity</strong></td><td>Turn both texts into <em>embeddings</em> and compare them with cosine similarity (1 = same, −1 = opposite).</td><td>Only as good as the embedding model, and it costs compute.</td></tr>
+</tbody></table></div>
+<p>Lexical vs semantic in one example: “What's up?” and “How are you?” share almost no words but mean nearly the same thing. “Let's eat, grandma” and “Let's eat grandma” look almost identical and mean very different things. <a class="cite" href="#src">Ch3 · Semantic similarity</a></p>
+
+<p class="box"><span class="box-label">Embeddings, briefly</span>An <strong>embedding</strong> is a vector (typically 100 to 10,000 numbers) meant to capture the meaning of a piece of data, so similar texts get nearby vectors. OpenAI's <code>text-embedding-3-small</code> produces 1,536 numbers. CLIP puts text and images in one shared space. Embeddings come back in Chapter 6 (vector search for RAG) and Chapter 8 (deduplication). <a class="cite" href="#src">Ch3 · Introduction to Embedding</a></p>
+
+<h2>4 · AI as a judge</h2>
+<p>This means using a model to evaluate a model's outputs. It's fast and cheap, and it works <strong>without reference data</strong>, so it works in production. On MT-Bench, GPT-4 agreed with humans 85% of the time, more than humans agreed with each other (81%). <a class="cite" href="#src">Ch3 · Why AI as a Judge?</a> It can do three jobs: score a response on its own, compare it with a reference, or pick the better of two responses.</p>
+
+<p><strong>A judge is a model plus a prompt plus sampling settings.</strong> Change any one and you have a different judge. A good judge prompt spells out the task, the criteria, and the scoring system. Classification labels such as good/bad work better than numbers, and a discrete 1–5 scale works better than a continuous one. Include an example for each score. <a class="cite" href="#src">Ch3 · How to Use AI as a Judge</a></p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Limitation</th><th>What it looks like</th></tr></thead>
+<tbody>
+<tr><td>Inconsistency</td><td>It's probabilistic, so the same input can get different scores. Examples in the prompt raised GPT-4's consistency from 65% to 77.5%.</td></tr>
+<tr><td>Criteria ambiguity</td><td>“Faithfulness” is scored 1–5 in MLflow, 0/1 in Ragas, and YES/NO in LlamaIndex. The scores aren't comparable, and a quiet prompt change can shift your metrics.</td></tr>
+<tr><td>Cost and latency</td><td>Judging 3 criteria on every response means 4× the API calls. Spot-checking a sample reduces this.</td></tr>
+<tr><td>Biases</td><td><strong>Self-bias</strong> (favors its own outputs), <strong>first-position bias</strong> (humans have the opposite, recency bias), <strong>verbosity bias</strong> (prefers longer answers even when they contain errors).</td></tr>
+</tbody></table></div>
+<blockquote>Do not trust any AI judge if you can't see the model and the prompt used for the judge.<cite>Huyen, Ch. 3, “Criteria ambiguity”</cite></blockquote>
+<p><strong>Connecting to Lesson 2:</strong> the RLHF <em>reward model</em> is a specialized judge. It takes a (prompt, response) pair and outputs a score. Huyen also describes reference-based judges and <em>preference models</em>, which take two responses and predict which one users would prefer. <a class="cite" href="#src">Ch3 · What Models Can Act as Judges?</a></p>
+
+<h2>5 · Comparative evaluation: ranking by head-to-head matches</h2>
+<p><strong>Pointwise</strong> evaluation scores each model on its own. <strong>Comparative</strong> evaluation shows two models' outputs side by side, records which one wins, and turns the wins into a ranking with a rating algorithm such as Elo or Bradley–Terry. LMSYS Chatbot Arena switched from Elo to Bradley–Terry because Elo was sensitive to the order of evaluations. It works because picking the better song is easier than scoring one. <a class="cite" href="#src">Ch3 · Ranking Models with Comparative Evaluation</a></p>
+<ul>
+  <li><strong>Don't use it for correctness questions.</strong> Letting people vote “Yes” or “No” on whether phone radiation causes tumors produces bad signals.</li>
+  <li><strong>It isn't A/B testing.</strong> In A/B testing a user sees one model's output at a time; here they see several at once.</li>
+  <li><strong>Pairs grow quadratically:</strong> 57 models make 1,596 pairs.</li>
+  <li><strong>Comparative isn't absolute.</strong> “B beats A 51% of the time” doesn't tell you whether either model is good enough, or whether B is worth twice the cost.</li>
+</ul>
+
+<h2>Practice · pick the method</h2>
+<p>For each feature, choose the <em>best primary</em> evaluation method. Commit to an answer before you check.</p>
+<div class="sorter"
+  data-categories='["Functional correctness","Exact match","Semantic similarity","AI as a judge","Comparative evaluation","Perplexity"]'
+  data-items='[
+    {"text":"A text-to-SQL feature: does the generated query return the right rows?","answer":"Functional correctness","why":"Run it and check the result, the same way HumanEval and Spider do. It measures what you actually care about."},
+    {"text":"A trivia bot: “Who was the first woman to win a Nobel Prize?”","answer":"Exact match","why":"There’s one short, unambiguous answer, which is exactly the case exact match handles."},
+    {"text":"Translations where many phrasings are correct, and you have a few reference translations","answer":"Semantic similarity","why":"Meaning matters more than wording, and embeddings tolerate different phrasings better than exact or lexical matching."},
+    {"text":"Live support-chat replies with no reference answers: are they relevant and polite?","answer":"AI as a judge","why":"It needs no reference data and can score any criterion you describe, so it works in production. Spot-check to control cost."},
+    {"text":"Choosing between two candidate models for a story-writing assistant, based on what users like","answer":"Comparative evaluation","why":"Quality here is subjective, and side-by-side preference is easier to judge than an absolute score. The users also know what they like."},
+    {"text":"Checking whether a model saw a public benchmark’s test questions during training","answer":"Perplexity","why":"Unusually low perplexity on the benchmark text suggests it was memorized, i.e. data contamination."}
+  ]'></div>
+
+<h2>Check yourself</h2>
+<div class="quiz" data-quiz="check-2"></div>
+
+<div class="box source" id="src">
+  <span class="box-label">Primary source</span>
+  <p><strong>Read next:</strong> Huyen, <em>AI Engineering</em>, Chapter 3. Read all of <em>“Exact Evaluation,” “AI as a Judge,”</em> and <em>“Ranking Models with Comparative Evaluation.”</em> In <em>“Understanding Language Modeling Metrics,”</em> Huyen says you can skip the math and focus on how to interpret the metrics. Do that: read “Perplexity Interpretation and Use Cases” and skim the rest.</p>
+  <p><strong>From a practitioner, about 20 min:</strong> Hamel Husain, <a href="https://hamel.dev/blog/posts/evals/">“Your AI Product Needs Evals”</a> (2024). It covers layering cheap assertions, human review and LLM judges, and always looking at your data. It's a good bridge to Chapter 4.</p>
+</div>
+
+<div class="box ask">
+  <span class="box-label">Stuck or curious?</span>
+  Ask me anything, e.g. “how is cosine similarity actually computed?” or “when would I use a weaker model as a judge?”. When you're done, tell me your <em>first-try</em> results: the warm-up matching score, the two warm-up questions, the practice sorter, and the quiz.
+</div>
+
+<nav class="lesson-nav">
+  <a href="0002-inside-a-foundation-model.html">← Lesson 2: Inside a Foundation Model</a>
+  <span><a href="../reference/evaluation.html">Reference: Evaluation</a> · <a href="../reference/glossary.html">Glossary</a></span>
+</nav>
+<p style="font:.85rem var(--sans);color:var(--muted);text-align:right"><a href="0004-evaluating-ai-systems.html">Next: Lesson 4, Evaluating AI Systems →</a></p>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="0003-evaluation-methodology.quiz.js"></script>
+<script>
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-1"]'), window.QUIZ.filter((q) => q.section === "check-1"));
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-2"]'), window.QUIZ.filter((q) => q.section === "check-2"));
+</script>
+<script src="../assets/sorter.js"></script>
+</body>
+</html>

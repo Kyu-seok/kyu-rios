@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Skills Map</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/flow.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 1 · Matt Pocock's Skills</p>
+<h1>The Map: Four Failures, One Flow</h1>
+<p class="subtitle">Each skill exists because agents fail in a predictable way.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>When an agent lets you down, you can name <strong>which of the four failures</strong> it was and <strong>which skill</strong> fixes it. You can also walk the <strong>main flow</strong> from idea to shipped code.</p>
+</div>
+
+<div class="note">
+  <p class="label">You've already used one</p>
+  <p>The <code>/teach</code> skill running this course is Pocock's. The copy in <code>~/.claude/skills/teach</code> is identical to the one in his repo.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/teach/SKILL.md">[1]</a> Its learning records work the same way his ADRs do: short, numbered notes that capture decisions which aren't obvious from the code.</p>
+</div>
+
+<h2>1. Idea one: four failures, four fixes</h2>
+
+<p>Pocock describes his repo as "small, easy to adapt, and composable," in contrast to frameworks like GSD, BMAD and Spec-Kit, which "own the process" and "take away your control."<a class="cite" href="https://github.com/mattpocock/skills#readme">[2]</a> Each skill fixes a specific way that coding agents fail:<a class="cite" href="https://github.com/mattpocock/skills#why-these-skills-exist">[3]</a></p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>#</th><th>Failure</th><th>Root cause</th><th>Fix</th></tr>
+  <tr><td>1</td><td><strong>"It didn't do what I want"</strong></td><td>Misalignment. "No-one knows exactly what they want" (<em>Pragmatic Programmer</em>).</td><td>A <strong>grilling session</strong>: <code>/grill-with-docs</code>, or <code>/grill-me</code> when there's no repo</td></tr>
+  <tr><td>2</td><td><strong>"It's way too verbose"</strong></td><td>No shared language, so the agent uses 20 words where 1 would do</td><td>A <strong>glossary</strong> (<code>GLOSSARY.md</code>), built during <code>/grill-with-docs</code></td></tr>
+  <tr><td>3</td><td><strong>"The code doesn't work"</strong></td><td>No feedback loops, so the agent is "flying blind"</td><td><code>/tdd</code> (red → green; see <a href="0004-build.html">Lesson 4</a>) and <code>/diagnosing-bugs</code></td></tr>
+  <tr><td>4</td><td><strong>"We built a ball of mud"</strong></td><td>Agents speed up coding, so they also speed up entropy</td><td><strong>Deep modules</strong>: <code>/improve-codebase-architecture</code> every few days</td></tr>
+</table>
+</div>
+
+<p>Failure 2 has a good before-and-after example. Without a glossary: <em>"There's a problem when a lesson inside a section of a course is made 'real' (i.e. given a spot in the file system)."</em> With one: <em>"There's a problem with the materialization cascade."</em><a class="cite" href="https://github.com/mattpocock/skills#2-the-agent-is-way-too-verbose">[3]</a></p>
+
+<p class="muted" style="font-size:.9rem">Link to your last course: <code>/tdd</code> is a <em>computational sensor</em>, and <code>GLOSSARY.md</code> is an <em>inferential guide</em>. Pocock builds a harness out of skills.</p>
+
+<h2>2. Idea two: the main flow</h2>
+
+<p>Pocock's router skill, <code>/ask-matt</code>, says most work runs along one <strong>main flow</strong>.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[4]</a> Read it from top to bottom:</p>
+
+<div class="flow"></div>
+
+<p>Three rules hold the flow together:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[4]</a></p>
+<ol>
+  <li><strong>Grill every time.</strong> The README says to use grilling "<em>every</em> time you want to make a change."</li>
+  <li><strong>Plan in one window, build in fresh ones.</strong> Keep grilling, spec and tickets in one unbroken context so they share the same thinking. After that, each <code>/implement</code> starts fresh from its ticket.</li>
+  <li><strong>Close with <code>/retro</code>.</strong> It changes the agent's <em>environment</em>, not the code. Mechanical mistakes become automated checks, and judgement calls become coding standards. This is the steering loop from your harness-engineering lesson.</li>
+</ol>
+
+<h2>3. Idea three: who invokes a skill</h2>
+
+<p>The catalogue splits skills on one question: <em>who can start this skill?</em><a class="cite" href="https://github.com/mattpocock/skills#reference">[5]</a></p>
+<ul>
+  <li><span class="inv user">User-invoked</span> skills run only when you type them, like <code>/grill-me</code> or <code>/to-spec</code>. They <strong>orchestrate</strong> the work. In code, this is <code>disable-model-invocation: true</code> in the frontmatter.</li>
+  <li><span class="inv model">Model-invoked</span> skills can also be picked up by the agent when the task fits, like <code>/tdd</code>, <code>/code-review</code> or <code>/grilling</code>. They hold <strong>reusable discipline</strong>.</li>
+</ul>
+<p>There's one rule: a user-invoked skill may call model-invoked skills, <strong>but never another user-invoked one</strong>. For example, <code>/grill-me</code> is only one line long: "Call the Skill tool with 'grilling'."<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md">[6]</a> The user-invoked skill is a thin entry point, and the model-invoked <code>/grilling</code> does the actual work.</p>
+
+<hr>
+
+<h2>4. Practice</h2>
+
+<h3>Recall: draw the flow from memory</h3>
+<div class="recall">
+  <p>Without scrolling up, write the main flow for a <strong>multi-session</strong> build: five skills in order, plus the two that run inside each build step.</p>
+  <textarea placeholder="1. /…"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <p><code>/grill-with-docs</code> → <code>/to-spec</code> → <code>/to-tickets</code> → <code>/implement</code> per ticket, with <code>/clear</code> between tickets → <code>/retro</code>. Inside each <code>/implement</code>: <code>/tdd</code>, then <code>/code-review</code>. Optional detour after grilling: <code>/prototype</code>.</p>
+  </div>
+</div>
+
+<h3>Drills</h3>
+<div class="quiz" data-quiz="map"></div>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read the README section <a href="https://github.com/mattpocock/skills#why-these-skills-exist">"Why These Skills Exist"</a> (5 minutes), then the <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md"><code>ask-matt</code> skill</a>. If you want to see it in action, watch <a href="https://www.youtube.com/watch?v=-QFHIoCo-Ko">"Full Walkthrough: Workflow for AI Coding"</a> (AI Engineer Europe 2026). The talk is older than some skill names: its "PRD" is now <code>/to-spec</code>, and its "issues" are now <code>/to-tickets</code>.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. For example: "why grill before writing a spec?" or "how is /grill-with-docs different from plan mode?" I'm your teacher for this course.</p>
+</div>
+
+<p>Keep the <a href="../reference/skill-map.html">Skill Map reference</a> nearby. It lists every core skill by where it sits in the flow.</p>
+
+<nav class="lesson-nav">
+  <a href="../index.html">← Course index</a>
+  <a href="0002-grilling.html">Next: Grilling →</a>
+</nav>
+
+</main>
+<script src="0001-the-map.quiz.js"></script>
+<script>
+Quiz.register("map", window.QUIZ);
+</script>
+</body>
+</html>

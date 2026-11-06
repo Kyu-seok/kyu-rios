@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remotes: Fetch, Pull, Push</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 2 · Git workflow in the age of agents</p>
+<h1>Your laptop has a bookmark, not a live view</h1>
+<p class="subtitle">Three copies of <code>main</code>, and which command moves which. About 25 minutes.</p>
+
+<p><strong>Today’s win:</strong> before you run <code>fetch</code>, <code>pull</code>, or <code>push</code>, you’ll be able to say what it will move, and you’ll catch <code>git status</code> telling you something out of date.</p>
+
+<h2>Three mains, not one</h2>
+
+<p>In Lesson 1 you saw <code>origin/main</code> in your log and moved on. Here’s what it is. There are really three things called “main”:</p>
+
+<ol>
+  <li><strong><code>main</code> on GitHub</strong>: the real shared branch. It moves whenever anyone pushes or merges a PR, including an agent.</li>
+  <li><strong><code>origin/main</code> on your laptop</strong>: a <em>remote-tracking branch</em>. It’s Git’s note of where GitHub’s <code>main</code> was the last time you checked.</li>
+  <li><strong><code>main</code> on your laptop</strong>: your own branch. It moves when you commit, pull, or merge.</li>
+</ol>
+
+<p class="idea">“Think of them as bookmarks, to remind you where the branches in your remote repositories were the last time you connected to them.”
+<span class="sidenote">Quote and the next one: <a href="https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches"><em>Pro Git</em> §3.5, “Remote Branches”</a>. The book also says these are “local references that you can’t move; Git moves them for you whenever you do any network communication.”</span></p>
+
+<p>The key detail is that a bookmark doesn’t update itself: “as long as you stay out of contact with your <code>origin</code> server, your <code>origin/master</code> pointer doesn’t move.” (<code>master</code> is the book’s older name for <code>main</code>.)</p>
+
+<div class="box misconception">
+<p>“<code>git status</code> tells me whether I’m up to date with GitHub.” It doesn’t. It compares your <code>main</code> with your <em>bookmark</em> <code>origin/main</code>, and it never contacts GitHub. So “Your branch is up to date with ‘origin/main’” can be true while GitHub has ten new commits.</p>
+</div>
+
+<h3>Which command moves which</h3>
+
+<table class="ref-inline">
+  <tr><th>Command</th><th>Talks to GitHub?</th><th>Moves</th></tr>
+  <tr><td><code>git commit</code></td><td>No</td><td>your <code>main</code> (the branch HEAD is on)</td></tr>
+  <tr><td><code>git fetch</code></td><td>Yes, downloads</td><td><code>origin/main</code> only. Your files and your <code>main</code> are untouched.</td></tr>
+  <tr><td><code>git pull</code></td><td>Yes, downloads</td><td><code>git fetch</code>, <em>then</em> brings <code>origin/main</code> into your <code>main</code></td></tr>
+  <tr><td><code>git push</code></td><td>Yes, uploads</td><td>GitHub’s <code>main</code>, and your <code>origin/main</code> with it</td></tr>
+</table>
+<p><span class="sidenote"><code>fetch</code> “will not modify your working directory at all” (<a href="https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches">Pro Git §3.5</a>). <code>pull</code> “runs <code>git fetch</code> … Then it integrates that branch into the current branch” (<a href="https://git-scm.com/docs/git-pull">git-pull docs</a>).</span>
+So <code>pull</code> isn’t a separate kind of download. It’s a fetch with an integration step added.</p>
+
+<h2>Play with it first</h2>
+
+<p>Click the buttons and watch which box changes. Newly arrived commits glow. <span style="color:var(--remote)">Violet</span> commits are your teammate’s and <span style="color:var(--branch)">blue</span> ones are yours. Before each click, <strong>predict</strong> which box will change and what the terminal will say.</p>
+
+<div class="remote-sim" id="sim"></div>
+
+<details>
+<summary>Stuck on challenge 3?</summary>
+<p>A rejected push means GitHub has commits that your <code>main</code> doesn’t contain. You have to bring them in first. Plain <code>git pull</code> refuses when both sides have new commits. On git 2.39 that’s the “Need to specify how to reconcile divergent branches” error. <code>git pull --no-rebase</code> tells it to <em>merge</em>, which creates a merge commit (the square <code>M</code>) that contains both sides. Then the push goes through. Lessons 3 and 6 cover what happens when both sides change the same lines, and the rebase alternative.
+<span class="sidenote">Default behaviour: “<code>git pull --ff-only</code> … fails if your local branch has diverged from the remote branch. This is the default.” <a href="https://git-scm.com/docs/git-pull">git-pull docs</a>.</span></p>
+</details>
+
+<div class="box agent">
+<p>Agents make this matter more. A cloud agent or a teammate’s Claude Code session can push branches and merge PRs while you aren’t looking, and your laptop learns about it only when you <code>fetch</code>. Before you review an agent’s branch locally, or start new work from <code>main</code>, sync first. The habit is <code>git switch main</code>, then <code>git pull</code>.</p>
+</div>
+
+<h2>Do it for real</h2>
+
+<p>Back to <code>~/Work/git-sandbox</code>. To play the teammate, you’ll make a <em>second clone</em> of the same GitHub repo. It stands in for a colleague’s laptop, or an agent working somewhere else.</p>
+
+<ol class="steps" data-checklist="lesson-0002">
+  <li>
+    <div class="step-title">Find the stale bookmark left over from Lesson 1</div>
+<pre><code>cd ~/Work/git-sandbox
+git branch -a</code></pre>
+    <p>You should still see <code>remotes/origin/add-greeting</code>, even though that branch was deleted on GitHub. <strong>Predict why</strong> before reading on. A bookmark changes only when you talk to the server, and a plain fetch doesn’t remove bookmarks for deleted branches. Clean it up:</p>
+<pre><code>git fetch --prune
+git branch -a</code></pre>
+    <p><span class="sidenote"><code>--prune</code>: “Before fetching, remove any remote-tracking references that no longer exist on the remote.” <a href="https://git-scm.com/docs/git-fetch">git-fetch docs</a>. Optional: <code>git config --global fetch.prune true</code> makes every fetch do this.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Become the teammate: clone, then run the whole PR loop from memory</div>
+<pre><code>cd ~/Work
+gh repo clone git-sandbox git-sandbox-teammate
+cd git-sandbox-teammate</code></pre>
+    <p>Now, <strong>without opening Lesson 1</strong>, take one change through the full loop. Make a branch, add a file <code>teammate.txt</code>, commit, push, open a PR, and merge it with branch deletion. Recalling the commands is part of the practice.</p>
+    <details>
+    <summary>Check your commands (only after trying)</summary>
+<pre><code>git switch -c add-teammate-note
+echo "Hi from your teammate" &gt; teammate.txt
+git add teammate.txt
+git commit -m "Add teammate note"
+git push -u origin add-teammate-note
+gh pr create --fill
+gh pr merge --merge --delete-branch</code></pre>
+    </details>
+  </li>
+  <li>
+    <div class="step-title">Go back to your clone and ask git status</div>
+<pre><code>cd ~/Work/git-sandbox
+git status</code></pre>
+    <p>GitHub’s <code>main</code> just moved. <strong>Predict</strong> what <code>git status</code> says, then run it. It says “up to date with ‘origin/main’”, because your bookmark hasn’t moved and <code>status</code> didn’t ask GitHub.</p>
+  </li>
+  <li>
+    <div class="step-title">Fetch, and watch the bookmark move</div>
+<pre><code>git fetch
+git status
+git log --oneline --graph --all</code></pre>
+    <p><strong>Predict the number</strong> before you run it: behind by how many commits? It’s 2: the teammate’s commit <em>and</em> the merge commit GitHub created. In the log, <code>origin/main</code> is now above <code>(HEAD -&gt; main)</code>. Run <code>ls</code> and notice that <code>teammate.txt</code> isn’t there yet. Fetch doesn’t touch your files.</p>
+  </li>
+  <li>
+    <div class="step-title">Pull, and catch up</div>
+<pre><code>git pull
+git log --oneline --graph --all
+ls</code></pre>
+    <p>The output says <code>Fast-forward</code>. Your <code>main</code> had no new commits of its own, so Git only slid the label forward to where <code>origin/main</code> is. Nothing needed merging. Now <code>teammate.txt</code> is there.</p>
+  </li>
+  <li>
+    <div class="step-title">Be “ahead”: commit on a branch before pushing</div>
+<pre><code>git switch -c add-notes
+echo "Remotes are bookmarks" &gt; notes.txt
+git add notes.txt &amp;&amp; git commit -m "Add notes"
+git push -u origin add-notes
+echo "fetch moves origin/*, pull also merges" &gt;&gt; notes.txt
+git commit -am "Expand notes"
+git status</code></pre>
+    <p>The status reads “ahead of ‘origin/add-notes’ by 1 commit”: your second commit exists only on your laptop. <code>git push</code> sends it and moves both GitHub’s branch and your bookmark. Run <code>git status</code> again to see “up to date”.</p>
+  </li>
+  <li>
+    <div class="step-title">Finish the loop</div>
+<pre><code>git push
+gh pr create --fill
+gh pr merge --merge --delete-branch
+git switch main
+git pull
+git fetch --prune
+git log --oneline --graph --all</code></pre>
+  </li>
+</ol>
+
+<div class="box">
+<p><strong>Close the feedback loop:</strong> paste the final <code>git log --oneline --graph --all</code> into Claude Code. You should see two more merge commits than last time, with <code>HEAD -&gt; main</code> and <code>origin/main</code> on the same commit. I’ll walk through anything that looks off.</p>
+</div>
+
+<h2>Recall it</h2>
+<p>No scrolling up.
+<span class="sidenote">Try this again in two or three days, and also retry the <a href="0001-branches-and-your-first-pr.html#recall">Lesson 1 quiz</a>. Spaced retrieval builds long-term memory.</span></p>
+
+<div class="quiz" data-quiz-id="0002"></div>
+
+<h2>Go deeper</h2>
+<p><strong>Primary source:</strong> <a href="https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches"><em>Pro Git</em> §3.5, “Remote Branches”</a>. Read up to “Tracking Branches”. Its diagrams show the same three-box idea with <code>master</code>.</p>
+<p><strong>Optional extra practice:</strong> the <em>Remote</em> tab on <a href="https://learngitbranching.js.org/">Learn Git Branching</a>, levels “Push &amp; Pull” 1–4.</p>
+<p><strong>Reference:</strong> <a href="../reference/github-flow-cheatsheet.html">GitHub flow cheat sheet</a> (now with a sync section) · <a href="../reference/glossary.html">Glossary</a>.</p>
+
+<p class="ask">Did something print output you didn’t expect, or are you wondering why <code>pull</code> doesn’t just always merge? Ask me in Claude Code. Questions like these are what I’m here for.</p>
+
+<nav class="lesson-nav">
+  <a href="0001-branches-and-your-first-pr.html">← Lesson 1: branches and your first PR</a>
+  <a href="0003-merge-conflicts.html">Next: Lesson 3, merge conflicts →</a>
+</nav>
+
+</main>
+
+<script src="../assets/checklist.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/remote-sim.js"></script>
+<script src="0002-remotes-fetch-pull-push.quiz.js"></script>
+<script>
+  RemoteSim.mount('#sim', {
+    challenges: [
+      { text: 'Get GitHub ahead of you while <code>git status</code> still says “up to date”.',
+        check: (st, s) => s.remote.length > s.tracking.length && !st.ahead && !st.behind },
+      { text: 'Make <code>git status</code> say you’re behind by exactly 2.',
+        check: st => st.behind === 2 && !st.ahead },
+      { text: 'Get a <code>git push</code> rejected.',
+        check: (st, s) => s.log.some(l => l.includes('[rejected]')) },
+      { text: 'Recover: get GitHub’s <code>main</code> to hold both your commit and your teammate’s.',
+        check: (st, s) => s.remote.some(id => id[0] === 'M') }
+    ]
+  });
+
+  Quiz.mount('[data-quiz-id="0002"]', window.QUIZ);
+</script>
+</body>
+</html>

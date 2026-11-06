@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context Engineering</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/context-bar.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 4 · Agent Orchestration</p>
+<h1>Context Engineering: The Window Is a Budget</h1>
+<p class="subtitle">Why long agent sessions get worse, and the two moves that fix it.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>When an agent session degrades, you can explain <strong>why</strong> (context rot) and choose a fix: <strong>compact</strong> the window, or <strong>move memory outside</strong> it into notes or subagents.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. Idea one: the window is a finite budget</h2>
+
+<p>Everything the model sees in one call is its <strong>context</strong>: system prompt, CLAUDE.md, your messages, every file it read, every test output. <strong>Context engineering</strong> is curating and maintaining the best set of tokens in that window, not only writing the prompt.<a class="cite" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">[1]</a></p>
+
+<p>The window has a hard limit, but quality drops well before you reach it. Anthropic calls this <strong>context rot</strong>: <em>as the number of tokens grows, the model's ability to accurately recall information from it decreases</em>. The model has an "attention budget," and every token you add spends some of it.<a class="cite" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">[1]</a></p>
+
+<figure>
+  <div class="ctxbar" data-cap="200" data-segments="System:12:--l1, CLAUDE.md:8:--l2, Your task:4:--l4, Early file reads:40:--l3, Old test output:70:--l5, Recent work:46:--l3" data-caption="Late in a long session: mostly stale tool output. The important early decisions are buried in the middle."></div>
+  <figcaption>A typical long Claude Code session. Most of the budget is spent on tool output the agent no longer needs.</figcaption>
+</figure>
+
+<blockquote>"Find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome."<cite>Anthropic, Effective context engineering <a class="cite" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">[1]</a></cite></blockquote>
+
+<p>You have seen this already: an agent that was sharp at the start of a session forgets a decision you made an hour ago, or repeats a mistake it already fixed. The window isn't full yet, but it is <em>noisy</em>.</p>
+
+<h2>2. Idea two: compaction (shrink what's inside)</h2>
+
+<p><strong>Compaction</strong> means summarising the conversation as it nears the limit and starting a fresh window with that summary. Claude Code's compaction keeps architectural decisions and unresolved bugs and drops redundant tool output. The lightest form is simply <strong>clearing old tool results</strong>.<a class="cite" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">[1]</a></p>
+
+<figure>
+  <div class="ctxbar" data-cap="200" data-segments="System:12:--l1, CLAUDE.md:8:--l2, Your task:4:--l4, Summary:14:--l2, Recent work:46:--l3" data-caption="After compaction: the same decisions, about 40% of the budget."></div>
+</figure>
+
+<p class="muted">You use this daily: <code>/compact</code> in Claude Code, and the automatic compaction that kicks in when the window fills. The risk is that a summary can drop details that later turn out to matter.</p>
+
+<h2>3. Idea three: move memory outside the window</h2>
+
+<p>Instead of keeping everything <em>in</em> the window, keep it somewhere the agent can read back <em>when it needs to</em>. There are two forms:<a class="cite" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">[1]</a></p>
+
+<ul>
+  <li><strong>Structured note-taking.</strong> The agent writes progress, decisions and to-dos to a file (a <code>NOTES.md</code>, a to-do list) and reloads it later. Notes survive compaction and even a brand-new session. Anthropic's example is Claude playing Pokémon, keeping maps and progress in notes across thousands of steps.</li>
+  <li><strong>Subagents.</strong> A helper explores in its <em>own</em> clean window and may spend tens of thousands of tokens doing it. It hands back only a condensed summary, often 1,000–2,000 tokens. The main window stays clean. This is what Claude Code's Explore subagent is for, and why you labelled it a <em>harness feature doing context work</em> in Lesson 1.</li>
+</ul>
+
+<div class="note">
+  <p class="label">Why this matters for the rest of the course</p>
+  <p>Push idea three as far as it goes: <strong>throw away the window completely after every task</strong>, and keep all memory in files and git. That is the <strong>Ralph loop</strong>, where each iteration starts with a fresh context and the plan and specs live on disk.<a class="cite" href="https://ghuntley.com/ralph/">[2]</a> Anthropic's long-running harness does the same with a progress file and a feature list.<a class="cite" href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">[3]</a> You'll meet both next.</p>
+</div>
+
+<hr>
+
+<h2>4. Recall</h2>
+<p>From memory: what is context rot, and what are the two kinds of fix (with the two forms of the second)?</p>
+<div class="recall">
+  <textarea placeholder="Context rot is…&#10;Fix 1: …&#10;Fix 2: … (a) … (b) …"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <p><strong>Context rot:</strong> as the window fills, the model recalls what's in it less accurately. Context is a finite attention budget.</p>
+    <p><strong>Fix 1, compaction:</strong> summarise the window and continue in a fresh one (or clear old tool results).</p>
+    <p><strong>Fix 2, memory outside the window:</strong> (a) structured notes in files the agent re-reads; (b) subagents that work in their own window and return a short summary.</p>
+  </div>
+</div>
+
+<h2>5. Practice: pick the fix</h2>
+<div class="quiz" data-quiz="l4"></div>
+
+<script src="0004-context-engineering.quiz.js"></script>
+<script>
+const SHAPES = ["Prompt chaining", "Routing", "Parallelization", "Orchestrator-workers", "Evaluator-optimizer", "Autonomous agent"];
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+const FIXES = ["Compaction", "Structured note-taking", "Subagent"];
+Quiz.register("l4", window.QUIZ.filter((q) => q.section === "l4"));
+</script>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source to read next (≈20 min)</p>
+  <p><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">"Effective context engineering for AI agents"</a> (Anthropic, Sep 2025). Read the section on long-horizon tasks; it covers compaction, note-taking and subagents in more depth.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck or curious?</p>
+  <p>Ask me in the terminal. Good questions: <em>"When should I /compact vs /clear?"</em> or <em>"Is CLAUDE.md context engineering or harness engineering?"</em></p>
+</div>
+
+<p class="muted">Quick reference: <a href="../reference/zoom-levels.html">The Five Zoom Levels</a> · <a href="../reference/workflow-patterns.html">Six Orchestration Shapes</a></p>
+
+<h3>Sources</h3>
+<ol class="muted" style="font-size:.85rem">
+  <li><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic, "Effective context engineering for AI agents" (Sep 2025)</a></li>
+  <li><a href="https://ghuntley.com/ralph/">Huntley, "Ralph Wiggum as a 'software engineer'" (Jul 2025)</a></li>
+  <li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic, "Effective harnesses for long-running agents" (Nov 2025)</a></li>
+</ol>
+
+<nav class="lesson-nav">
+  <a href="0003-telling-shapes-apart.html">← Lesson 3: Telling Shapes Apart</a>
+  <a href="0005-harness-engineering.html">Next: Lesson 5, Harness Engineering →</a>
+</nav>
+
+</main>
+</body>
+</html>

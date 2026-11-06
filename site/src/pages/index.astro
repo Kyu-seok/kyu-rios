@@ -1,0 +1,32 @@
+---
+import Graph from '../components/Graph.astro';
+import Site from '../layouts/Site.astro';
+import { base, getSite } from '../lib/site';
+import { topicColor } from '../lib/palette';
+
+const site = getSite();
+const lessonCount = site.topics.reduce((n, t) => n + t.lessons.length, 0);
+---
+
+<Site title="kyu-rios" description="A public second brain: a Graph of everything learned with /teach, and spaced-repetition Review of its quiz questions.">
+  <p class="kicker">Public second brain</p>
+  <h1>What I have learned, and how it connects</h1>
+  <p class="lede">
+    {site.topics.length} Topics, {lessonCount} Lessons, {site.review.cards.length} Review cards. Hover a Node for its summary, click to open it.
+    <a href={`${base}review/`}>Review what is due</a>.
+  </p>
+
+  <Graph mode="global" height={560} />
+
+  <h2>Topics</h2>
+  <ul class="topic-list">
+    {site.topics.map((t, i) => (
+      <li>
+        <span class="topic-dot" style={`background:${topicColor(i)}`}></span>
+        <a href={`${base}topics/${t.slug}/`}>{t.title}</a>
+        <p>{t.summary}</p>
+        <p>{t.lessons.length} Lessons · {t.references.length} Reference sheets</p>
+      </li>
+    ))}
+  </ul>
+</Site>

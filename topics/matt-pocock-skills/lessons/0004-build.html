@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sort.js"></script>
+<script src="../assets/flow.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 4 · Matt Pocock's Skills</p>
+<h1>Build: One Ticket, One Run</h1>
+<p class="subtitle"><code>/implement</code> runs the build, <code>/tdd</code> keeps it honest, and <code>/code-review</code> checks it two ways.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>You can watch an <code>/implement</code> run and tell whether it's going right. You can spot a <strong>test that grades nothing</strong>, put a review finding on the right <strong>axis</strong>, and fix the common ways a run stalls.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<p class="muted" style="font-size:.9rem">These mix Lessons 1–3, applied to a feature you haven't seen. That makes them harder on purpose.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<div class="flow" data-highlight="implement tdd review"></div>
+
+<p>This lesson's example is a new ticket. The spec has already agreed one seam: the reset service's <code>request(email)</code> entry point.</p>
+<ol class="tickets">
+  <li><span class="id">03</span><span>A user who asks for a 4th password-reset email within an hour sees "try again later", and no email is sent.</span><span class="by">Blocked by: 02</span></li>
+</ol>
+
+<h2>1. Idea one: <code>/implement</code> builds, it never re-plans</h2>
+
+<p><code>/implement</code> builds work that has <em>already been decided</em>. <em>"It never reopens the plan. There is no interview, no clarifying round."</em> That's the difference from typing "build this" into a fresh agent, which tends to redesign the work while it builds it.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md">[1]</a> The whole skill is six lines long.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/implement/SKILL.md">[2]</a> One run takes five steps:</p>
+<ol>
+  <li>Fetch the ticket, <strong>state its title</strong>, and work out the seams.</li>
+  <li>Drive <code>/tdd</code> at the <strong>pre-agreed seams</strong>, one red → green slice at a time.</li>
+  <li>Typecheck often, and run single test files as it goes.</li>
+  <li>Run the <strong>full suite once</strong>, at the end.</li>
+  <li>Run <code>/code-review</code>, then <strong>commit to the current branch</strong>.</li>
+</ol>
+<p>That's one ticket per run. Then <code>/clear</code>, and start the next. Three things it does <em>not</em> do:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md">[1]</a></p>
+<ul>
+  <li><strong>It doesn't create a branch.</strong> It commits to whatever branch you're on, so check first.</li>
+  <li><strong>It doesn't close the ticket</strong> or tick its acceptance criteria. Remember from Lesson 3 that the frontier only opens when blockers are <em>closed</em>. If you never close tickets, nothing ever becomes unblocked.</li>
+  <li><strong>It doesn't run in parallel safely.</strong> Several <code>/implement</code> sessions in one checkout share one index and one HEAD. One report describes commits landing on the wrong branch. For parallel work, <code>/implement-spec</code> gives each ticket its own worktree.</li>
+</ul>
+<p class="muted" style="font-size:.88rem">Burned 150k tokens on one ticket? That's normal for a non-trivial ticket, which goes over 100k. If it keeps happening, the fix is upstream: split the ticket.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md">[1]</a></p>
+
+<h2>2. Idea two: <code>/tdd</code> is red → green at agreed seams</h2>
+
+<p>A <strong>seam</strong> is <em>"the public boundary you test at: the interface where you observe behavior without reaching inside."</em> The rule has no exceptions: <em>"No test is written at an unconfirmed seam."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md">[3]</a> In the full flow, the seams were agreed in <code>/to-spec</code>. If they weren't agreed anywhere, the run quietly turns into "just write the code," and nothing warns you.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md">[1]</a></p>
+
+<p>The loop: write <strong>one failing test</strong>, then only enough code to pass it, then the next test. <strong>There's no refactor phase</strong>, even though the skill's description still says "red-green-refactor". The step was removed in June 2026, because agents almost never did it and because review works better in its own session. <strong>Refactoring now belongs to <code>/code-review</code>.</strong><a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/tdd.md">[4]</a></p>
+
+<div class="note">
+  <p class="label">Correction to earlier lessons</p>
+  <p>Lesson 1 and the Skill Map said "red → green → refactor". I've updated both. This is why the course re-reads the skill files before teaching from them.</p>
+</div>
+
+<h3>A test worth keeping, and one that grades nothing</h3>
+<pre><code>// KEEP: behaviour through the agreed seam, literal expectations
+test("a 4th reset request within an hour is refused", async () => {
+  const mail = fakeMailer();                       // system boundary
+  const resets = makeResetService({ clock: fakeClock(), mail });
+  for (let i = 0; i &lt; 3; i++) await resets.request("kyu@example.com");
+
+  expect(await resets.request("kyu@example.com")).toBe("try-again-later");
+  expect(mail.sent).toHaveLength(3);
+});
+
+// TAUTOLOGICAL: the expected value is computed the way the code computes it
+test("remaining resets", async () => {
+  const expected = RESET_LIMIT - attempts.length;
+  expect(resets.remaining("kyu@example.com")).toBe(expected);
+});</code></pre>
+
+<p>The skill names three anti-patterns, and each has a tell:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md">[3]</a></p>
+<div class="table-wrap"><table>
+  <tr><th>Anti-pattern</th><th>The tell</th></tr>
+  <tr><td><strong>Implementation-coupled</strong></td><td>It breaks when you rename an internal function, even though behaviour didn't change. Look for mocked internal collaborators, asserted call counts, or a database query used to check the result.</td></tr>
+  <tr><td><strong>Tautological</strong></td><td>The expected value restates the code, so it passes by construction. Expected values must come from <em>"a known-good literal, a worked example, the spec."</em></td></tr>
+  <tr><td><strong>Horizontal slicing</strong></td><td>A batch of tests landed before any implementation. It's the Lesson 3 mistake again, made at the scale of tests.</td></tr>
+</table></div>
+<p><strong>Mock at system boundaries only</strong>: external APIs, time, randomness, and sometimes the filesystem or the database. Never mock your own modules.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/mocking.md">[5]</a> In the test above, the mailer and the clock are faked, and the rate limiter inside the reset service is real.</p>
+
+<h2>3. Idea three: <code>/code-review</code> checks two separate axes</h2>
+
+<p>The review compares <code>git diff &lt;fixed-point&gt;...HEAD</code> against two questions. Each runs in its <strong>own subagent</strong>, so neither sees the other's reasoning:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md">[6]</a></p>
+<div class="table-wrap"><table>
+  <tr><th></th><th>Standards</th><th>Spec</th></tr>
+  <tr><td>Asks</td><td>Is it built right?</td><td>Is it the right thing?</td></tr>
+  <tr><td>Reads</td><td>The repo's documented standards (<code>CODING_STANDARDS.md</code>, <code>CONTRIBUTING.md</code>, and so on) plus a <strong>smell baseline</strong></td><td>The originating ticket or spec</td></tr>
+  <tr><td>Finds</td><td>Documented breaches, which can be hard violations, and smells, which are always judgement calls</td><td>Missing or partial requirements, <strong>scope creep</strong>, and requirements implemented wrongly</td></tr>
+  <tr><td>Cites</td><td>The rule and its file, or the named smell plus the hunk</td><td>The spec line</td></tr>
+</table></div>
+<p>The two reports are <strong>never merged or re-ranked</strong>. Code can follow every standard and still build the wrong thing, and a blended verdict would let the passing axis hide the failing one.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md">[6]</a> The smell baseline is twelve code smells from chapter 3 of Fowler's <em>Refactoring</em>: Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, and Refused Bequest. <strong>The repo always overrides the baseline.</strong></p>
+
+<h3>Field notes from the guide</h3>
+<p>These come from real reports collected in the skill's guide.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md">[7]</a></p>
+<ul>
+  <li><strong>Commit first.</strong> The three-dot diff leaves out staged and uncommitted work, so a review before the first commit sees nothing.</li>
+  <li><strong>Review in a fresh session.</strong> <em>"Same context reviewing itself isn't review, it's confirmation bias with a slash command."</em></li>
+  <li><strong>Don't loop until it's clean.</strong> Every fix adds new code to review, and smells are judgement calls, so it never converges. Act on the findings that cite a rule, then stop.</li>
+  <li><strong>Watch the name clash.</strong> Claude Code ships its own <code>/code-review</code>, a bug hunter. A plain skills install shadows it, and the plugin adds a <code>mattpocock-skills:</code> prefix. Check which one actually ran.</li>
+</ul>
+
+<h2>4. Practice</h2>
+
+<h3>Drill A: keep the test, or throw it out?</h3>
+<p>All of these are tests for ticket 03.</p>
+<div class="sort" data-sort="tests"></div>
+
+<h3>Drill B: fake it, or use the real one?</h3>
+<div class="sort" data-sort="mocks"></div>
+
+<h3>Drill C: which axis finds it?</h3>
+<p>The spec for the reset limit says <em>"3 reset emails per hour per account; the 4th request shows 'try again later'."</em></p>
+<div class="sort" data-sort="axis"></div>
+
+<h3>Drill D: the run went wrong</h3>
+<div class="quiz" data-quiz="runs"></div>
+
+<h3>Drill E: from memory</h3>
+<p>Write the five steps of an <code>/implement</code> run, then the three <code>/tdd</code> anti-patterns.</p>
+<div class="recall">
+  <textarea aria-label="Your answer"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <ol>
+      <li>Fetch the ticket, state its title, and work out the seams</li>
+      <li><code>/tdd</code> at the pre-agreed seams, one red → green slice at a time</li>
+      <li>Typecheck often, and run single test files</li>
+      <li>Run the full suite once, at the end</li>
+      <li><code>/code-review</code>, then commit to the current branch</li>
+    </ol>
+    <p>Anti-patterns: <strong>implementation-coupled</strong>, <strong>tautological</strong>, and <strong>horizontal slicing</strong>.</p>
+  </div>
+</div>
+
+<h3>Optional: feel it for real (20 min)</h3>
+<p>Use the git-log CLI tickets from Lesson 3's optional exercise. Copy <a href="https://github.com/mattpocock/skills/tree/main/skills/engineering/implement"><code>implement</code></a>, <a href="https://github.com/mattpocock/skills/tree/main/skills/engineering/tdd"><code>tdd</code></a>, <a href="https://github.com/mattpocock/skills/tree/main/skills/engineering/codebase-design"><code>codebase-design</code></a> (which <code>tdd</code> needs) and <a href="https://github.com/mattpocock/skills/tree/main/skills/engineering/code-review"><code>code-review</code></a> into <code>~/.claude/skills/</code>. The <code>code-review</code> copy will shadow Claude Code's built-in one until you delete it. Then:</p>
+<ol>
+  <li>Create a branch, then run <code>/implement 01</code>.</li>
+  <li>Watch for three things: it names the seams and waits, a single test goes red before any code exists, and the run ends in a commit.</li>
+  <li>Close ticket 01 yourself, run <code>/clear</code>, then run <code>/code-review main</code>. Check that you get two separate blocks, Standards and Spec.</li>
+</ol>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md"><code>tdd/SKILL.md</code></a> and its <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/tests.md"><code>tests.md</code></a> (5 minutes in total). Then read the "Common questions" sections of the <a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md">implement</a> and <a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md">code-review</a> guides, which are field reports from people running these skills. For the background, chapter 3 of Fowler's <em>Refactoring</em> is the smell baseline.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. Good questions: "where would the seam be in my BullMQ worker?", "show me an implementation-coupled test from a real codebase", or "how do I fork code-review so it stops clashing with the built-in?"</p>
+</div>
+
+<p>The <a href="../reference/build-card.html">Build Card</a> has all of this on one page. See also the <a href="../reference/planning-card.html">Planning Card</a> and the <a href="../reference/skill-map.html">Skill Map</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0003-spec-to-tickets.html">← Lesson 3: From Spec to Tickets</a>
+  <a href="0005-phase-boundaries.html">Lesson 5: Phase Boundaries →</a>
+</nav>
+
+</main>
+<script src="0004-build.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+Sort.register("tests", {
+  buckets: ["Keep it", "Implementation-coupled", "Tautological"],
+  items: [
+    { text: "Calls <code>resets.request()</code> four times with a fake clock, and expects <code>\"try-again-later\"</code> and exactly 3 sent emails.", bucket: 0,
+      why: "Behaviour through the agreed seam, with literal expectations. It survives any rewrite underneath." },
+    { text: "Asserts that <code>rateLimiter.increment</code> was called exactly once.", bucket: 1,
+      why: "An asserted call count on an internal collaborator. Rename or inline the limiter and it breaks, even though behaviour is the same." },
+    { text: "Computes <code>expected = RESET_LIMIT - attempts.length</code>, then expects <code>remaining()</code> to equal it.", bucket: 2,
+      why: "The expected value is worked out the same way the code works it out, so the test can never disagree with the code." },
+    { text: "After one request, runs <code>SELECT count(*) FROM reset_attempts</code> and expects 1.", bucket: 1,
+      why: "It checks through a side channel instead of the interface. If the counter moves to Redis, the test breaks but behaviour hasn't changed." },
+    { text: "With a limit of 3, makes one request and expects <code>remaining()</code> to be <code>2</code>.", bucket: 0,
+      why: "Compare it with the tautological one: here the expected value is a literal worked out by hand, so it can catch a real bug." },
+    { text: "Expects <code>RESET_LIMIT</code> to equal <code>config.resetLimit</code>.", bucket: 2,
+      why: "It asserts a constant equals itself. It passes by construction and grades nothing." },
+    { text: "Moves the fake clock forward 61 minutes after three requests, and expects the 4th request to send an email.", bucket: 0,
+      why: "An edge of the behaviour, tested through the seam. Faking time is fine, because time is a system boundary." }
+  ]
+});
+
+Sort.register("mocks", {
+  buckets: ["Fake it", "Use the real one"],
+  items: [
+    { text: "The transactional email provider's HTTP API", bucket: 0,
+      why: "An external API is a system boundary, so fake it." },
+    { text: "Your own <code>RateLimiter</code> module", bucket: 1,
+      why: "You control it. Mocking it would couple the test to how the reset service is wired internally." },
+    { text: "The current time", bucket: 0,
+      why: "Time is a boundary. A fake clock lets you test \"61 minutes later\" without waiting." },
+    { text: "Your <code>PasswordPolicy</code> class that the reset service calls", bucket: 1,
+      why: "It's an internal collaborator, so leave it real." },
+    { text: "The random generator behind reset tokens", bucket: 0,
+      why: "Randomness is a boundary. Fake it so the expected values are deterministic." },
+    { text: "Your <code>AuditLog</code> module that records each reset", bucket: 1,
+      why: "It's still your own module. If the test cares that a reset was audited, observe that through the module's public interface." }
+  ]
+});
+
+Sort.register("axis", {
+  buckets: ["Standards", "Spec"],
+  items: [
+    { text: "The code limits resets per IP address, but the spec says per account.", bucket: 1,
+      why: "A requirement implemented wrongly. The finding quotes the spec line." },
+    { text: "A helper function is named <code>handle2()</code>.", bucket: 0,
+      why: "Mysterious Name from the smell baseline. It's a judgement call, not a hard violation." },
+    { text: "The diff also emails the account's admin whenever a user hits the limit.", bucket: 1,
+      why: "Behaviour nobody asked for is scope creep, and the Spec axis catches it." },
+    { text: "Email addresses travel as raw strings, but <code>CODING_STANDARDS.md</code> requires the <code>EmailAddress</code> type.", bucket: 0,
+      why: "A documented breach, so it can be a hard violation. It cites the rule and the file." },
+    { text: "The 4th request returns HTTP 500 instead of showing \"try again later\".", bucket: 1,
+      why: "The requirement looks implemented, but it behaves wrongly against the spec line." },
+    { text: "A configurable <code>limitStrategy</code> option exists, with only one strategy behind it.", bucket: 0,
+      why: "This is the tricky one. It isn't new user-facing behaviour, it's an abstraction for a need the spec doesn't have: Speculative Generality, a Standards smell." },
+    { text: "The same <code>if (channel === \"email\") … else if (\"sms\")</code> cascade appears in three files.", bucket: 0,
+      why: "Repeated Switches. The fix is polymorphism, or one map that every site shares." }
+  ]
+});
+
+Quiz.register("runs", window.QUIZ.filter((q) => q.section === "runs"));
+</script>
+</body>
+</html>

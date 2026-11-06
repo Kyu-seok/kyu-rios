@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On-ramps Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>On-ramps Card</h1>
+<p class="subtitle">Where work that isn't your own fresh idea joins the flow.</p>
+<p class="muted" style="font-size:.85rem">Sources: <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md"><code>ask-matt</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/triage/SKILL.md"><code>triage</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md"><code>diagnosing-bugs</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md"><code>wayfinder</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/prototype/SKILL.md"><code>prototype</code></a>, commit <code>5beb35b</code>.</p>
+
+<h2>Route by origin</h2>
+<div class="table-wrap"><table>
+  <tr><th>Situation</th><th>Skill</th><th>Merges at</th></tr>
+  <tr><td>Raw bugs, requests, or external PRs from <strong>others</strong></td><td><code>/triage</code></td><td><code>/implement</code></td></tr>
+  <tr><td>Broken, and a first glance didn't explain it</td><td><code>/diagnosing-bugs</code></td><td>Fix + regression test, then <code>/retro</code></td></tr>
+  <tr><td>Huge and foggy, more than one session can hold</td><td><code>/wayfinder</code></td><td><code>/to-spec #&lt;map&gt;</code></td></tr>
+  <tr><td>A question talking can't settle (logic or UI)</td><td><code>/prototype</code>, with <code>/handoff</code> out and back</td><td>The original thread</td></tr>
+  <tr><td>Your own idea that fits one session</td><td><code>/grill-with-docs</code></td><td>(the main flow)</td></tr>
+</table></div>
+<p style="font-size:.9rem"><strong>Never triage your own <code>/to-tickets</code> output.</strong> <strong>Never use wayfinder for a well-scoped feature.</strong></p>
+
+<h2><code>/triage</code></h2>
+<ul>
+  <li>Each issue gets one category (<code>bug</code> or <code>enhancement</code>) and one state (<code>needs-triage</code> → <code>needs-info</code>, <code>ready-for-agent</code>, <code>ready-for-human</code>, or <code>wontfix</code>).</li>
+  <li>The order: gather context and check whether it's <strong>already built</strong> or <strong>already rejected</strong> (<code>.out-of-scope/</code>), then recommend and wait, then <strong>verify the claim</strong> (reproduce it), then grill if needed, then apply the outcome.</li>
+  <li><code>ready-for-agent</code> gets an agent brief. <code>ready-for-human</code> means judgement calls, external access, design decisions, or manual testing.</li>
+  <li>An already-built <code>wontfix</code> doesn't go in <code>.out-of-scope/</code>. Only rejected enhancements do.</li>
+</ul>
+
+<h2><code>/diagnosing-bugs</code></h2>
+<ol>
+  <li><strong>Feedback loop</strong> ("this is the skill"): one command, already run, that is <strong>red-capable</strong> (the exact symptom), <strong>deterministic</strong> (or a high pinned reproduction rate), <strong>fast</strong>, and <strong>agent-runnable</strong>. No loop, no theory.</li>
+  <li><strong>Reproduce and minimise</strong> until every element is load-bearing.</li>
+  <li><strong>Hypothesise</strong>: 3–5, ranked, falsifiable ("if X, then changing Y fixes it"). Show them to the user.</li>
+  <li><strong>Instrument</strong>: one variable at a time, debugger before logs, tagged <code>[DEBUG-xxxx]</code>. For performance problems, measure first.</li>
+  <li><strong>Fix with a regression test first</strong>, at a correct seam. <em>No correct seam is itself the finding.</em></li>
+  <li><strong>Clean up</strong>: re-run the loop, grep out the debug tags, and put the correct hypothesis in the commit.</li>
+</ol>
+
+<h2><code>/wayfinder</code></h2>
+<ul>
+  <li>A map issue (<code>wayfinder:map</code>) with sections: Destination · Notes · Decisions so far · Not yet specified · Out of scope.</li>
+  <li>Child issues are <strong>decision tickets</strong>, each sized to about one 100k session, with native blocking. Frontier = open, unblocked, unclaimed.</li>
+  <li><strong>Research</strong> (AFK) · <strong>Grilling</strong> (HITL) · <strong>Prototype</strong> (HITL) · <strong>Task</strong> (either).</li>
+  <li>Resolve one ticket per session (research tickets excepted), and claim it first. Make a ticket only for questions you can already state precisely. Everything else is fog.</li>
+  <li>It produces decisions, not deliverables. When the map clears, go to <code>/to-spec</code>.</li>
+</ul>
+
+<h2><code>/prototype</code></h2>
+<ul>
+  <li><strong>Logic question</strong>: a single click-through HTML state demo. <strong>UI question</strong>: radically different variants on one route, switched by a URL param.</li>
+  <li>Throwaway and clearly marked, trivial to run, no persistence, no polish, and it shows the full state after every action.</li>
+  <li>When done, the decision goes into the real code, and the prototype is kept on a <code>prototype/&lt;name&gt;</code> branch, linked from the issue.</li>
+</ul>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a> · <a href="skill-map.html">Skill Map</a> · <a href="context-card.html">Context Card</a></p>
+</main>
+</body>
+</html>

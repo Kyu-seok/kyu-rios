@@ -1,0 +1,44 @@
+---
+/** A Node's local Graph, embedded by Lesson and Reference sheet pages in an iframe (`?focus=<node id>`). */
+import '../../styles/site.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Local Graph</title>
+    <style>
+      body { margin: 0; }
+      .graph { border: 0; border-radius: 0; height: 100vh; display: flex; flex-direction: column; }
+      .graph canvas { flex: 1; }
+      .graph-legend { border-top: 1px solid var(--rule); }
+    </style>
+  </head>
+  <body>
+    <div class="graph" data-embed-graph><p class="graph-empty">Loading…</p></div>
+    <script>
+      import { clientBase } from '../../lib/base';
+      import { mountGraph } from '../../client/graph';
+      import { nodeSubgraph } from '../../lib/subgraph';
+      import type { GraphData } from '../../lib/types';
+
+      const base = clientBase;
+      const focus = new URLSearchParams(location.search).get('focus') ?? '';
+      const el = document.querySelector<HTMLElement>('[data-embed-graph]')!;
+      const graph: GraphData = await fetch(`${base}graph.json`).then((r) => r.json());
+      const data = nodeSubgraph(graph, focus);
+      mountGraph(el, data, {
+        base,
+        allTopics: graph.nodes.filter((n) => n.kind === 'topic').map((n) => n.id),
+        focus,
+        labels: true,
+        height: Math.max(200, window.innerHeight - 40),
+        navigate: (href) => {
+          (window.top ?? window).location.assign(href);
+        },
+      });
+    </script>
+  </body>
+</html>

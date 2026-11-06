@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Checklist</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Agent Orchestration</p>
+<h1>Harness Checklist</h1>
+<p class="subtitle">Agent = Model + Harness. When an agent fails, fix the harness, not just this one output.</p>
+
+<h3>The 2×2 of controls</h3>
+<div class="grid2">
+  <div class="h"></div><div class="h">Guide (before acting)</div><div class="h">Sensor (after acting)</div>
+  <div class="h">Computational<br>(deterministic program)</div>
+  <div class="c1">Codemods, templates, LSP</div>
+  <div class="c2">Tests, linters, type checks, structural/architecture tests</div>
+  <div class="h">Inferential<br>(LLM interprets/judges)</div>
+  <div class="c3">CLAUDE.md / AGENTS.md, skills</div>
+  <div class="c4">Review agents, LLM-as-judge</div>
+</div>
+
+<h3>When an agent fails, ask in order</h3>
+<ol>
+  <li>Preventable before it acts? → <strong>guide</strong></li>
+  <li>Detectable after? → <strong>sensor</strong> (write the message for the model: how to fix)</li>
+  <li>Can a program decide it? → <strong>computational</strong>; needs judgment → <strong>inferential</strong></li>
+  <li>Must a fresh session know it? → <strong>state file</strong> or git</li>
+</ol>
+
+<h3>Rules of thumb</h3>
+<ul>
+  <li>Guide ignored repeatedly → back it with a computational sensor.</li>
+  <li>Feedback alone repeats mistakes; feedforward alone is never checked. Use both.</li>
+  <li>The steering loop: a recurring failure means the harness needs to change ("add a sign on the slide").</li>
+</ul>
+
+<h3>Long-running harness (Anthropic)</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>Piece</th><th>Kind</th><th>Prevents</th></tr>
+  <tr><td>Initializer agent (runs once)</td><td>Setup</td><td>Missing state for later sessions</td></tr>
+  <tr><td><code>feature_list.json</code>, only <code>passes</code> editable</td><td>State</td><td>Declaring done too early</td></tr>
+  <tr><td><code>claude-progress.txt</code> + git</td><td>State</td><td>Fresh session not knowing the history</td></tr>
+  <tr><td><code>init.sh</code> + end-to-end smoke check</td><td>Guide + sensor</td><td>Setup waste; building on broken code</td></tr>
+  <tr><td>One feature per session</td><td>Guide</td><td>Running out of context halfway</td></tr>
+</table>
+</div>
+<p class="muted">Sources: <a href="https://martinfowler.com/articles/harness-engineering.html">Böckeler 2026</a> · <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic 2025</a> · <a href="https://openai.com/index/harness-engineering/">OpenAI 2026</a>. Introduced in <a href="../lessons/0005-harness-engineering.html">Lesson 5</a>.</p>
+</main>
+</body>
+</html>

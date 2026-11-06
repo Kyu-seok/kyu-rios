@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Engineering Book Map</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+<h1>Book Map</h1>
+<p class="subtitle">All ten chapters of Huyen's <em>AI Engineering</em> on one page: what each chapter covers, where it sits in the stack, and the terms to listen for.</p>
+<p class="meta">Reference</p>
+
+<p>The book follows the three-layer AI stack from Chapter 1. Most of it lives in
+<span class="tag app">Application</span>. Chapters 7–9 go down into
+<span class="tag model">Model</span>, and Chapter 10 puts the pieces together into a production
+<span class="tag infra">System</span>. Section names below come straight from the book's table of contents.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Ch.</th><th>Layer</th><th>In one line</th><th>Terms to listen for</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><span class="tag app">Overview</span></td>
+<td>What foundation models are, why AI engineering became its own discipline, how to plan an AI product, and the three-layer stack.</td>
+<td>token, self-supervision, foundation model, multimodal, prompt engineering vs finetuning, AI stack</td></tr>
+<tr><td>2</td><td><span class="tag model">Model</span></td>
+<td>How the models you'll use are made (training data, transformer, scale, post-training) and how they produce output (sampling).</td>
+<td>transformer, scaling law, SFT, preference finetuning/RLHF, reward model, temperature, top-k, top-p, structured outputs, hallucination</td></tr>
+<tr><td>3</td><td><span class="tag app">Application</span></td>
+<td>Ways to evaluate open-ended outputs: language-model metrics, exact evaluation, AI as a judge, comparative ranking.</td>
+<td>entropy, cross entropy, perplexity, functional correctness, exact match, lexical/semantic similarity, embedding, AI judge, Elo-style ranking</td></tr>
+<tr><td>4</td><td><span class="tag app">Application</span></td>
+<td>Evaluating a whole <em>system</em>: what to measure, how to choose a model (build vs buy), and how to design an evaluation pipeline.</td>
+<td>evaluation-driven development, factual consistency, instruction following, open weight, model API, public benchmarks, data contamination, rubric</td></tr>
+<tr><td>5</td><td><span class="tag app">Application</span></td>
+<td>Prompting best practices, plus defending against attacks on your prompts.</td>
+<td>in-context learning, zero-/few-shot, system prompt, context length, chain of thought, jailbreak, prompt injection (direct/indirect)</td></tr>
+<tr><td>6</td><td><span class="tag app">Application</span></td>
+<td>Building context: retrieval-augmented generation, agents that plan and use tools, and memory.</td>
+<td>RAG, sparse vs dense retrieval, BM25, vector search, chunking, reranking, query rewriting, tools, planning, reflection, memory</td></tr>
+<tr><td>7</td><td><span class="tag model">Model</span></td>
+<td>When to finetune (and when RAG is the better fit), why finetuning is memory-hungry, and how parameter-efficient methods help.</td>
+<td>finetuning vs RAG, backpropagation, trainable parameters, memory math, numerical precision (FP16/BF16/INT8), quantization, PEFT, LoRA, model merging</td></tr>
+<tr><td>8</td><td><span class="tag model">Model</span></td>
+<td>Getting the data you train and evaluate on: curation, synthesis, and processing.</td>
+<td>data quality/coverage/quantity, annotation, data synthesis, instruction data, distillation, deduplication</td></tr>
+<tr><td>9</td><td><span class="tag model">Model</span></td>
+<td>Making inference faster and cheaper, at the model level and at the serving level.</td>
+<td>compute- vs memory-bound, TTFT, TPOT, throughput, goodput, MFU/MBU, accelerators, KV cache, speculative decoding, batching, prefill/decode, prompt caching, parallelism</td></tr>
+<tr><td>10</td><td><span class="tag infra">System</span></td>
+<td>A reference architecture assembled step by step, plus monitoring and collecting user feedback.</td>
+<td>context enhancement, input/output guardrails, model router, gateway, exact/semantic cache, observability, drift, user feedback, degenerate feedback loop</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>The three layers</h2>
+<p>Paraphrased from Ch. 1, “Three Layers of the AI Stack.” You usually start at the top and move down only when you need to.</p>
+<table>
+<thead><tr><th>Layer</th><th>Responsibilities</th><th>Chapters</th></tr></thead>
+<tbody>
+<tr><td><span class="tag app">Application development</span></td><td>Evaluation, prompt engineering and context construction, AI interface</td><td>3, 4, 5, 6, 10</td></tr>
+<tr><td><span class="tag model">Model development</span></td><td>Modeling and training (incl. finetuning), dataset engineering, inference optimization; evaluation again</td><td>2, 7, 8, 9</td></tr>
+<tr><td><span class="tag infra">Infrastructure</span></td><td>Model serving, managing data and compute, monitoring</td><td>9, 10 (touched on)</td></tr>
+</tbody>
+</table>
+
+<h2>Adaptation, from cheapest to heaviest</h2>
+<table>
+<thead><tr><th>Technique</th><th>Changes weights?</th><th>Data needed</th><th>Chapter</th></tr></thead>
+<tbody>
+<tr><td>Prompt engineering</td><td>No</td><td>Least</td><td>5</td></tr>
+<tr><td>RAG (context construction)</td><td>No</td><td>A document store to retrieve from</td><td>6</td></tr>
+<tr><td>Finetuning</td><td>Yes</td><td>More</td><td>7, 8</td></tr>
+<tr><td>Pre-training from scratch</td><td>Yes (starts from random weights)</td><td>The most by far; rarely your job</td><td>2</td></tr>
+</tbody>
+</table>
+
+<p class="lesson-nav"><a href="../lessons/0001-the-big-picture.html">← Lesson 1: The big picture</a><span><a href="sampling.html">Sampling</a> · <a href="evaluation.html">Evaluation</a> · <a href="glossary.html">Glossary</a></span></p>
+</main>
+</body>
+</html>

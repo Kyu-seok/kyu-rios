@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflows vs Agents</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/patterns.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 2 · Agent Orchestration</p>
+<h1>Workflows vs Agents: Six Shapes</h1>
+<p class="subtitle">Almost every orchestration you will meet is built from a handful of shapes.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Given a task, you can say whether it needs a <strong>workflow</strong> or an <strong>agent</strong>, and name the shape that fits: prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer or autonomous agent.</p>
+</div>
+
+<h2>0. Warm-up: recall from last time</h2>
+<p>Answer these first, before reading anything new. Coming back to an idea after a gap is what makes it stick.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. The one distinction that matters</h2>
+
+<p>Anthropic calls both of these <em>agentic systems</em>, but splits them by <strong>who decides the path</strong>:<a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a></p>
+<ul>
+  <li><strong>Workflow</strong>: LLMs and tools are orchestrated <em>"through predefined code paths."</em> You decide the steps; the model fills them in.</li>
+  <li><strong>Agent</strong>: the LLM <em>"dynamically directs its own processes and tool use."</em> The model decides the steps.</li>
+</ul>
+
+<p>This is the same test you just used for the Explore subagent. A path designed in advance means a workflow; a path decided by the model at runtime means an agent. It also explains graph engineering: <strong>a graph is a workflow whose nodes may themselves be agents.</strong> You fix the shape, and each node is free to work out its own part.<a class="cite" href="https://www.louisbouchard.ai/graph-engineering-explained/">[2]</a></p>
+
+<p>Every shape below is built from one block: the <strong>augmented LLM</strong>, a model with retrieval, tools and memory.<a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a> Before reaching for any of them, remember that for many tasks a single well-prompted call is enough.<a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a></p>
+
+<h2>2. Five workflow shapes</h2>
+
+<div class="pattern-card">
+  <h3>① Prompt chaining</h3>
+  <div class="pattern" data-pattern="chain"></div>
+  <p>Split the task into fixed steps; each call takes the previous output. A code <strong>gate</strong> between steps can stop bad output early.</p>
+  <p class="use"><strong>Use when</strong> the task breaks cleanly into the same steps every time. <span class="muted">Example: write an outline, check it against rules, then write the document.</span></p>
+</div>
+
+<div class="pattern-card">
+  <h3>② Routing</h3>
+  <div class="pattern" data-pattern="route"></div>
+  <p>Classify the input, then send it to a prompt (or model) specialised for that category.</p>
+  <p class="use"><strong>Use when</strong> inputs fall into distinct categories you can classify reliably. <span class="muted">Example: refund / technical / general support queries; easy questions to a small model, hard ones to a big one.</span></p>
+</div>
+
+<div class="pattern-card">
+  <h3>③ Parallelization</h3>
+  <div class="pattern" data-pattern="parallel"></div>
+  <p>Run several calls at once and combine the results. There are two kinds: <strong>sectioning</strong> (different independent subtasks) and <strong>voting</strong> (the same task several times).</p>
+  <p class="use"><strong>Use when</strong> you want speed, or more confidence from several attempts. <span class="muted">Example: three prompts review code for vulnerabilities, and it is flagged if enough agree.</span></p>
+</div>
+
+<div class="pattern-card">
+  <h3>④ Orchestrator-workers</h3>
+  <div class="pattern" data-pattern="orchestrator"></div>
+  <p>A central LLM breaks the task down <em>at runtime</em>, hands the pieces to workers, then combines their results. The dashed boxes show that the workers aren't known in advance.</p>
+  <p class="use"><strong>Use when</strong> you can't predict the subtasks. <span class="muted">This is the difference from ③: there, you fix the subtasks; here, <em>"the orchestrator determines subtasks based on the input."</em><a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a> Example: a code change that touches an unknown set of files. Anthropic's research system uses this shape.<a class="cite" href="https://www.anthropic.com/engineering/multi-agent-research-system">[3]</a></span></p>
+</div>
+
+<div class="pattern-card">
+  <h3>⑤ Evaluator-optimizer</h3>
+  <div class="pattern" data-pattern="evaluator"></div>
+  <p>One LLM generates, another critiques, and they loop until the evaluator accepts.</p>
+  <p class="use"><strong>Use when</strong> you have <em>clear evaluation criteria</em> and refining measurably helps. <span class="muted">Example: a translation critiqued and revised. In code, the "evaluator" is often not an LLM at all: it can be the test suite, which is a <strong>sensor</strong> from Lesson 1.</span></p>
+</div>
+
+<h2>3. The sixth shape: the autonomous agent</h2>
+
+<div class="pattern-card">
+  <h3>⑥ Autonomous agent</h3>
+  <div class="pattern" data-pattern="agent"></div>
+  <p>An LLM uses tools in a loop based on feedback from the environment, until a stop condition. This is Claude Code itself.</p>
+  <p class="use"><strong>Use when</strong> the problem is open-ended, you can't predict or hard-code the number of steps, and you trust the model's decisions. The cost is higher spend and the risk that errors compound, so Anthropic advises sandboxing and guardrails.<a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a></p>
+</div>
+
+<div class="note">
+  <p class="label">Connecting to Lesson 1</p>
+  <p>The <strong>Ralph loop</strong> is shape ⑥ restarted from scratch over and over, with tests acting as an evaluator (⑤). The Lesson 1 code-review graph (parallel reviewers → verifier → fixer → tests) is ③ followed by ⑤. Most real systems are <em>combinations</em> of these six shapes.</p>
+</div>
+
+<h2>4. How to choose</h2>
+
+<p>Go down this list and stop at the first one that works. Each step adds cost and failure modes.</p>
+<ol>
+  <li><strong>One call</strong>, plus retrieval and examples. Often enough.</li>
+  <li><strong>Fixed steps?</strong> → chaining. <strong>Distinct input types?</strong> → routing. <strong>Independent parts, or want votes?</strong> → parallelization.</li>
+  <li><strong>Clear pass/fail criteria?</strong> → add an evaluator-optimizer loop.</li>
+  <li><strong>Subtasks only known at runtime?</strong> → orchestrator-workers.</li>
+  <li><strong>Open-ended, unknown number of steps?</strong> → autonomous agent, with a strong harness.</li>
+</ol>
+<blockquote>"Success in the LLM space isn't about building the most sophisticated system. It's about building the right system for your needs."<cite>Schluntz &amp; Zhang, Anthropic <a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a></cite></blockquote>
+
+<hr>
+
+<h2>5. Practice: recall the shapes</h2>
+<p>Without scrolling up, list the six shapes and give each a one-line "use when."</p>
+<div class="recall">
+  <textarea placeholder="1. ...&#10;2. ...&#10;3. ...&#10;4. ...&#10;5. ...&#10;6. ..."></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <ol>
+      <li><strong>Prompt chaining</strong>: the task always breaks into the same fixed steps.</li>
+      <li><strong>Routing</strong>: distinct input categories, each best handled separately.</li>
+      <li><strong>Parallelization</strong>: independent parts (sectioning) or several attempts (voting).</li>
+      <li><strong>Orchestrator-workers</strong>: subtasks only known at runtime.</li>
+      <li><strong>Evaluator-optimizer</strong>: clear criteria, and refining helps.</li>
+      <li><strong>Autonomous agent</strong>: open-ended, unpredictable number of steps.</li>
+    </ol>
+    <p>Shapes 1–5 are <strong>workflows</strong> (you design the path). Shape 6 is an <strong>agent</strong> (the model chooses the path).</p>
+  </div>
+</div>
+
+<h2>6. Practice: pick the shape</h2>
+<p>Choose the <em>simplest</em> shape that fits each scenario.</p>
+<div class="quiz" data-quiz="l2"></div>
+
+<script src="0002-workflows-vs-agents.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+const SHAPES = ["Prompt chaining", "Routing", "Parallelization", "Orchestrator-workers", "Evaluator-optimizer", "Autonomous agent"];
+Quiz.register("l2", window.QUIZ.filter((q) => q.section === "l2"));
+</script>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source to read next (≈25 min)</p>
+  <p><a href="https://www.anthropic.com/engineering/building-effective-agents">Erik Schluntz &amp; Barry Zhang, "Building effective agents"</a> (Anthropic, Dec 2024). Nearly every later framework, including LangGraph tutorials and graph-engineering posts, reuses its vocabulary. Read the patterns section, then skim Appendix 2 on tool design: the authors say they spent more time optimising tools than the overall prompt.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck or curious?</p>
+  <p>Ask me in the terminal. Good questions to try: <em>"Which shape is Claude Code's plan mode?"</em> or <em>"Is evaluator-optimizer the same as a Ralph loop?"</em></p>
+</div>
+
+<p class="muted">Quick reference: <a href="../reference/workflow-patterns.html">Six Orchestration Shapes</a> · <a href="../reference/zoom-levels.html">The Five Zoom Levels</a></p>
+
+<h3>Sources</h3>
+<ol class="muted" style="font-size:.85rem">
+  <li><a href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic, "Building effective agents" (Dec 2024)</a></li>
+  <li><a href="https://www.louisbouchard.ai/graph-engineering-explained/">Bouchard, "Graph Engineering vs Loop Engineering" (Jul 2026)</a></li>
+  <li><a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic, "How we built our multi-agent research system" (Jun 2025)</a></li>
+</ol>
+
+<nav class="lesson-nav">
+  <a href="0001-the-map.html">← Lesson 1: The Map</a>
+  <a href="0003-telling-shapes-apart.html">Next: Lesson 3, Telling the Shapes Apart →</a>
+</nav>
+
+</main>
+</body>
+</html>

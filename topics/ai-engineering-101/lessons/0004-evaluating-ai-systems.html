@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluating AI Systems</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .flow text { font: 13px var(--sans); fill: var(--fg); }
+  .flow .n { font: 600 13px var(--sans); fill: var(--accent); }
+  .flow .sub { fill: var(--muted); }
+  .flow rect { fill: var(--card); stroke: var(--rule); }
+  .flow .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; marker-end: url(#ah4); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Evaluating AI Systems</h1>
+<p class="subtitle">From “which method?” to “which model, and how do I know my product works?”</p>
+<p class="meta">Lesson 4 · Previews Chapter 4 · about 20 min</p>
+
+<div class="box win">
+  <span class="box-label">Your win today</span>
+  Given a product idea, you'll be able to sketch its evaluation plan: the criteria that matter, how to narrow the field of models, whether to call an API or host the model yourself, and how many test examples you need before you trust a result.
+</div>
+
+<h2>Warm-up · spaced review</h2>
+<p><strong>Training stages, one more time.</strong> Ask one question of each item: <em>who writes the answer?</em> Nobody, because the text already exists → pre-training. A person writes the ideal reply → SFT. A person (or a reward model) only <em>judges</em> replies → preference finetuning.</p>
+<div class="sorter"
+  data-categories='["Pre-training","Supervised finetuning (SFT)","Preference finetuning"]'
+  data-items='[
+    {"text":"Scraped Wikipedia and code repositories, used as-is","answer":"Pre-training","why":"Nobody writes an answer. The next token in the existing text is the label (self-supervision)."},
+    {"text":"Doctors write model answers to 5,000 patient questions","answer":"Supervised finetuning (SFT)","why":"A person writes the ideal response, so these are (prompt, response) demonstrations."},
+    {"text":"Annotators write a step-by-step solution for each math problem","answer":"Supervised finetuning (SFT)","why":"Still a person writing the answer, so it’s demonstration data, even though it’s long and detailed."},
+    {"text":"Users click 👍 on the better of two candidate replies","answer":"Preference finetuning","why":"The person only judges; the replies already exist. That gives (prompt, winner, loser) comparison data."},
+    {"text":"A scorer model rates replies, and the LLM is updated to raise those scores","answer":"Preference finetuning","why":"That scorer is the reward model. Optimizing against it is the RL step of RLHF. Nobody writes anything here."}
+  ]'></div>
+
+<p><strong>And three from Lesson 3, in new clothes.</strong></p>
+<div class="quiz" data-quiz="check-1"></div>
+
+<h2>1 · Decide what “good” means before you build</h2>
+<p>Huyen asks conference audiences what's worse: an app that was never deployed, or one that's deployed but nobody knows whether it works. Most say the second. It costs money to run, and it can cost even more to take down. Her answer is <strong>evaluation-driven development</strong>: like test-driven development, you define evaluation criteria <em>before</em> building. <a class="cite" href="#src">Ch4 · Evaluation Criteria</a></p>
+<p>It's no accident that the most common production apps are the easy-to-measure ones: recommenders (engagement), fraud detection (money saved), coding (functional correctness), and classification. <a class="cite" href="#src">Ch4 · Evaluation-Driven Development</a></p>
+
+<p>Huyen sorts criteria into four buckets. Her example is summarizing a legal contract:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Bucket</th><th>Asks</th><th>Contract-summary example</th></tr></thead>
+<tbody>
+<tr><td><strong>Domain-specific capability</strong></td><td>Does the model know the field?</td><td>Understands contract law</td></tr>
+<tr><td><strong>Generation capability</strong></td><td>Is the output fluent, coherent, faithful, safe?</td><td>The summary is consistent with the contract</td></tr>
+<tr><td><strong>Instruction-following</strong></td><td>Did it do what you asked, in the format asked?</td><td>Meets the length limit</td></tr>
+<tr><td><strong>Cost and latency</strong></td><td>Can you afford it, and is it fast enough?</td><td>Price and wait per summary</td></tr>
+</tbody></table></div>
+
+<p>Two details worth carrying with you:</p>
+<ul>
+  <li><strong>Factual consistency</strong> is either <em>local</em> (checked against a given context, as in summaries or support bots) or <em>global</em> (checked against open knowledge). Local is far easier to check. Huyen also suggests focusing hallucination tests on the queries that trigger it: niche topics, and questions about things that don't exist. <a class="cite" href="#src">Ch4 · Factual consistency</a></li>
+  <li><strong>Instruction-following is not domain skill.</strong> A sentiment model that answers “HAPPY” when told to output POSITIVE, NEGATIVE or NEUTRAL understands the sentiment; it just didn't follow the format, and the parser downstream breaks anyway. <a class="cite" href="#src">Ch4 · Instruction-Following Capability</a></li>
+</ul>
+
+<p><strong>Practice:</strong> these bug reports come from a contract-summary product. File each one under its bucket.</p>
+<div class="sorter"
+  data-categories='["Domain-specific capability","Generation capability","Instruction-following","Cost and latency"]'
+  data-items='[
+    {"text":"It misreads an indemnity clause because it doesn’t understand contract law","answer":"Domain-specific capability","why":"The model lacks knowledge of the field. Better prompting won’t add knowledge; a stronger model, RAG or finetuning might."},
+    {"text":"The summary gives a termination date that appears nowhere in the contract","answer":"Generation capability","why":"A local factual-consistency failure: the output isn’t supported by the given context."},
+    {"text":"You asked for at most 100 words and got 400","answer":"Instruction-following","why":"The content may be fine; the instruction was ignored. Length and format constraints are classic instruction-following checks."},
+    {"text":"Each summary takes 40 seconds, and users abandon the page","answer":"Cost and latency","why":"Quality isn’t the problem. Latency is, and the fix might be a smaller model or shorter outputs."},
+    {"text":"The summary contradicts itself between paragraphs","answer":"Generation capability","why":"Coherence is a generation-quality criterion, alongside fluency, faithfulness and safety."},
+    {"text":"It returns prose when your parser expects JSON","answer":"Instruction-following","why":"A structured-output failure. Huyen calls instruction-following essential for any app that parses the output."}
+  ]'></div>
+
+<h2>2 · Choosing a model</h2>
+<p>“You don't really care about which model is the best. You care about which model is the best for your applications.” Start by splitting attributes into <strong>hard</strong> ones, which you can't change (licence, training data, model size, your privacy policy), and <strong>soft</strong> ones, which you can improve (accuracy, toxicity, factual consistency). The same attribute can be either. Latency is soft if you host the model and can optimize it, and hard if someone else hosts it. <a class="cite" href="#src">Ch4 · Model Selection Workflow</a></p>
+
+<figure>
+<svg class="flow" viewBox="0 0 680 120" role="img" aria-label="Four-step model selection workflow: filter by hard attributes, narrow with public information, run your own evaluation, then monitor in production">
+  <defs><marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
+  <rect x="0" y="8" width="150" height="70" rx="6"/>
+  <text class="n" x="12" y="30">1 · Filter</text><text x="12" y="50">Drop models whose</text><text x="12" y="67">hard attributes fail</text>
+  <rect x="176" y="8" width="150" height="70" rx="6"/>
+  <text class="n" x="188" y="30">2 · Narrow</text><text x="188" y="50">Public benchmarks</text><text x="188" y="67">and leaderboards</text>
+  <rect x="352" y="8" width="150" height="70" rx="6"/>
+  <text class="n" x="364" y="30">3 · Experiment</text><text x="364" y="50">Your own eval</text><text x="364" y="67">pipeline decides</text>
+  <rect x="528" y="8" width="150" height="70" rx="6"/>
+  <text class="n" x="540" y="30">4 · Monitor</text><text x="540" y="50">Production failures</text><text x="540" y="67">and user feedback</text>
+  <path class="arrow" d="M151,43 L172,43"/><path class="arrow" d="M327,43 L348,43"/><path class="arrow" d="M503,43 L524,43"/>
+  <text class="sub" x="0" y="106">Iterative: what you learn in step 3 can send you back to step 1.</text>
+</svg>
+</figure>
+
+<h3>Model API or self-hosted open model?</h3>
+<p>Almost nobody builds a foundation model, so “build vs. buy” really means calling a commercial API or hosting an open model yourself. (Most “open source” models are really <em>open weight</em>: the weights are public, the training data isn't. Always read the licence: is commercial use allowed? Can you train other models on its outputs?) Huyen weighs seven axes: <a class="cite" href="#src">Ch4 · Model Build Versus Buy</a></p>
+<div class="table-wrap"><table>
+<thead><tr><th>Axis</th><th>Leans API when…</th><th>Leans self-host when…</th></tr></thead>
+<tbody>
+<tr><td>Data privacy</td><td>Data may leave your org</td><td>It can't (cf. Samsung's 2023 ChatGPT leak)</td></tr>
+<tr><td>Data lineage</td><td>You want contracts that shield you from copyright claims</td><td>You need to inspect fully open data</td></tr>
+<tr><td>Performance</td><td>You need the very strongest model; the best stay behind APIs</td><td>A slightly weaker model is enough</td></tr>
+<tr><td>Functionality</td><td>You want scaling, function calling, JSON mode out of the box</td><td>You need logprobs or a kind of finetuning the provider won't offer</td></tr>
+<tr><td>Cost</td><td>Low or spiky volume; engineers are expensive</td><td>Huge volume, where per-token API bills dominate</td></tr>
+<tr><td>Control</td><td>The provider's guardrails and update schedule are acceptable</td><td>You need a frozen version, or the provider's safety filters block your use case</td></tr>
+<tr><td>On-device</td><td>Always online</td><td>Must run offline or on the device</td></tr>
+</tbody></table></div>
+
+<p><strong>Practice:</strong> which way does each situation push you?</p>
+<div class="sorter"
+  data-categories='["Model API","Self-hosted open model"]'
+  data-items='[
+    {"text":"A hospital can’t send patient records outside its own network","answer":"Self-hosted open model","why":"Data privacy is a hard attribute here. An external API is ruled out before any benchmark is consulted."},
+    {"text":"A three-person startup needs function calling, JSON output and auto-scaling next week","answer":"Model API","why":"These features are slow and costly to build yourself. Huyen: “APIs are expensive, but engineering can be even more so.”"},
+    {"text":"Your classifier needs token logprobs, and the provider doesn’t expose them","answer":"Self-hosted open model","why":"With an API you only get the functionality it exposes. Many APIs hide logprobs so competitors can’t copy their models."},
+    {"text":"The app must work on phones with no internet connection","answer":"Self-hosted open model","why":"On-device deployment means the model runs locally, which an API can’t do."},
+    {"text":"You need the strongest model available today, whatever its licence","answer":"Model API","why":"Providers usually open-source their weaker models and keep the strongest behind APIs."},
+    {"text":"A regulator requires that the model version never changes without notice","answer":"Self-hosted open model","why":"You can freeze open weights. Commercial models have historically changed without announcement."}
+  ]'></div>
+
+<h3>Public benchmarks: a filter, not a verdict</h3>
+<p>There are thousands of benchmarks (BIG-bench alone has 214). Leaderboards aggregate only a handful, often skipping expensive ones. The bigger problem is <strong>data contamination</strong>: the model was trained on the test. It's usually accidental, because web scrapes pick up benchmark pages. A satirical paper, “Pretraining on the Test Set Is All You Need,” showed a tiny model beating much larger ones that way. <a class="cite" href="#src">Ch4 · Data contamination</a></p>
+<p>There are two ways to detect contamination. <strong>N-gram overlap</strong> (e.g. a 13-token sequence found in the training data) is accurate but needs the training data. <strong>Perplexity</strong> is cheaper and works without it: unusually low perplexity means the text looks memorized. So use benchmarks to <em>weed out bad models</em>, not to find the best one for you. <a class="cite" href="#src">Ch4 · Handling data contamination</a></p>
+
+<h2>3 · Your own evaluation pipeline</h2>
+<p><strong>Step 1: evaluate every component.</strong> Huyen's example app extracts someone's current employer from a résumé PDF in two steps, PDF→text then text→employer. If the end result is wrong, only scoring each step separately tells you which one failed. Also evaluate per <em>turn</em> (is each reply good?) and per <em>task</em> (did the user get it done, and in how many turns?). Task-level matters more, because that's what users care about. <a class="cite" href="#src">Ch4 · Step 1</a></p>
+<p><strong>Step 2: write the guideline.</strong> Huyen calls this the most important step. Define what the app should <em>and shouldn't</em> do, pick criteria (LangChain users averaged 2.3), and write a scoring rubric <em>with examples</em> that humans can apply consistently. A correct answer isn't always a good one. LinkedIn found “You are a terrible fit” may be accurate but unhelpful. Then tie the metric to the business. For example: <em>80% factual consistency lets us automate 30% of tickets; 90% lets us automate 50%.</em> <a class="cite" href="#src">Ch4 · Step 2</a></p>
+<p><strong>Step 3: choose methods and data.</strong> Mix methods: for example, a cheap classifier on 100% of traffic and an expensive AI judge on 1%. Use real production data, and <strong>slice</strong> it (free vs. paid, mobile vs. web, inputs with typos, out-of-scope requests). Otherwise you can fall for <em>Simpson's paradox</em>, where A beats B overall yet loses on every slice. “If you care about something, put a test set on it.” <a class="cite" href="#src">Ch4 · Step 3</a></p>
+
+<h3>How many examples do you need?</h3>
+<p>OpenAI's rule of thumb: for every 3× smaller score difference you want to detect, you need about 10× more examples (roughly 10 examples for a 30-point gap, 100 for 10, 1,000 for 3, 10,000 for 1). Feel it below. Prompt B really is better than A. How often does your eval set notice? <a class="cite" href="#src">Ch4 · Annotate evaluation data, Table 4-7</a></p>
+
+<div class="evalsim" data-base="0.5"
+  data-challenges='[
+    {"text":"10-point gap: find the <em>smallest</em> set size where the eval picks B in at least 95% of runs.","gap":10,"n":300,"min":0.95},
+    {"text":"3-point gap: same goal. How many times bigger did the set have to get?","gap":3,"n":3000,"min":0.95},
+    {"text":"With 100 examples, find the gap where the eval is barely better than a coin flip (at most 60%).","n":100,"max":0.6}
+  ]'></div>
+
+<p>Huyen's practical test for whether your set is big enough is <strong>bootstrapping</strong>. Resample your 100 examples with replacement many times. If one resample scores 90% and another 70%, you need more data. Finally, <strong>evaluate the evaluator</strong>. Do better replies actually score higher? Does running it twice give the same result? (Set the AI judge's temperature to 0.) Log every variable: data, rubric, judge prompt and sampling settings. <a class="cite" href="#src">Ch4 · Evaluate your evaluation pipeline, Iterate</a></p>
+
+<h2>Check yourself</h2>
+<p>Answer from memory, then use the feedback.</p>
+<div class="quiz" data-quiz="check-2"></div>
+
+<div class="box source" id="src">
+  <span class="box-label">Primary source</span>
+  <p><strong>Read next:</strong> Huyen, <em>AI Engineering</em>, Chapter 4. Read <em>“Evaluation Criteria”</em> up to the safety section, then <em>“Model Selection,”</em> <em>“Model Build Versus Buy”</em> and all of <em>“Design Your Evaluation Pipeline.”</em> Skim the leaderboard details in <em>“Navigate Public Benchmarks,”</em> but read the data contamination part carefully.</p>
+  <p><strong>From a practitioner, about 15 min:</strong> Juan Pablo Bottaro &amp; Karthik R., <a href="https://www.linkedin.com/blog/engineering/generative-ai/musings-on-building-a-generative-ai-product">“Musings on Building a Generative AI Product”</a> (LinkedIn Engineering, 2024). This is the retrospective Huyen cites. Writing the evaluation guideline was their first hurdle, and they had linguists reviewing up to 500 conversations a day.</p>
+</div>
+
+<div class="box ask">
+  <span class="box-label">Stuck or curious?</span>
+  Ask me anything, e.g. “what would an eval plan look like for <em>my</em> product idea?” or “how does bootstrapping actually work in code?”. When you're done, tell me your first-try results: the warm-up sorter, the 3 warm-up questions, the two practice sorters, the simulator challenges, and the quiz. You don't need to say which questions you missed; the scores are enough.
+</div>
+
+<nav class="lesson-nav">
+  <a href="0003-evaluation-methodology.html">← Lesson 3: Evaluation Methodology</a>
+  <span><a href="../reference/evaluation.html">Reference: Evaluation</a> · <a href="../reference/glossary.html">Glossary</a></span>
+</nav>
+<p style="font:.85rem var(--sans);color:var(--muted);text-align:right"><a href="0005-prompt-engineering.html">Next: Lesson 5, Prompt Engineering →</a></p>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="0004-evaluating-ai-systems.quiz.js"></script>
+<script>
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-1"]'), window.QUIZ.filter((q) => q.section === "check-1"));
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-2"]'), window.QUIZ.filter((q) => q.section === "check-2"));
+</script>
+<script src="../assets/sorter.js"></script>
+<script src="../assets/evalsim.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keys and Partitions</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<p class="kicker">CCDAK reference</p>
+<h1>Keys and partitions</h1>
+<h2>Routing</h2>
+<table>
+<tr><th>Record has</th><th>Default producer does</th><th>Order you can rely on</th></tr>
+<tr><td>A key</td><td><code>toPositive(murmur2(keyBytes)) % numPartitions</code></td><td>Per key, while the partition count is unchanged</td></tr>
+<tr><td>No key</td><td>Sticks to one partition for about <code>batch.size</code> bytes, then moves</td><td>Per partition only, nothing per key</td></tr>
+<tr><td>An explicit partition</td><td>Uses that partition</td><td>Per partition</td></tr>
+</table>
+<h2>Producer settings</h2>
+<table>
+<tr><th>Config</th><th>Default</th><th>Effect</th></tr>
+<tr><td><code>partitioner.class</code></td><td>null</td><td>Null uses the built-in logic. Can be <code>RoundRobinPartitioner</code> or your own <code>Partitioner</code>.</td></tr>
+<tr><td><code>partitioner.ignore.keys</code></td><td>false</td><td>If true, keys are not used to choose a partition.</td></tr>
+<tr><td><code>partitioner.adaptive.partitioning.enable</code></td><td>true</td><td>Sends more to partitions on faster brokers.</td></tr>
+</table>
+<h2>Rules worth memorising</h2>
+<ul>
+<li>Order exists within a partition, never across a topic.</li>
+<li>Same key means same partition. Different keys may still share one.</li>
+<li>Total order across a topic needs exactly one partition.</li>
+<li>Partition count can only increase. To reduce it, create a new topic.</li>
+<li>Growing remaps keys, and existing data does not move.</li>
+</ul>
+<h2>Commands</h2>
+<pre><code>kafka-topics.sh --bootstrap-server HOST:9092 --create --topic T --partitions 3 --replication-factor 1
+kafka-topics.sh --bootstrap-server HOST:9092 --describe --topic T
+kafka-topics.sh --bootstrap-server HOST:9092 --alter --topic T --partitions 6</code></pre>
+<footer>Sources: <a href="https://kafka.apache.org/44/getting-started/introduction/">Introduction</a> · <a href="https://kafka.apache.org/44/configuration/producer-configs/">Producer configs</a> · <a href="https://kafka.apache.org/44/operations/basic-kafka-operations/">Basic operations</a> · <a href="https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/producer/internals/BuiltInPartitioner.java">BuiltInPartitioner</a>. Taught in <a href="../lessons/0001-where-does-an-event-land.html">Lesson 1</a>.</footer>
+</main>
+</body>
+</html>

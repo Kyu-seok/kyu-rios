@@ -1,0 +1,40 @@
+---
+/**
+ * A Graph on a page. `mode` picks which part of the Graph: the whole of it, a Topic's local Graph,
+ * or a Node's neighbourhood. The browser loads graph.json and draws on a canvas.
+ */
+interface Props {
+  mode: 'global' | 'topic' | 'node';
+  topic?: string;
+  focus?: string;
+  height?: number;
+  filters?: boolean;
+}
+const { mode, topic, focus, height = 420, filters = mode === 'global' } = Astro.props;
+---
+
+<div class="graph" data-graph data-mode={mode} data-topic={topic} data-focus={focus} data-filters={filters ? 'true' : 'false'} style={`--graph-height:${height}px`}>
+  <p class="graph-empty">Loading the Graph…</p>
+</div>
+
+<script>
+  import { clientBase } from '../lib/base';
+  import { mountGraph } from '../client/graph';
+  import { nodeSubgraph, topicSubgraph } from '../lib/subgraph';
+  import type { GraphData } from '../lib/types';
+
+  const base = clientBase;
+  const graph: GraphData = await fetch(`${base}graph.json`).then((r) => r.json());
+  for (const el of document.querySelectorAll<HTMLElement>('[data-graph]')) {
+    const { mode, topic, focus, filters } = el.dataset;
+    const data = mode === 'topic' && topic ? topicSubgraph(graph, topic) : mode === 'node' && focus ? nodeSubgraph(graph, focus) : graph;
+    mountGraph(el, data, {
+      base,
+      allTopics: graph.nodes.filter((n) => n.kind === 'topic').map((n) => n.id),
+      focus: focus ?? (mode === 'topic' ? topic : undefined),
+      filters: filters === 'true',
+      labels: mode !== 'global',
+      height: Number.parseInt(getComputedStyle(el).getPropertyValue('--graph-height'), 10) || 420,
+    });
+  }
+</script>

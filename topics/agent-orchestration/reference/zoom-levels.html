@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Five Zoom Levels</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Agent Orchestration</p>
+<h1>The Five Zoom Levels</h1>
+<p class="subtitle">One system, five questions. Find your level, then pick your technique.</p>
+
+<h3>Core definitions</h3>
+<p><strong>Agent</strong>: "LLMs using tools based on environmental feedback in a loop," ending at a stop condition. <a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic</a><br>
+<strong>Agent = Model + Harness.</strong> The harness is everything except the model. The <em>inner</em> harness ships with the tool; the <em>outer</em> harness is what you add. <a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">Böckeler</a></p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>Level</th><th>Question it answers</th><th>Typical artifacts</th><th>Go-to source</th></tr>
+  <tr><td><strong>Prompt</strong></td><td>What do I say in this one message?</td><td>Instructions, examples, output format</td><td><a href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic 2024</a></td></tr>
+  <tr><td><strong>Context</strong></td><td>Which tokens are in the window right now?</td><td>Compaction, NOTES.md, just-in-time retrieval, subagent summaries</td><td><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic 2025</a></td></tr>
+  <tr><td><strong>Harness</strong></td><td>What environment does the agent work in?</td><td>Guides: CLAUDE.md/AGENTS.md, skills. Sensors: tests, linters, type checks, review agents</td><td><a href="https://martinfowler.com/articles/harness-engineering.html">Böckeler 2026</a>, <a href="https://openai.com/index/harness-engineering/">OpenAI 2026</a></td></tr>
+  <tr><td><strong>Loop</strong></td><td>How does one agent keep going until a verifier says done?</td><td>Ralph loop, PROMPT.md, plan file, git commits, max-iterations</td><td><a href="https://ghuntley.com/ralph/">Huntley 2025</a></td></tr>
+  <tr><td><strong>Graph</strong></td><td>How do several loops connect?</td><td>Orchestrator, parallel workers, verifier with veto, explicit shared state</td><td><a href="https://www.louisbouchard.ai/graph-engineering-explained/">Bouchard 2026</a></td></tr>
+</table>
+</div>
+
+<h3>Rules of thumb</h3>
+<ul>
+  <li>Start at the lowest level that works; add complexity "only when it demonstrably improves outcomes." <a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic</a></li>
+  <li>Cost grows as you zoom out: agents use about 4× chat tokens, multi-agent about 15×. <a class="cite" href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic</a></li>
+  <li>Graphs contain loops, and loops run inside harnesses. The levels overlap; ask <em>which question am I solving?</em></li>
+</ul>
+
+<p class="muted">Introduced in <a href="../lessons/0001-the-map.html">Lesson 1: The Map</a>.</p>
+</main>
+</body>
+</html>

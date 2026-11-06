@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Engineering</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 5 · Agent Orchestration</p>
+<h1>Harness Engineering: Guides, Sensors, State</h1>
+<p class="subtitle">You won't change the model. You will build what surrounds it.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Given an agent failure, you can pick the harness fix (a <strong>guide</strong>, a <strong>sensor</strong> or a <strong>state file</strong>) and say whether it should be <strong>computational</strong> or <strong>inferential</strong>.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. Idea one: the 2×2 of controls</h2>
+
+<p>You know <strong>guides</strong> (steer before the agent acts) and <strong>sensors</strong> (check after). Böckeler adds a second axis: <em>what does the checking or steering</em>?<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[1]</a></p>
+<ul>
+  <li><strong>Computational</strong> controls are a deterministic program, fast and cheap enough to run on every change: tests, linters, type checkers, codemods.</li>
+  <li><strong>Inferential</strong> controls depend on an <em>LLM interpreting or judging</em>: AGENTS.md, skills, review agents, "LLM as judge." They are slower, costlier and non-deterministic, but they can judge meaning.</li>
+</ul>
+
+<div class="grid2" role="table" aria-label="Harness controls 2 by 2">
+  <div class="h"></div><div class="h">Guide (before)</div><div class="h">Sensor (after)</div>
+  <div class="h">Computational</div>
+  <div class="c1">Codemods (OpenRewrite), LSP / code intelligence, project templates</div>
+  <div class="c2">Tests, linters, type checker, ArchUnit structural tests, coverage</div>
+  <div class="h">Inferential</div>
+  <div class="c3">CLAUDE.md / AGENTS.md, skills describing conventions</div>
+  <div class="c4">Review agents, LLM-as-judge</div>
+</div>
+<p class="muted" style="font-size:.85rem">Examples from Böckeler's table.<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[1]</a> The surprise is that <strong>CLAUDE.md is inferential</strong>: it's just text, so it only works if the model reads and follows it. A linter cannot be ignored.</p>
+
+<p>You need both directions. <em>Feedback alone</em> gives an agent that keeps repeating the same mistakes; <em>feedforward alone</em> gives rules that nobody checks.<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[1]</a> OpenAI's agent-written codebase used both: docs as the agents' source of truth (guides) plus structural tests that mechanically enforce which layer may depend on which (computational sensors).<a class="cite" href="https://www.infoq.com/news/2026/02/openai-harness-engineering-codex">[2]</a></p>
+
+<h2>2. Idea two: the steering loop</h2>
+
+<p>The harness isn't designed once. <strong>When a failure happens again, change the harness</strong>, not just this one output.<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[1]</a> Huntley describes the same habit as putting up signs on a playground: Ralph fell off the slide, so you add a sign that says <em>"SLIDE DOWN, DON'T JUMP."</em><a class="cite" href="https://ghuntley.com/ralph/">[3]</a></p>
+
+<p>Two practical rules:</p>
+<ul>
+  <li><strong>Prefer computational when you can.</strong> A rule in CLAUDE.md can be ignored; a failing check can't. If a mistake keeps happening despite the guide, add a sensor.</li>
+  <li><strong>Write sensor messages for the model.</strong> A linter error that says <em>how to fix</em> the violation steers the next attempt. Böckeler calls this "a positive kind of prompt injection."<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[1]</a></li>
+</ul>
+
+<h2>3. Idea three: state files for fresh sessions</h2>
+
+<p>From Lesson 4: only what's <em>on disk</em> survives into a new session. Anthropic built a harness for multi-session coding around this.<a class="cite" href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">[4]</a> An <strong>initializer agent</strong> runs once and creates the state; a <strong>coding agent</strong> runs every session after that and keeps it up to date:</p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>State file</th><th>Failure it prevents</th></tr>
+  <tr><td><code>feature_list.json</code>: 200+ features, all marked failing; agents may only flip <code>passes</code></td><td>Declaring the project "done" too early. JSON was chosen because models are less likely to overwrite it wrongly than Markdown.</td></tr>
+  <tr><td><code>claude-progress.txt</code> + git log</td><td>A fresh session not knowing what happened before</td></tr>
+  <tr><td><code>init.sh</code>: starts the app, then a basic end-to-end check</td><td>Each session wasting time working out how to run things; building on a broken state</td></tr>
+  <tr><td>Rule: <strong>one feature per session</strong>, then commit</td><td>Trying to do everything at once, running out of context halfway</td></tr>
+</table>
+</div>
+<p class="muted" style="font-size:.85rem">Notice that the "one feature per session" rule is a <em>guide</em>, the end-to-end check is a <em>sensor</em>, and the JSON file is <em>state</em>. A real harness mixes all three.</p>
+
+<hr>
+
+<h2>4. The harness checklist</h2>
+<p>When an agent fails, ask these questions in order:</p>
+<ol>
+  <li><strong>Could I prevent it before it acts?</strong> → add a <em>guide</em>.</li>
+  <li><strong>Can I detect it after?</strong> → add a <em>sensor</em>, ideally with a fix-it message.</li>
+  <li><strong>Can a program decide it, or does it need judgment?</strong> → <em>computational</em> if possible, otherwise <em>inferential</em>.</li>
+  <li><strong>Does a future fresh session need to know this?</strong> → put it in a <em>state file</em> or git.</li>
+</ol>
+
+<h2>5. Drill: place it in the 2×2</h2>
+<div class="quiz" data-quiz="grid"></div>
+
+<h2>6. Drill: pick the fix</h2>
+<div class="quiz" data-quiz="fix"></div>
+
+<h2>7. Apply it to your own repo</h2>
+<p>Pick a real project of yours, for example your Java <code>Design-Patterns</code> repo. Write one item for each: computational guide, computational sensor, inferential guide, inferential sensor, and one state file.</p>
+<div class="recall">
+  <textarea placeholder="Computational guide: …&#10;Computational sensor: …&#10;Inferential guide: …&#10;Inferential sensor: …&#10;State file: …"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <p><em>One possible answer for a Java/Gradle repo:</em></p>
+    <ul>
+      <li><strong>Computational guide:</strong> a project template or script that creates a new pattern's package, class and test skeleton.</li>
+      <li><strong>Computational sensor:</strong> <code>./gradlew test</code> run by a Claude Code hook after every edit; Checkstyle with clear messages.</li>
+      <li><strong>Inferential guide:</strong> CLAUDE.md saying "one package per pattern; every pattern has a test showing its intent."</li>
+      <li><strong>Inferential sensor:</strong> a review subagent asked "Does this code actually implement the pattern named, or just the name?"</li>
+      <li><strong>State file:</strong> <code>patterns.json</code> listing each pattern with <code>"done": false</code>, which the agent may only flip after tests pass.</li>
+    </ul>
+  </div>
+</div>
+
+<script src="0005-harness-engineering.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+const GRID = ["Computational guide", "Computational sensor", "Inferential guide", "Inferential sensor"];
+Quiz.register("grid", window.QUIZ.filter((q) => q.section === "grid"));
+
+const FIX = ["Add a guide", "Add a sensor", "Add a state file"];
+Quiz.register("fix", window.QUIZ.filter((q) => q.section === "fix"));
+</script>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source to read next (≈25 min)</p>
+  <p><a href="https://martinfowler.com/articles/harness-engineering.html">Böckeler, "Harness Engineering for Coding Agent Users"</a> (martinfowler.com). If you read it after Lesson 1, read it again now: the guides/sensors table and the "steering loop" section will make much more sense. For the long-running version, see <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic's "Effective harnesses for long-running agents."</a></p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck or curious?</p>
+  <p>Ask me in the terminal. Good questions: <em>"Is a Claude Code hook a guide or a sensor?"</em> or <em>"Review my answer to section 7."</em> Paste your harness sketch and I'll critique it.</p>
+</div>
+
+<p class="muted">Quick reference: <a href="../reference/harness-checklist.html">Harness Checklist</a> · <a href="../reference/zoom-levels.html">Five Zoom Levels</a></p>
+
+<h3>Sources</h3>
+<ol class="muted" style="font-size:.85rem">
+  <li><a href="https://martinfowler.com/articles/harness-engineering.html">Böckeler, "Harness Engineering for Coding Agent Users" (Apr 2026)</a></li>
+  <li><a href="https://www.infoq.com/news/2026/02/openai-harness-engineering-codex">InfoQ, on OpenAI's "Harness engineering" (Feb 2026)</a></li>
+  <li><a href="https://ghuntley.com/ralph/">Huntley, "Ralph Wiggum as a 'software engineer'" (Jul 2025)</a></li>
+  <li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic, "Effective harnesses for long-running agents" (Nov 2025)</a></li>
+</ol>
+
+<nav class="lesson-nav">
+  <a href="0004-context-engineering.html">← Lesson 4: Context Engineering</a>
+  <span class="muted">Next: The Ralph loop</span>
+</nav>
+
+</main>
+</body>
+</html>

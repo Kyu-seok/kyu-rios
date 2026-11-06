@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Orchestration Map</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 1 · Agent Orchestration</p>
+<h1>The Map: Agent&nbsp;=&nbsp;Model&nbsp;+&nbsp;Harness</h1>
+<p class="subtitle">Before learning any single technique, learn where each buzzword sits.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Given any agent technique, such as a CLAUDE.md file, a <code>while</code> loop or a team of reviewer agents, you can name its <strong>zoom level</strong> (prompt, context, harness, loop or graph) and the question that level answers.</p>
+</div>
+
+<h2>1. What an agent actually is</h2>
+
+<p>Anthropic gives a precise definition: agents are <em>"LLMs using tools based on environmental feedback in a loop."</em><a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a> That is all. The model picks a tool, the tool runs in the real world (read a file, run tests), the result comes back, and the model decides what to do next. It repeats until a <strong>stop condition</strong> is met: the task is done, a human is needed, or an iteration limit is hit.<a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a></p>
+
+<p>You already watch this every day in Claude Code. When you ask it to fix a bug, it greps, reads, edits and runs the tests. Each of those steps is one turn of the loop.</p>
+
+<figure>
+<svg viewBox="0 0 640 300" role="img" aria-label="The agent loop inside a harness">
+  <rect x="10" y="10" width="620" height="280" rx="10" fill="none" stroke="var(--accent)" stroke-dasharray="6 5"/>
+  <text x="26" y="34" font-family="var(--sans)" font-size="12" fill="var(--accent)" letter-spacing="1.5">HARNESS: instructions · tools · context · tests · state · permissions</text>
+  <rect x="60" y="110" width="150" height="70" rx="6" fill="var(--l3)" stroke="var(--fg)"/>
+  <text x="135" y="140" text-anchor="middle" font-family="var(--serif)" font-size="17" fill="var(--fg)">Model</text>
+  <text x="135" y="162" text-anchor="middle" font-family="var(--serif)" font-size="12" font-style="italic" fill="var(--muted)">decides next step</text>
+  <rect x="430" y="110" width="160" height="70" rx="6" fill="var(--l2)" stroke="var(--fg)"/>
+  <text x="510" y="140" text-anchor="middle" font-family="var(--serif)" font-size="17" fill="var(--fg)">Environment</text>
+  <text x="510" y="162" text-anchor="middle" font-family="var(--serif)" font-size="12" font-style="italic" fill="var(--muted)">files, shell, web, tests</text>
+  <path d="M210 125 C 300 85, 340 85, 430 125" fill="none" stroke="var(--fg)" marker-end="url(#ah)"/>
+  <text x="320" y="84" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--fg)">tool call</text>
+  <path d="M430 165 C 340 205, 300 205, 210 165" fill="none" stroke="var(--fg)" marker-end="url(#ah)"/>
+  <text x="320" y="218" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--fg)">result (feedback)</text>
+  <path d="M135 180 L135 250" fill="none" stroke="var(--muted)" stroke-dasharray="3 3" marker-end="url(#ah2)"/>
+  <text x="148" y="262" font-family="var(--sans)" font-size="12" fill="var(--muted)">stop condition: done · ask human · max turns</text>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="var(--fg)"/></marker>
+    <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker>
+  </defs>
+</svg>
+<figcaption>The agent loop. Everything drawn inside the dashed frame, apart from the model, is the harness.</figcaption>
+</figure>
+
+<h2>2. Agent = Model + Harness</h2>
+
+<p>The model is the engine. The <strong>harness</strong> is <em>everything in an agent except the model itself</em>: the system prompt, the tool definitions, what goes into the context, the tests it can run, the permission rules, the files it keeps notes in.<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[2]</a> Birgitta Böckeler splits it in two:<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[2]</a></p>
+
+<ul>
+  <li><strong>Inner harness</strong> is what the vendor ships. For Claude Code that is its system prompt, built-in tools, compaction and subagents.</li>
+  <li><strong>Outer harness</strong> is what <em>you</em> add for your project, such as <code>CLAUDE.md</code>, linters, tests, hooks and CI.</li>
+</ul>
+
+<p>This split matters for your career. You will rarely train models, but you will build outer harnesses all the time. OpenAI's team, who shipped roughly a million lines of agent-written code, summed up the new job as <em>"Humans steer. Agents execute."</em><a class="cite" href="https://openai.com/index/harness-engineering/">[3]</a></p>
+
+<h2>3. Five zoom levels</h2>
+
+<p>The field keeps inventing new "<em>X</em> engineering" terms. Bouchard notes that "graph engineering" spread partly as a joke about how fast things get renamed.<a class="cite" href="https://www.louisbouchard.ai/graph-engineering-explained/">[4]</a> Don't learn them as separate fads. Treat each one as a <strong>zoom level</strong> on the same system, and remember the question each level answers:</p>
+
+<ol class="ladder">
+  <li><span class="term">Prompt engineering</span>: <span class="q">What do I say in this one message?</span><br><span class="muted">Scope: a single model call.</span></li>
+  <li><span class="term">Context engineering</span>: <span class="q">Which tokens are in the window right now?</span><br><span class="muted">The prompt, tool results, history, retrieved files. Context is a finite budget, and recall degrades as it fills ("context rot").<a class="cite" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">[5]</a></span></li>
+  <li><span class="term">Harness engineering</span>: <span class="q">What environment does the agent work in?</span><br><span class="muted">Guides that steer it <em>before</em> it acts (CLAUDE.md, conventions) and sensors that check it <em>after</em> (tests, linters, review agents).<a class="cite" href="https://martinfowler.com/articles/harness-engineering.html">[2]</a></span></li>
+  <li><span class="term">Loop engineering</span>: <span class="q">How does one agent keep going until a verifier says done?</span><br><span class="muted">One agent, one job, a real check, a hard stop.<a class="cite" href="https://www.louisbouchard.ai/graph-engineering-explained/">[4]</a> The <strong>Ralph loop</strong> is its purest form: <code>while :; do cat PROMPT.md | claude-code ; done</code>.<a class="cite" href="https://ghuntley.com/ralph/">[6]</a></span></li>
+  <li><span class="term">Graph engineering</span>: <span class="q">How do several loops connect?</span><br><span class="muted">Explicit nodes (agents), handoffs, parallel branches and vetoes. "Graphs contain loops."<a class="cite" href="https://www.louisbouchard.ai/graph-engineering-explained/">[4]</a></span></li>
+</ol>
+
+<div class="note">
+  <p class="label">Honest caveat</p>
+  <p>The levels overlap. A Ralph loop's <code>PROMPT.md</code> and plan file are also part of its harness. The ladder is a thinking tool, not a strict hierarchy. The useful habit is asking <em>which question am I solving right now?</em></p>
+</div>
+
+<h2>4. One task, five zoom levels</h2>
+
+<p>Take a task you might really give Claude Code: <strong>"add dark mode to my web app."</strong> Here is how each level would approach it:</p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>Level</th><th>What you would do</th></tr>
+  <tr><td>Prompt</td><td>Say "use CSS variables" and show one example token in your request.</td></tr>
+  <tr><td>Context</td><td>Let it grep for just the theme files instead of pasting the whole repo, and keep its decisions in a notes file so they survive compaction.</td></tr>
+  <tr><td>Harness</td><td>CLAUDE.md says "colors live in <code>tokens.css</code>". A lint rule rejects hard-coded hex colors. A screenshot test renders both themes.</td></tr>
+  <tr><td>Loop</td><td>A script reruns the agent until done. Each run takes the next unchecked screen from <code>plan.md</code>, fixes it, commits, and exits. It stops when the list is empty.</td></tr>
+  <tr><td>Graph</td><td>One agent per screen runs in parallel, a reviewer agent checks the screenshots, a fixer applies confirmed issues, and the tests decide whether to ship or loop back.</td></tr>
+</table>
+</div>
+
+<p>Notice the cost going up as you move down the table. Anthropic measured agents using about 4× the tokens of a chat, and multi-agent systems about 15×.<a class="cite" href="https://www.anthropic.com/engineering/multi-agent-research-system">[7]</a> Their standing advice is to <em>"consider adding complexity only when it demonstrably improves outcomes."</em><a class="cite" href="https://www.anthropic.com/engineering/building-effective-agents">[1]</a> For dark mode, a good harness plus one agent is probably enough. Picking the right level is the core skill this course is building.</p>
+
+<hr>
+
+<h2>5. Practice: recall first</h2>
+
+<p>Scroll up so section 3 is out of sight. Then write the five zoom levels <strong>in order</strong> and the question each one answers. Struggling a little is the point: effortful recall builds memory that lasts.</p>
+
+<div class="recall">
+  <textarea placeholder="1. ...&#10;2. ...&#10;3. ...&#10;4. ...&#10;5. ..."></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <ol>
+      <li><strong>Prompt</strong>: what do I say in this one message?</li>
+      <li><strong>Context</strong>: which tokens are in the window right now?</li>
+      <li><strong>Harness</strong>: what environment does the agent work in (guides + sensors)?</li>
+      <li><strong>Loop</strong>: how does one agent keep going until a verifier says done?</li>
+      <li><strong>Graph</strong>: how do several loops connect?</li>
+    </ol>
+    <p>Bonus: <em>Agent = Model + Harness</em>, and an agent is "LLMs using tools based on environmental feedback in a loop."</p>
+  </div>
+</div>
+
+<h2>6. Practice: place the technique</h2>
+
+<p>For each technique, pick the zoom level it <em>mainly</em> works at.</p>
+
+<div class="quiz" data-quiz="l1"></div>
+<script src="0001-the-map.quiz.js"></script>
+<script>
+const LEVELS = ["Prompt engineering", "Context engineering", "Harness engineering", "Loop engineering", "Graph engineering"];
+Quiz.register("l1", window.QUIZ);
+</script>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source to read next (≈20 min)</p>
+  <p><a href="https://martinfowler.com/articles/harness-engineering.html">Birgitta Böckeler, "Harness Engineering for Coding Agent Users"</a> (martinfowler.com, Apr 2026). It is the clearest treatment of Agent = Model + Harness, written for people who <em>use</em> coding agents, like you. Skim the guides/sensors table and look for things you already do in Claude Code.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck or curious?</p>
+  <p>Ask me follow-up questions in the terminal. I'm your teacher for this course. Good ones to try: <em>"Is a Claude Code subagent a graph?"</em> or <em>"Which zoom level are hooks?"</em></p>
+</div>
+
+<p class="muted">Quick reference: <a href="../reference/zoom-levels.html">The Five Zoom Levels (cheat sheet)</a></p>
+
+<h3>Sources</h3>
+<ol class="muted" style="font-size:.85rem">
+  <li><a href="https://www.anthropic.com/engineering/building-effective-agents">Anthropic, "Building effective agents" (Dec 2024)</a></li>
+  <li><a href="https://martinfowler.com/articles/harness-engineering.html">Böckeler, "Harness Engineering for Coding Agent Users" (Apr 2026)</a></li>
+  <li><a href="https://openai.com/index/harness-engineering/">Lopopolo, "Harness engineering: leveraging Codex in an agent-first world" (OpenAI, Feb 2026)</a></li>
+  <li><a href="https://www.louisbouchard.ai/graph-engineering-explained/">Bouchard, "Graph Engineering vs Loop Engineering" (Jul 2026)</a></li>
+  <li><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic, "Effective context engineering for AI agents" (Sep 2025)</a></li>
+  <li><a href="https://ghuntley.com/ralph/">Huntley, "Ralph Wiggum as a 'software engineer'" (Jul 2025)</a></li>
+  <li><a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic, "How we built our multi-agent research system" (Jun 2025)</a></li>
+</ol>
+
+<nav class="lesson-nav">
+  <a href="../index.html">← Course index</a>
+  <a href="0002-workflows-vs-agents.html">Next: Lesson 2, Workflows vs Agents →</a>
+</nav>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>Context Card</h1>
+<p class="subtitle">What to do with the context at a phase boundary.</p>
+<p class="muted" style="font-size:.85rem">Sources: <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md"><code>ask-matt/PHASE-BOUNDARIES.md</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md"><code>handoff</code></a> (<a href="https://github.com/mattpocock/skills/blob/main/docs/productivity/handoff.md">guide</a>), commit <code>5beb35b</code>.</p>
+
+<h2>When</h2>
+<p>Decide <strong>only at a phase boundary</strong>, the point where you think "ok, we're done with that." Mid-phase there are two choices: <strong>continue, or split what's left into subagents</strong>. Never compact mid-phase.</p>
+
+<h2>The tree: first yes wins</h2>
+<ol class="ladder">
+  <li><span class="term">Continue</span>: the next phase needs this one verbatim (a primary source), <em>or</em> there's smart zone left (~150k). Grilling → implement, and <code>/to-spec</code> → <code>/to-tickets</code>.</li>
+  <li><span class="term"><code>/clear</code></span>: everything here is disposable. It's the cheapest move, and it only works one way (you lose the why). Use it between tickets.</li>
+  <li><span class="term"><code>/handoff</code></span>: the work must travel to a new <strong>harness</strong>, a new <strong>directory</strong>, a <strong>colleague</strong>, or a <strong>mid-phase fork</strong> (the prototype detour).</li>
+  <li><span class="term">Subagent</span>: the task can run AFK with no steering. Automated review is the standard case.</li>
+  <li><span class="term"><code>/compact &lt;what's next&gt;</code></span>: everything else. It's the default, not the first reach.</li>
+</ol>
+
+<h2>What each move keeps</h2>
+<div class="table-wrap"><table>
+  <tr><th>Move</th><th>Keeps</th><th>Source after</th></tr>
+  <tr><td>Continue</td><td>Everything</td><td>Primary</td></tr>
+  <tr><td><code>/compact</code></td><td>Your intent</td><td>Secondary (lossy)</td></tr>
+  <tr><td><code>/handoff</code></td><td>The work's ability to move</td><td>Secondary (a file)</td></tr>
+  <tr><td><code>/clear</code></td><td>Nothing (the old session can still be resumed)</td><td>None</td></tr>
+</table></div>
+
+<h2><code>/handoff</code> checklist</h2>
+<ul>
+  <li>Pass what the next session is for: <code>/handoff QA the reset flow in Codex</code>.</li>
+  <li>The file goes to <code>$TMPDIR</code>. Ask for the path, and copy it somewhere durable if the next session isn't soon.</li>
+  <li>It references specs, ADRs, issues and diffs by path or URL. It doesn't copy them. Secrets are redacted.</li>
+  <li>Read it before passing it on, and downgrade any claim nobody verified.</li>
+  <li>Start the new session by pointing it at the file. Don't paste the summary into a shell command.</li>
+  <li>If it's still true next month, it belongs in <code>CLAUDE.md</code>. Work in progress belongs in a handoff.</li>
+</ul>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a> · <a href="skill-map.html">Skill Map</a> · <a href="build-card.html">Build Card</a></p>
+</main>
+</body>
+</html>

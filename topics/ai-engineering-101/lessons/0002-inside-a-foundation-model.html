@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inside a Foundation Model</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .pipe text { font-family: var(--sans); }
+  .pipe .lbl { font-size: 14px; font-weight: 600; fill: #fff; }
+  .pipe .sub { font-size: 13px; fill: var(--fg); }
+  .pipe .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; marker-end: url(#ah); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Inside a Foundation Model</h1>
+<p class="subtitle">How a raw text predictor becomes an assistant, and why the same prompt can return a different answer, or a made-up one.</p>
+<p class="meta">Lesson 2 · Previews Chapter 2 · about 15 min</p>
+
+<div class="box win">
+  <span class="box-label">Your win today</span>
+  Given a product need (“consistent grading,” “creative taglines,” “strict JSON”), you'll be able to pick sampling settings for it and explain inconsistency and hallucination to a teammate.
+</div>
+
+<h2>Warm-up · from Lesson 1</h2>
+<p>Recall these before reading on. Spacing your review across sessions is what moves an idea into long-term memory.</p>
+<div class="quiz" data-quiz="check-1"></div>
+
+<h2>1 · What makes one model differ from another</h2>
+<p>You'll mostly <em>use</em> models, not build them. Still, Huyen traces most differences between models to three decisions: <strong>training data</strong>, <strong>architecture and size</strong>, and <strong>post-training</strong>. <a class="cite" href="#src">Ch2 intro</a></p>
+<ul>
+  <li><strong>Data.</strong> A model can't do what its data never showed it. With no Vietnamese in the training data, there's no English→Vietnamese translation. Quality can beat quantity: a 1.3B-parameter model trained on 7B tokens of high-quality code outperformed much larger models on coding benchmarks. <a class="cite" href="#src">Ch2 · Training Data</a></li>
+  <li><strong>Architecture.</strong> Nearly every model you'll use is a <em>transformer</em>. You can skip its internals for now.</li>
+  <li><strong>Size</strong> is measured in parameters: “Llama-13B” has 13 billion. Bigger usually means more capable within a model family, though newer small models often beat older big ones: Llama 3-8B beats Llama 2-70B on MMLU. <a class="cite" href="#src">Ch2 · Model Size</a></li>
+</ul>
+<p class="box"><span class="box-label">Napkin math you'll reuse</span>
+Each parameter stored in 16 bits takes 2 bytes, so a <strong>7B model needs at least 14 GB of GPU memory</strong> just to run inference. <a class="cite" href="#src">Ch2 · Model Size</a> Chapter 7 builds on this arithmetic.</p>
+
+<h2>2 · From monster to assistant: the training pipeline</h2>
+
+<figure>
+<svg class="pipe" viewBox="0 0 680 150" role="img" aria-label="Pipeline: pre-training, then supervised finetuning, then preference finetuning">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
+  <rect x="0"   y="10" width="190" height="52" rx="6" style="fill:var(--model)"/>
+  <text class="lbl" x="14" y="42">1. Pre-training</text>
+  <rect x="245" y="10" width="190" height="52" rx="6" style="fill:var(--model)"/>
+  <text class="lbl" x="259" y="42">2. Supervised finetuning</text>
+  <rect x="490" y="10" width="190" height="52" rx="6" style="fill:var(--model)"/>
+  <text class="lbl" x="504" y="42">3. Preference finetuning</text>
+  <path class="arrow" d="M192,36 L241,36"/><path class="arrow" d="M437,36 L486,36"/>
+  <text class="sub" x="0" y="86">Self-supervised on web-scale text</text>
+  <text class="sub" x="0" y="104">Learns to <tspan font-weight="600">complete text</tspan></text>
+  <text class="sub" x="0" y="122">~98% of compute (InstructGPT)</text>
+  <text class="sub" x="245" y="86">(prompt, response) demonstrations</text>
+  <text class="sub" x="245" y="104">Learns to <tspan font-weight="600">converse</tspan></text>
+  <text class="sub" x="245" y="122">a.k.a. behavior cloning</text>
+  <text class="sub" x="490" y="86">RLHF, DPO, RLAIF</text>
+  <text class="sub" x="490" y="104">Learns <tspan font-weight="600">human preferences</tspan></text>
+  <text class="sub" x="490" y="122">steps 2+3 = post-training</text>
+</svg>
+<figcaption>After Fig. 2-10. Huyen compares the result to the “Shoggoth with a smiley face” meme: pre-training produces the monster, SFT makes it socially acceptable, and preference finetuning adds the smile.</figcaption>
+</figure>
+
+<p><strong>Why SFT is needed.</strong> A pre-trained model only completes text. Give it “How to make pizza” and “for a family of six?” is a perfectly valid completion. SFT trains it on high-quality <em>demonstration data</em>, (prompt, response) pairs, often written by highly educated labelers at up to 30 minutes per pair. <a class="cite" href="#src">Ch2 · Supervised Finetuning</a></p>
+
+<p><strong>Why preference finetuning is needed.</strong> Demonstrations teach the model <em>how</em> to converse but not <em>which</em> conversations to have. In <strong>RLHF</strong>, you first train a <strong>reward model</strong> that scores responses, then optimize the language model to earn high scores. The reward model learns from <em>comparison data</em>, (prompt, winning response, losing response), because people agree far more on “A beats B” than on a 1–10 score. <strong>DPO</strong> is a simpler alternative; Meta switched to it for Llama 3. <a class="cite" href="#src">Ch2 · Preference Finetuning, Reward model</a></p>
+
+<blockquote>Pre-training [is like] reading to acquire knowledge, while post-training is like learning how to use that knowledge.<cite>Huyen, Ch. 2, “Post-Training”</cite></blockquote>
+
+<h2>3 · Sampling: how the model picks each token</h2>
+<p>For every next token, the model outputs one <strong>logit</strong> (a raw score) per token in its vocabulary. <strong>Softmax</strong> turns the logits into probabilities. Then a token is <em>sampled</em>. Huyen calls sampling “perhaps one of the most underrated concepts in AI.” <a class="cite" href="#src">Ch2 · Sampling</a></p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Knob</th><th>What it does</th><th>Typical values</th></tr></thead>
+<tbody>
+<tr><td><strong>Greedy</strong></td><td>Always takes the most likely token. Fine for classification, boring for text.</td><td>= temperature 0</td></tr>
+<tr><td><strong>Temperature</strong></td><td>Divides the logits before softmax. Lower values sharpen the distribution (consistent); higher values flatten it (creative, less coherent).</td><td>Providers allow 0–2; 0.7 is common for creative work; 0 for consistency</td></tr>
+<tr><td><strong>Top-k</strong></td><td>Keeps only the k most likely tokens, which also cuts the softmax computation.</td><td>50–500</td></tr>
+<tr><td><strong>Top-p</strong> (nucleus)</td><td>Keeps the smallest set of top tokens whose probabilities add up to p, so the pool size adapts to the context.</td><td>0.9–0.95</td></tr>
+<tr><td><strong>Stopping condition</strong></td><td>A maximum token count or stop tokens. Saves latency and cost, but can cut off JSON mid-object.</td><td>—</td></tr>
+</tbody></table></div>
+<p>A worked example from the book: logits [1, 2] for tokens A and B. At temperature 1, B gets 73%. At temperature 0.5, B gets 88%. <a class="cite" href="#src">Ch2 · Temperature</a></p>
+
+<h3>Try it: do the challenges below with the knobs</h3>
+<p>Before each challenge, predict which knob you'll need, then check whether you were right.</p>
+<div class="sampler" data-context="My favorite color is"
+  data-logits='{"blue":3.0,"green":2.6,"red":2.3,"purple":1.4,"black":1.0,"the":0.2}'
+  data-challenges='[
+    {"text":"Make the output near-deterministic: give <b>blue</b> at least 95%.","token":"blue","min":0.95},
+    {"text":"Give the creative token <b>the</b> (as in “the color of a still lake…”) at least a 5% chance, using provider-legal settings.","token":"the","min":0.05},
+    {"text":"With top-k <em>off</em>, leave exactly <b>3</b> candidate tokens.","candidates":3,"topkOff":true}
+  ]'></div>
+<p style="font:.8rem var(--sans);color:var(--muted)">Toy logits invented for this exercise; the context “My favorite color is” is from Fig. 2-14. Click “Sample 20 times” to see the randomness for yourself.</p>
+
+<p><strong>Test-time compute.</strong> Instead of a single response, generate several and pick the best (<em>best-of-N</em>), using a scorer, the highest overall probability, or the user's choice. It reliably helps, but two outputs cost about twice as much as one. <a class="cite" href="#src">Ch2 · Test Time Compute</a></p>
+
+<h2>4 · The probabilistic nature of AI</h2>
+<p>Anything with a non-zero probability can come out, “no matter how far-fetched or wrong.” <a class="cite" href="#src">Ch2 · The Probabilistic Nature of AI</a> That causes two problems you'll fight for the rest of the book:</p>
+
+<h3>Inconsistency</h3>
+<p>The same input can give different outputs (Huyen got 3/5 and then 5/5 grading the same essay), and a slightly different input can give a very different output. Mitigations: <strong>cache</strong> answers; <strong>fix</strong> temperature, top-p, and top-k; fix the <strong>seed</strong>. Even then, identical outputs aren't guaranteed, because <em>the hardware</em> running the model can change results. <a class="cite" href="#src">Ch2 · Inconsistency</a></p>
+
+<h3>Hallucination</h3>
+<p>A response not grounded in facts. Two complementary hypotheses: <a class="cite" href="#src">Ch2 · Hallucination</a></p>
+<ol>
+  <li><strong>Self-delusion</strong> (DeepMind, 2021). The model can't tell the text it was given from the text it generated. After writing “Chip Huyen is an architect,” it treats that as fact and builds on it. Errors <em>snowball</em>.</li>
+  <li><strong>Knowledge mismatch</strong> (Leo Gao, John Schulman, OpenAI). In SFT the model imitates labelers' answers. When those answers use knowledge the model doesn't have, we're effectively teaching it to make things up.</li>
+</ol>
+<p>Practical levers for now: ask for concise answers (fewer tokens means fewer chances to invent), tell it to say “I don't know,” and ground it with context (Chapters 5–6). Detecting hallucinations is covered in Chapter 4.</p>
+
+<h2>Check yourself</h2>
+<div class="quiz" data-quiz="check-2"></div>
+
+<div class="box source" id="src">
+  <span class="box-label">Primary source</span>
+  <p><strong>Read next:</strong> Huyen, <em>AI Engineering</em>, Chapter 2: <em>“Post-Training,” “Sampling”</em> (through “Structured Outputs”), and <em>“The Probabilistic Nature of AI.”</em> These are the parts this lesson previews. You can skim “Modeling” (the transformer internals and scaling laws) on a first pass; Huyen herself says to skip any concept you're confident about.</p>
+  <p><strong>Optional, about 30 min:</strong> the first half of Andrej Karpathy's <a href="https://www.youtube.com/watch?v=zjkBMFhNj_g">“Intro to Large Language Models”</a> covers the same pre-training → finetuning pipeline from a model builder's view.</p>
+</div>
+
+<div class="box ask">
+  <span class="box-label">Stuck or curious?</span>
+  Ask me anything, e.g. “what's the actual difference between RLHF and DPO?” or “what temperature should a support bot use?”. When you're done, tell me your warm-up and quiz scores, and whether all three sampler challenges went green.
+</div>
+
+<nav class="lesson-nav">
+  <a href="0001-the-big-picture.html">← Lesson 1: The Big Picture</a>
+  <span><a href="../reference/sampling.html">Reference: Sampling</a> · <a href="../reference/glossary.html">Glossary</a></span>
+</nav>
+<p style="font:.85rem var(--sans);text-align:right"><a href="0003-evaluation-methodology.html">Next: Lesson 3, Evaluation Methodology →</a></p>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="0002-inside-a-foundation-model.quiz.js"></script>
+<script>
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-1"]'), window.QUIZ.filter((q) => q.section === "check-1"));
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-2"]'), window.QUIZ.filter((q) => q.section === "check-2"));
+</script>
+<script src="../assets/sampler.js"></script>
+</body>
+</html>

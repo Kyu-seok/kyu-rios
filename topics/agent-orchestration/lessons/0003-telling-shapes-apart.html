@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telling Shapes Apart</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/patterns.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 3 · Agent Orchestration</p>
+<h1>Telling the Six Shapes Apart</h1>
+<p class="subtitle">Don't memorise six definitions. Ask a few questions, in order.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Read a short scenario and reach the right shape by asking the <strong>decision key</strong> questions below, in order.</p>
+</div>
+
+<h2>1. The decision key</h2>
+<p>Ask these questions <strong>in order</strong> and stop at the first <em>yes</em>. Each one comes with clue words to look for in the scenario.</p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>#</th><th>Ask</th><th>If yes →</th><th>Clue words</th></tr>
+  <tr><td>1</td><td>Does the <strong>model</strong> choose its own steps, with no fixed plan and no known number of steps?</td><td><strong>Autonomous agent</strong></td><td>"open-ended", "investigate", "nobody knows how many steps"</td></tr>
+  <tr><td>2</td><td>Is there a check that <strong>sends the work back</strong> to be redone?</td><td><strong>Evaluator-optimizer</strong></td><td>"revise until", "feedback", "try again"</td></tr>
+  <tr><td>3</td><td>Does each input go down <strong>only one</strong> of several branches?</td><td><strong>Routing</strong></td><td>"classify", "sort into", "send to the right…"</td></tr>
+  <tr><td>4</td><td>Do several calls run <strong>at the same time</strong>, on a list <strong>you</strong> fixed in advance?</td><td><strong>Parallelization</strong></td><td>"three prompts", "simultaneously", "vote"</td></tr>
+  <tr><td>5</td><td>Do several calls run, but a <strong>lead model decides</strong> what they are once it sees the input?</td><td><strong>Orchestrator-workers</strong></td><td>"lead model decides which…", "delegates", "unknown in advance"</td></tr>
+  <tr><td>6</td><td>Otherwise: fixed steps one after another.</td><td><strong>Prompt chaining</strong></td><td>"first… then… then", "a check rejects"</td></tr>
+</table>
+</div>
+
+<div class="note">
+  <p class="label">The two traps</p>
+  <p><strong>Parallelization vs orchestrator-workers.</strong> Both run many calls. The question is <em>who writes the list of subtasks</em>. If you wrote it in code before the input arrived, it's parallelization. If a model writes it after reading the input, it's orchestrator-workers.</p>
+  <p><strong>Chaining vs evaluator-optimizer.</strong> Both can contain a check. A chaining <em>gate</em> lets the work continue or stops it. An <em>evaluator</em> sends it <strong>back</strong> to be redone. Look for an arrow pointing backwards.</p>
+</div>
+
+<h2>2. See the key in the diagrams</h2>
+<p>Now look again at the diagrams with the key in mind: a backward arrow means an evaluator, one branch out of several means routing, and dashed workers mean the orchestrator decides them.</p>
+<div class="pattern-card"><h3>Evaluator-optimizer: the arrow goes back</h3><div class="pattern" data-pattern="evaluator"></div></div>
+<div class="pattern-card"><h3>Prompt chaining: a gate, but all arrows go forward</h3><div class="pattern" data-pattern="chain"></div></div>
+<div class="pattern-card"><h3>Parallelization: solid boxes you drew in advance</h3><div class="pattern" data-pattern="parallel"></div></div>
+<div class="pattern-card"><h3>Orchestrator-workers: dashed boxes the model decides</h3><div class="pattern" data-pattern="orchestrator"></div></div>
+
+<hr>
+
+<h2>3. Drill: ten quick scenarios</h2>
+<p>Work through the key for each one. After you answer, the feedback names the clue words that point to the right shape.</p>
+<div class="quiz" data-quiz="drill"></div>
+
+<script src="0003-telling-shapes-apart.quiz.js"></script>
+<script>
+const SHAPES = ["Prompt chaining", "Routing", "Parallelization", "Orchestrator-workers", "Evaluator-optimizer", "Autonomous agent"];
+Quiz.register("drill", window.QUIZ);
+</script>
+
+<h2>4. Recall</h2>
+<p>Close or scroll away from the table. Write the decision key questions in order.</p>
+<div class="recall">
+  <textarea placeholder="1. Does the model…&#10;2. …"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <ol>
+      <li>Model picks its own steps, unknown count? → <strong>Autonomous agent</strong></li>
+      <li>Work sent back to redo? → <strong>Evaluator-optimizer</strong></li>
+      <li>One branch out of several? → <strong>Routing</strong></li>
+      <li>Simultaneous, list fixed by you? → <strong>Parallelization</strong></li>
+      <li>Simultaneous, list decided by a model? → <strong>Orchestrator-workers</strong></li>
+      <li>Otherwise, fixed sequence → <strong>Prompt chaining</strong></li>
+    </ol>
+  </div>
+</div>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>The same one as Lesson 2: <a href="https://www.anthropic.com/engineering/building-effective-agents">"Building effective agents"</a> (Anthropic). Now that you have the key, read only the "Workflow" section and label each example with its key question.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck or curious?</p>
+  <p>Ask me in the terminal. If a drill answer felt unfair or ambiguous, tell me which one. That's useful for both of us.</p>
+</div>
+
+<p class="muted">Quick reference: <a href="../reference/workflow-patterns.html">Six Orchestration Shapes</a> (now includes the decision key)</p>
+
+<nav class="lesson-nav">
+  <a href="0002-workflows-vs-agents.html">← Lesson 2: Workflows vs Agents</a>
+  <a href="0004-context-engineering.html">Next: Lesson 4, Context Engineering →</a>
+</nav>
+
+</main>
+</body>
+</html>

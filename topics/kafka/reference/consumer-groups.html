@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consumer Groups</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<p class="kicker">CCDAK reference</p>
+<h1>Consumer groups</h1>
+<h2>Rules worth memorising</h2>
+<ul>
+<li>Within a group, each partition has exactly one consumer. One consumer may own many partitions.</li>
+<li>Maximum parallelism equals partition count. Extra consumers sit idle.</li>
+<li>Different groups each read every event, independently.</li>
+<li>Same <code>group.id</code> shares the work. Different <code>group.id</code>s each get a full copy of the stream.</li>
+</ul>
+<h2>What triggers a rebalance</h2>
+<ul>
+<li>A member joins the group.</li>
+<li>A member leaves or fails.</li>
+<li>A subscribed topic's partition count changes.</li>
+<li>A subscribed topic is created or deleted.</li>
+</ul>
+<h2>Configs</h2>
+<table>
+<tr><th>Config</th><th>Default</th><th>Effect</th></tr>
+<tr><td><code>group.id</code></td><td>null</td><td>Names the group. Required for <code>subscribe()</code> group management.</td></tr>
+<tr><td><code>group.protocol</code></td><td>classic</td><td><code>classic</code> or <code>consumer</code>. With <code>consumer</code>, the broker assigns partitions.</td></tr>
+<tr><td><code>partition.assignment.strategy</code></td><td>RangeAssignor, CooperativeStickyAssignor</td><td>Client-side assignors, classic protocol only. Range is used by default.</td></tr>
+<tr><td><code>group.remote.assignor</code></td><td>null</td><td>Picks a server-side assignor, such as <code>uniform</code> or <code>range</code>. Consumer protocol only.</td></tr>
+</table>
+<h2>Range assignor</h2>
+<p>Per topic: partitions in numeric order, consumers in sorted order, and any remainder goes to the first consumers. With 2 consumers and 2 topics of 3 partitions each, the split is 4 and 2.</p>
+<h2>Commands</h2>
+<pre><code>kafka-consumer-groups.sh --bootstrap-server HOST:9092 --list
+kafka-consumer-groups.sh --bootstrap-server HOST:9092 --describe --group G
+kafka-consumer-groups.sh --bootstrap-server HOST:9092 --describe --group G --members --verbose</code></pre>
+<footer>Sources: <a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html">KafkaConsumer</a> · <a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/RangeAssignor.html">RangeAssignor</a> · <a href="https://kafka.apache.org/44/configuration/consumer-configs/">Consumer configs</a> · <a href="https://kafka.apache.org/44/operations/consumer-rebalance-protocol/">Rebalance protocol</a>. Taught in <a href="../lessons/0002-who-reads-which-partition.html">Lesson 2</a>.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On-ramps</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sort.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 6 · Matt Pocock's Skills</p>
+<h1>On-ramps and the Detour</h1>
+<p class="subtitle">Not all work starts as your own idea. Where the work came from tells you where to join the flow.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Given a starting situation, you can choose between <code>/triage</code>, <code>/diagnosing-bugs</code>, <code>/wayfinder</code>, a <code>/prototype</code> detour, or the plain main flow. You can also tell when a bug hunt is ready to start theorising.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<p class="muted" style="font-size:.9rem">Question 1 follows up on your AFK question from Lesson 5.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. Idea one: route by where the work came from</h2>
+
+<p>Pocock's router describes <strong>one main flow</strong> and <strong>on-ramps</strong> that merge onto it. An on-ramp is <em>"a starting situation that generates work, then merges onto the main flow."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[1]</a></p>
+
+<div class="table-wrap"><table>
+  <tr><th>Starting situation</th><th>Reach for</th><th>Merges back at</th></tr>
+  <tr><td>Bugs and requests <strong>other people</strong> filed</td><td><code>/triage</code></td><td><code>/implement</code> (it produces agent-ready issues)</td></tr>
+  <tr><td>Something's broken, and a first glance didn't explain it</td><td><code>/diagnosing-bugs</code></td><td>The fix is part of the skill, then <code>/retro</code></td></tr>
+  <tr><td>A huge, foggy effort, too big for one session</td><td><code>/wayfinder</code></td><td><code>/to-spec</code></td></tr>
+  <tr><td>A question in the middle of grilling that talking can't settle</td><td><code>/prototype</code> detour (<code>/handoff</code> out and back)</td><td>The grilling thread you left</td></tr>
+  <tr><td>Your own idea, which you can hold in one session</td><td><code>/grill-with-docs</code></td><td>It <em>is</em> the main flow</td></tr>
+</table></div>
+
+<p>Two edges people get wrong:</p>
+<ul>
+  <li><strong>Triage is only for work you didn't create.</strong> Tickets from <code>/to-tickets</code> are already agent-ready, so <em>"don't triage them."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[1]</a></li>
+  <li><strong>Wayfinder is for the idea you <em>can't</em> hold in one session.</strong> It's <em>"the most cognitively demanding flow here"</em>, and it's for exactly that, <em>"never a well-scoped feature."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[1]</a></li>
+</ul>
+
+<h3><code>/triage</code> in one paragraph</h3>
+<p>It's a small state machine on your tracker. Every issue carries one <strong>category</strong> (<code>bug</code> or <code>enhancement</code>) and one <strong>state</strong> (<code>needs-triage</code>, <code>needs-info</code>, <code>ready-for-agent</code>, <code>ready-for-human</code>, or <code>wontfix</code>). Before any grilling, it checks two things: whether the behaviour <strong>already exists</strong>, and whether a similar request was <strong>already rejected</strong> (in <code>.out-of-scope/</code>). Then it <strong>verifies the claim</strong>, for example by reproducing the bug from the reporter's steps. <code>ready-for-human</code> means a person has to do it: judgement calls, external access, design decisions, or manual testing.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/triage/SKILL.md">[2]</a> That's the same AFK/HITL line you asked about.</p>
+
+<h2>2. Idea two: no theory without a red loop</h2>
+
+<p><code>/diagnosing-bugs</code> is for the hard ones: <em>"the bug that resists a first glance, the intermittent flake, the regression."</em> The core is Phase 1, building a feedback loop: <em>"<strong>This is the skill.</strong> Everything else is mechanical."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md">[3]</a></p>
+
+<p>Phase 1 is done when you can name <strong>one command you've already run</strong> that meets four conditions:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md">[3]</a></p>
+<ol>
+  <li><strong>Red-capable</strong>: it asserts the user's <em>exact symptom</em>, not "runs without erroring."</li>
+  <li><strong>Deterministic</strong>: it gives the same verdict every run. For a flaky bug, a pinned, high reproduction rate counts: <em>"A 50%-flake bug is debuggable; 1% is not."</em></li>
+  <li><strong>Fast</strong>: it takes seconds, not minutes.</li>
+  <li><strong>Agent-runnable</strong>: it runs unattended. A human can be in it only through the shipped <code>hitl-loop</code> script.</li>
+</ol>
+<p><em>"If you catch yourself reading code to build a theory before this command exists, stop."</em> After that the phases are mechanical. Shrink the repro until every part is load-bearing. Write <strong>3–5 ranked, falsifiable hypotheses</strong> in the form "if X is the cause, then changing Y will make it disappear," and show them to the user before testing. Change one variable at a time, and tag debug logs (<code>[DEBUG-a4f2]</code>) so cleanup is one grep. Then <strong>write the regression test before the fix</strong>.</p>
+
+<div class="note">
+  <p class="label">The finding people miss</p>
+  <p>Only write the regression test at a <strong>correct seam</strong>, one that reproduces the real bug pattern. <em>"If no correct seam exists, that itself is the finding."</em> The architecture is stopping the bug from being locked down, which is a job for <code>/improve-codebase-architecture</code> (<a href="0007-codebase-health.html">Lesson 7</a>).<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md">[3]</a></p>
+</div>
+
+<h2>3. Idea three: decisions, not deliverables</h2>
+
+<p><code>/wayfinder</code> charts a <strong>map</strong>, which is one tracker issue whose child issues are <strong>decision tickets</strong>: <em>"questions whose resolution is a decision, not slices of a build."</em> The map is done when nothing is left to decide. The urge to just start building is <em>"the signal you've reached the edge of the map."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md">[4]</a></p>
+<ul>
+  <li><strong>The destination comes first</strong>, because it fixes the scope. Work beyond it is <em>out of scope</em>, not fog.</li>
+  <li><strong>Fog of war</strong>: only make a ticket for questions you can already <em>state</em> precisely. Vaguer ones go in "Not yet specified" until the frontier reaches them.</li>
+  <li><strong>Resolve one ticket per session</strong> (research tickets are the exception), sized to about one 100k-token session.</li>
+  <li><strong>When the map clears, it hands off and doesn't build.</strong> Go to <code>/to-spec #&lt;map&gt;</code>. Going straight to <code>/implement</code> throws away the linked detail.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md">[1]</a></li>
+</ul>
+
+<p>The ticket types are where your Lesson 5 question has an official answer:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md">[4]</a></p>
+<div class="table-wrap"><table>
+  <tr><th>Type</th><th>Mode</th><th>Why</th></tr>
+  <tr><td>Research</td><td>AFK</td><td>It surfaces a <em>fact</em>, so a subagent runs it in parallel</td></tr>
+  <tr><td>Grilling</td><td>HITL</td><td>A decision. <em>"A grilling agent that answers its own questions has broken this."</em></td></tr>
+  <tr><td>Prototype</td><td>HITL</td><td>It makes something rough <em>for you to react to</em></td></tr>
+  <tr><td>Task</td><td>Either</td><td>Manual work that unblocks a decision. The agent does it alone where it can; otherwise it gives you a checklist.</td></tr>
+</table></div>
+
+<h3><code>/prototype</code>: throwaway code that answers one question</h3>
+<p>The question decides the shape. <strong>"Does this logic feel right?"</strong> gets a single HTML file you click through, showing the state after every action. <strong>"What should this look like?"</strong> gets several radically different UI variants on one route. There are no tests, no polish, and no persistence. "Throwaway" doesn't mean deleted, though. The validated decision goes into the real code, and the prototype is kept as a <strong>primary source</strong> on a <code>prototype/&lt;name&gt;</code> branch, linked from the implementation issue.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/prototype/SKILL.md">[5]</a></p>
+
+<h2>4. Practice</h2>
+
+<h3>Drill A: where does this work join the flow?</h3>
+<div class="sort" data-sort="route"></div>
+
+<h3>Drill B: can Phase 2 start?</h3>
+<p>Each of these is offered as "the feedback loop." Is it enough to start reproducing and hypothesising?</p>
+<div class="sort" data-sort="loop"></div>
+
+<h3>Drill C: inside the on-ramps</h3>
+<div class="quiz" data-quiz="inside"></div>
+
+<h3>Drill D: from memory</h3>
+<p>Write the four conditions on a Phase 1 loop. Then write the four wayfinder ticket types, marking each one AFK or HITL.</p>
+<div class="recall">
+  <textarea aria-label="Your answer"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <p>The loop must be <strong>red-capable</strong> (asserts the exact symptom), <strong>deterministic</strong>, <strong>fast</strong>, and <strong>agent-runnable</strong>, and you must have already run it once.</p>
+    <p>Ticket types: <strong>Research</strong> (AFK), <strong>Grilling</strong> (HITL), <strong>Prototype</strong> (HITL), <strong>Task</strong> (either).</p>
+  </div>
+</div>
+
+<h3>Optional: feel it for real (15 min)</h3>
+<p>Pick a real bug you've had, in your BullMQ or Go work. Copy <a href="https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs"><code>diagnosing-bugs</code></a> into <code>~/.claude/skills/</code> and say "diagnose this: …". Watch Phase 1: does it give you <em>one command it has already run</em> that goes red on the bug before it starts theorising?</p>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md"><code>diagnosing-bugs/SKILL.md</code></a> in full (5 minutes). It's the most transferable skill in the set, and useful even without agents. Then read the "On-ramps" section of <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md"><code>ask-matt</code></a>, and skim <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md"><code>wayfinder</code></a> for the map template.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. Good questions: "build a Phase 1 loop for a flaky BullMQ job with me", "what would a wayfinder map for a Kafka → BullMQ migration look like?", or "when is a prototype better than grilling?"</p>
+</div>
+
+<p>The <a href="../reference/on-ramps-card.html">On-ramps Card</a> has all of this on one page. See also the <a href="../reference/context-card.html">Context Card</a> and the <a href="../reference/skill-map.html">Skill Map</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0005-phase-boundaries.html">← Lesson 5: Phase Boundaries</a>
+  <a href="0007-codebase-health.html">Lesson 7: Codebase Health →</a>
+</nav>
+
+</main>
+<script src="0006-on-ramps.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+Sort.register("route", {
+  buckets: ["/triage", "/diagnosing-bugs", "/wayfinder", "/prototype", "Main flow"],
+  items: [
+    { text: "A customer opened an issue: \"exports sometimes include last month's invoices.\" Nobody has looked at it yet.", bucket: 0,
+      why: "It arrived raw from someone else. Triage reproduces it and categorises it first. If it turns out to be hard, diagnosing comes after." },
+    { text: "Your own retry worker double-processes jobs about once a day. You've stared at it for an hour.", bucket: 1,
+      why: "It's broken, intermittent, and resisted a first glance. Start by building a loop that raises the reproduction rate." },
+    { text: "\"Move our whole job system from Kafka to BullMQ.\" You can't yet see the steps from here to there.", bucket: 2,
+      why: "Huge and foggy, more than one session can hold. Chart a map of decisions, then hand off to <code>/to-spec</code>." },
+    { text: "Mid-grilling: \"Should a retried job keep its original priority, or reset?\" You can't tell how the queue states interact on paper.", bucket: 3,
+      why: "A logic question that talking won't settle. Build a click-through state demo and react to it." },
+    { text: "\"Add a 'retry now' button to the failed-jobs page.\" It's your idea, small and clear.", bucket: 4,
+      why: "Your own idea, and you can hold it in one session. That's the main flow, with no on-ramp needed." },
+    { text: "Ticket 04, which <code>/to-tickets</code> produced yesterday, is waiting on the tracker. Does it need a pass first?", bucket: 4,
+      why: "The trap. You created it, so don't triage it. It's already agent-ready, and it belongs on the main flow (here, <code>/implement</code>)." },
+    { text: "An external contributor opened a PR adding a Slack alert on job failure.", bucket: 0,
+      why: "\"A PR is an issue with attached code.\" Triage checks that the diff does what it claims." },
+    { text: "Two designs for the failed-jobs dashboard, and you won't know which is right until you see them.", bucket: 3,
+      why: "\"What should this look like?\" Build radically different variants on one route, switchable by a URL param." }
+  ]
+});
+
+Sort.register("loop", {
+  buckets: ["Phase 2 can start", "Not yet"],
+  items: [
+    { text: "<code>vitest run export.test.ts</code>: asserts the export contains only this month's invoices. It takes 2s, it's red every run, and it's already been run.", bucket: 0,
+      why: "Red-capable on the exact symptom, deterministic, fast, unattended, and already run. All four boxes are ticked." },
+    { text: "A script that runs the export end to end and checks that it \"completes without erroring.\"", bucket: 1,
+      why: "Not red-capable. The bug is wrong <em>content</em>, so this goes green while the bug is still there." },
+    { text: "A Playwright run that shows the bug about 1 time in 30, and takes 4 minutes.", bucket: 1,
+      why: "Slow, with a low reproduction rate. Tighten it first: narrow the scope, loop the trigger, and raise the rate." },
+    { text: "The agent has read the code and has a confident theory about a timezone bug.", bucket: 1,
+      why: "The exact failure the skill prevents: theorising before a red command exists." },
+    { text: "The double-processing trigger looped 200× in parallel. It reproduces 60% of the time in 8s, and it's been run.", bucket: 0,
+      why: "For non-deterministic bugs, the goal is a pinned, high reproduction rate. 60% is debuggable." },
+    { text: "\"You click Export in the browser and tell me what you see.\"", bucket: 1,
+      why: "It isn't agent-runnable. If a human must click, drive them with the structured <code>hitl-loop</code> script, which is the last resort." }
+  ]
+});
+
+Quiz.register("inside", window.QUIZ.filter((q) => q.section === "inside"));
+</script>
+</body>
+</html>

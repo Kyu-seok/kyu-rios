@@ -1,0 +1,7 @@
+title: Kafka
+summary: How Kafka routes events to partitions and consumers, on the way to the CCDAK exam.
+published: true
+exclude: []
+relationships: []
+review:
+  exclude: []

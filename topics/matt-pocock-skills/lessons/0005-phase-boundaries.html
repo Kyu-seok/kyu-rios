@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase Boundaries</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/walk.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 5 · Matt Pocock's Skills</p>
+<h1>Phase Boundaries: Five Moves, One Order</h1>
+<p class="subtitle">When a phase ends, you decide what happens to the context. Ask five questions in order, and the first yes wins.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>When you finish a phase, you can choose <strong>continue</strong>, <code>/clear</code>, <code>/handoff</code>, a <strong>subagent</strong> or <code>/compact</code> in a few seconds, and say what each one costs you.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<p class="muted" style="font-size:.9rem">Lessons 2–4, applied to a new feature: retrying failed webhooks.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<p>You already know <em>why</em> context matters from your context-engineering course: context rot, and compaction being lossy. This lesson is about <em>when</em>. Pocock's answer is to decide only at phase boundaries, and always in the same order.</p>
+
+<h2>1. Idea one: decide only at the boundary</h2>
+
+<p>A <strong>phase</strong> is a chunk of work inside a session, like the grilling, the implementation, or the QA. The definition is fuzzy on purpose: a phase ends when you think <em>"ok, we're done with that."</em> The <strong>phase boundary</strong> is the gap between two phases, and <em>"it is the only place this decision belongs."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md">[1]</a></p>
+
+<div class="note">
+  <p class="label">Mid-phase rule</p>
+  <p>In the middle of a phase there's nothing to decide. <strong>Continue, or split the work that's left into subagents.</strong> <em>"Compacting mid-phase makes the agent lose the thread."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md">[1]</a></p>
+</div>
+
+<h2>2. Idea two: the tree, top to bottom</h2>
+
+<p>At the boundary, ask these questions in order. The <strong>first yes</strong> wins.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md">[1]</a></p>
+
+<ol class="ladder">
+  <li><span class="term">1 · Continue</span> <span class="q">Does the next phase need this one as a primary source, or is there enough smart zone left for it (about 150k tokens)?</span><br>The standard yes is grilling → implementation, because the implementation wants the reasoning verbatim. Continuing costs nothing, so rule it out first.</li>
+  <li><span class="term">2 · <code>/clear</code></span> <span class="q">Is everything here disposable for what comes next?</span><br>It's the cheapest move: it takes no time and gives you the whole window back. But it only works one way. Clear a relevant context and you lose the <strong>why</strong>, and reading the diff back won't return it.</li>
+  <li><span class="term">3 · <code>/handoff</code></span> <span class="q">Does the work have to travel?</span><br>There are only four cases: a <strong>new harness</strong> (Claude → Codex), a <strong>new directory</strong> or repo, a <strong>colleague</strong>, or a <strong>side task forked mid-phase</strong>. What it buys is portability, not better compression.</li>
+  <li><span class="term">4 · Subagent</span> <span class="q">Can the next task run AFK, with no steering from you?</span><br>Then send it off and leave this session untouched. Automated review is the standard case.</li>
+  <li><span class="term">5 · <code>/compact</code></span> <span class="q">Otherwise.</span><br>The context is relevant, you're in the same harness and directory, and you need to stay in the loop. Tell it what comes next: <code>/compact we're going to QA this area</code>. It's <strong>the default, not the first reach</strong>.</li>
+</ol>
+
+<p>You've already used three of these. Running <code>/to-spec</code> → <code>/to-tickets</code> in one window is <strong>continue</strong> (Lesson 3). Running <code>/clear</code> between tickets is <strong>clear</strong>, and reviewing in a fresh session is the <strong>subagent</strong> case (Lesson 4).</p>
+
+<p class="muted" style="font-size:.88rem">Why is <code>/compact</code> last? Because each question above it leads to something cheaper or more precise. If you start with <code>/compact</code>, you tend to get <em>"a fresh session that is confidently wrong about a decision the summary flattened."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md">[1]</a></p>
+
+<h2>3. Idea three: every move except continue loses something</h2>
+
+<p>Continue keeps the session as a <strong>primary source</strong>: the conversation as it happened. Every other move turns it into a <strong>secondary source</strong>, which is a summary, or in the case of <code>/clear</code>, nothing at all.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md">[1]</a></p>
+<div class="table-wrap"><table>
+  <tr><th>Source</th><th>Information</th><th>Noise</th><th>Room to move</th></tr>
+  <tr><td>Primary (continue)</td><td>Full</td><td>Lots</td><td>Little</td></tr>
+  <tr><td>Secondary (<code>/compact</code>, <code>/handoff</code>)</td><td>Lossy</td><td>Less</td><td>Lots</td></tr>
+</table></div>
+<p>Each move keeps something different: <code>/compact</code> keeps <strong>your intent</strong>, <code>/clear</code> keeps <strong>nothing</strong>, and <code>/handoff</code> keeps <strong>the work's ability to move</strong>.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/productivity/handoff.md">[2]</a></p>
+
+<h3><code>/handoff</code> field notes</h3>
+<p>These come from real reports collected in the handoff guide.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/productivity/handoff.md">[2]</a></p>
+<ul>
+  <li><strong>It writes to the OS temp directory</strong>, not your repo. Ask for the path, and copy the file somewhere durable if the next session isn't within the hour or uses another harness. A reboot empties <code>/private/tmp</code>.</li>
+  <li><strong>It references, it doesn't copy.</strong> Specs, ADRs, issues and diffs go in as paths or URLs. It also redacts secrets and adds a "suggested skills" section.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md">[3]</a></li>
+  <li><strong>Downgrade unverified claims</strong> before you pass it on. The next agent trusts the file, so if it says "X isn't built" and nobody checked, that becomes a false premise for everything after it.</li>
+  <li><strong>Point the new session at the file.</strong> Don't paste the summary into <code>claude "…"</code>, because the shell silently mangles backticks and <code>$(…)</code>.</li>
+  <li><strong>Will it still be true next month?</strong> Then it belongs in <code>CLAUDE.md</code>. If it's about work in progress, it belongs in a handoff.</li>
+</ul>
+
+<h2>4. Practice</h2>
+
+<h3>Drill A: walk the tree</h3>
+<p>Answer each question in order. The walk stops at the first correct yes.</p>
+<div class="walk" data-walk="boundary"></div>
+
+<h3>Drill B: the costs</h3>
+<div class="quiz" data-quiz="costs"></div>
+
+<h3>Drill C: from memory</h3>
+<p>Write the five questions in order, with the move each one leads to. Then write the four reasons to use <code>/handoff</code>.</p>
+<div class="recall">
+  <textarea aria-label="Your answer"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <ol>
+      <li>Next phase needs this verbatim, or there's room? → <strong>Continue</strong></li>
+      <li>Everything here disposable? → <strong><code>/clear</code></strong></li>
+      <li>Does the work have to travel? → <strong><code>/handoff</code></strong></li>
+      <li>Can it run AFK? → <strong>Subagent</strong></li>
+      <li>Otherwise → <strong><code>/compact</code></strong>, with an instruction</li>
+    </ol>
+    <p>Handoff cases: a new <strong>harness</strong>, a new <strong>directory</strong>, a <strong>colleague</strong>, or a <strong>mid-phase fork</strong>.</p>
+  </div>
+</div>
+
+<h3>Optional: use it for real (no setup)</h3>
+<p>Next time you think "ok, we're done with that" in Claude Code, stop and walk the five questions out loud before you type anything. If you have the plugin, try <code>/ask-matt I'm at a phase boundary</code> and see whether it reaches the same answer as you.</p>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/PHASE-BOUNDARIES.md"><code>ask-matt/PHASE-BOUNDARIES.md</code></a>. It takes three minutes, and this lesson follows it closely. Then read the <a href="https://github.com/mattpocock/skills/blob/main/docs/productivity/handoff.md"><code>handoff</code> guide</a>, especially "Branching is the use people skip."</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. Good questions: "how is /handoff different from Claude Code's fork-session?", "where does the ~150k smart-zone number come from?", or "walk my last real session's boundaries with me."</p>
+</div>
+
+<p>The <a href="../reference/context-card.html">Context Card</a> has the tree on one page. See also the <a href="../reference/build-card.html">Build Card</a> and the <a href="../reference/skill-map.html">Skill Map</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0004-build.html">← Lesson 4: Build</a>
+  <a href="0006-on-ramps.html">Lesson 6: On-ramps and the Detour →</a>
+</nav>
+
+</main>
+<script src="0005-phase-boundaries.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+Walk.register("boundary", {
+  steps: [
+    { q: "Does the next phase need this one verbatim, or is there room left for it?", outcome: "Continue" },
+    { q: "Is everything in this context disposable for what comes next?", outcome: "/clear" },
+    { q: "Does the work have to travel (harness, directory, colleague, fork)?", outcome: "/handoff" },
+    { q: "Can the next task run AFK, with no steering from you?", outcome: "Subagent" },
+    { q: "Relevant context, same place, and you stay in the loop?", outcome: "/compact, with an instruction" }
+  ],
+  scenarios: [
+    { text: "You've just finished grilling the CSV export. It's small, and there's plenty of smart zone left. Next: build it.", stop: 0,
+      why: { 0: "The implementation wants the reasoning verbatim. That's the standard yes." } },
+    { text: "Ticket 03 is committed and closed. The window is well past halfway, full of 03's exploration. Next: ticket 04, which is self-contained.", stop: 1,
+      why: { 0: "04 doesn't need 03's session, and there's little room left.", 1: "Each ticket is sized to stand alone, so throwing this away costs nothing." } },
+    { text: "Mid-grilling, a question comes up that only running code can settle. The prototype will live in its own directory, and you want to keep grilling here.", stop: 2,
+      why: { 0: "The prototype needs its own window in another directory, so it can't happen here.", 1: "No. This is the grilling you're keeping alive.", 2: "A new directory <em>and</em> a mid-phase fork. Hand it off, then reference the answer back here." } },
+    { text: "The implementation is committed. You want a Standards and Spec review, and you'll fix the findings here afterwards. You don't need to steer the review.", stop: 3,
+      why: { 0: "The review shouldn't run in the context that wrote the code. That's confirmation bias.", 1: "No. You'll need this context to act on the findings.", 2: "Nothing is leaving this harness or directory.", 3: "Reading a diff and reporting back is the standard AFK case." } },
+    { text: "A long debugging session, deep past the smart zone. The fix has landed. Next: QA the reset flow with you steering, in the same repo.", stop: 4,
+      why: { 0: "There's no room left, so continuing means working past the smart zone.", 1: "No. The bug's context is exactly what QA needs.", 2: "Same harness, same directory, just you.", 3: "QA needs you steering it.", 4: "<code>/compact we're going to QA the reset flow</code>. The instruction tells the summary what to keep." } },
+    { text: "<code>/to-spec</code> has just published. You still have room. Next: <code>/to-tickets</code>.", stop: 0,
+      why: { 0: "Lesson 3: keep both in one window. Slicing wants the decisions verbatim, and fetching a big spec back can truncate." } },
+    { text: "You spent an hour comparing three caching libraries and decided none fit. Next: an unrelated billing bug.", stop: 1,
+      why: { 0: "The billing bug doesn't need any of this.", 1: "The dead ends are disposable. But <code>/clear</code> only works one way: if \"none fit\" matters later, write it down first, for example as an ADR." } },
+    { text: "The feature is half-built, and you'll finish it tomorrow in Codex instead of Claude Code.", stop: 2,
+      why: { 0: "Tomorrow's session runs in a different harness.", 1: "No. The work in progress matters.", 2: "A new harness can't see this context, so the work has to travel as a file. Copy it out of temp." } }
+  ]
+});
+
+Quiz.register("costs", window.QUIZ.filter((q) => q.section === "costs"));
+</script>
+</body>
+</html>

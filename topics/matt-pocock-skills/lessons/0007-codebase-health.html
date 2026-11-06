@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codebase Health</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sort.js"></script>
+<script src="../assets/walk.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 7 · Matt Pocock's Skills</p>
+<h1>Codebase Health and Retro</h1>
+<p class="subtitle">The main flow ships a feature. Two skills keep the <em>next</em> feature easy: one improves the code, the other improves the agent's environment.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>You can apply the deletion test to a module and tell a real seam from a fake one. You can also take a retro finding and say where its fix belongs: a check, a coding standard, a pointer, or wider access.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<p class="muted" style="font-size:.9rem">These are mixed from Lessons 3–6, with no hints about which lesson each comes from.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. Idea one: depth is leverage at the interface</h2>
+
+<p>This is the fourth failure mode from Lesson 1, the ball of mud. Agents speed up entropy, because each change is local and nobody watches the shape. Pocock's fix starts with <strong>words</strong>. <code>codebase-design</code> is a glossary that the other skills share, and it bans loose substitutes: <em>"don't substitute 'component,' 'service,' 'API,' or 'boundary.' Consistent language is the whole point."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md">[1]</a></p>
+
+<div class="table-wrap"><table>
+  <tr><th>Term</th><th>Meaning</th></tr>
+  <tr><td><strong>Module</strong></td><td>Anything with an interface and an implementation, at any scale: a function, a class, a package.</td></tr>
+  <tr><td><strong>Interface</strong></td><td><em>Everything</em> a caller must know: the types, plus invariants, ordering, error modes, config, and performance.</td></tr>
+  <tr><td><strong>Seam</strong></td><td>The <em>location</em> where an interface lives, a place where you can change behaviour without editing there (from Feathers).</td></tr>
+  <tr><td><strong>Adapter</strong></td><td>A concrete thing that fills the slot at a seam. It's a role, so an in-memory fake and a Postgres repo are both adapters.</td></tr>
+  <tr><td><strong>Depth</strong></td><td>How much behaviour a caller or test gets per unit of interface it has to learn.</td></tr>
+  <tr><td><strong>Leverage</strong> / <strong>Locality</strong></td><td>What depth pays out. Callers get more for less (leverage). Maintainers get one place to fix (locality).</td></tr>
+</table></div>
+
+<div class="depth" aria-label="Deep module: narrow interface over a tall implementation. Shallow module: wide interface over a thin implementation.">
+  <div class="mod deep">
+    <div class="iface">interface</div>
+    <div class="impl">implementation</div>
+    <p class="cap"><strong>Deep</strong>: a small interface with a lot behind it.</p>
+  </div>
+  <div class="mod shallow">
+    <div class="iface">interface</div>
+    <div class="impl">implementation</div>
+    <p class="cap"><strong>Shallow</strong>: the interface is nearly as big as the code.</p>
+  </div>
+</div>
+
+<p>Four principles follow from these words:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md">[1]</a></p>
+<ol>
+  <li><strong>The deletion test.</strong> Imagine deleting the module. <em>"If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep."</em></li>
+  <li><strong>The interface is the test surface.</strong> Callers and tests cross the same seam. <em>"If you want to test past the interface, the module is probably the wrong shape."</em></li>
+  <li><strong>One adapter means a hypothetical seam. Two adapters means a real one.</strong> A port with only a production adapter, and no test adapter, is just indirection.</li>
+  <li><strong>Depth is a property of the interface.</strong> Inside, a deep module can be small swappable parts with their own internal seams. Callers never see them.</li>
+</ol>
+
+<div class="note">
+  <p class="label">Two connections to earlier lessons</p>
+  <p>Lesson 4's "mock only at system boundaries" is a special case of this. <code>DEEPENING.md</code> sorts dependencies into four kinds, and the kind decides how you test across the seam. <strong>In-process</strong> code you merge and test directly. <strong>Local-substitutable</strong> dependencies run a stand-in, such as PGLite. For <strong>remote but owned</strong> services you define a port, with an HTTP adapter for production and an in-memory one for tests. A <strong>true external</strong> service, like Stripe, you mock.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/DEEPENING.md">[2]</a> The skill also departs from Ousterhout on purpose. It rejects his "implementation lines ÷ interface lines" ratio, because that <em>"rewards padding the implementation."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md">[1]</a></p>
+</div>
+
+<h2>2. Idea two: survey, pick one, then the main flow</h2>
+
+<p><code>/improve-codebase-architecture</code> looks for <strong>deepening opportunities</strong>: places where a cluster of shallow modules could become one deep module. <em>"It never changes the code."</em> The whole run produces one HTML report in <code>$TMPDIR</code> and a conversation.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/improve-codebase-architecture.md">[4]</a></p>
+
+<ol>
+  <li><strong>Scope before you scan (YAGNI).</strong> If you named a direction, it takes it. Otherwise it reads <code>git log</code> for <strong>hot spots</strong>, because <em>"a deepening in code that nobody touches is a refactor that never pays back."</em> The best prompt is the next build: point it at the spec and ask <em>"how can we make this change easy?"</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/improve-codebase-architecture.md">[4]</a></li>
+  <li><strong>Explore with the deletion test.</strong> A subagent looks for friction: a concept that takes five files to understand, pure functions pulled out for testability while the bugs live in how callers use them, and code that's hard to test through its interface.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md">[3]</a></li>
+  <li><strong>Report, then stop.</strong> Each card has the files, the problem, the solution, the benefit (in terms of locality and leverage), a before/after diagram, and a badge: <code>Strong</code>, <code>Worth exploring</code>, or <code>Speculative</code>. It ends with a top pick and asks <em>"Which of these would you like to explore?"</em> It doesn't propose interfaces yet.</li>
+  <li><strong>Grill the one you picked.</strong> The output is <em>"a decision, not a diff"</em>, and the decision then goes through the main flow: <code>/to-spec</code> → <code>/to-tickets</code> → <code>/implement</code>. Use one candidate per session, and turn the rest into tickets.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/improve-codebase-architecture.md">[4]</a></li>
+</ol>
+
+<p>Field notes from the guide's "Common questions":<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/improve-codebase-architecture.md">[4]</a></p>
+<ul>
+  <li><strong>It rarely says "fine."</strong> The skill exists to produce findings. <em>"If every candidate in a report is <code>Speculative</code>, the skill found nothing."</em></li>
+  <li><strong>Over-grilling is the top complaint.</strong> Weaker models skip the report and interview you about their first idea. Say "don't grill me, just show the report."</li>
+  <li><strong>Rejecting a candidate for a lasting reason?</strong> Accept the offer of an <strong>ADR</strong>, so the next run doesn't suggest it again. That's Lesson 2's ADR test again.</li>
+  <li><strong>Don't drive a session with <code>/codebase-design</code> alone.</strong> It's a reference with no process. Given "go," an agent invents a process and runs for 100k tokens before asking anything (<a href="https://github.com/mattpocock/skills/issues/449">issue #449</a>). Run a <em>driver</em> skill and let it use the vocabulary.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/codebase-design.md">[7]</a></li>
+</ul>
+
+<h2>3. Idea three: fix the environment, not the code</h2>
+
+<p><code>/retro</code> is the last step of the main chain. It reads a session's own record and proposes changes to the agent's <strong>environment</strong>, so the next run goes better. It changes no code, and nothing changes until you pick a candidate.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/retro.md">[6]</a> The category of what went wrong decides where the fix goes:</p>
+
+<div class="table-wrap"><table>
+  <tr><th>What went wrong in the session</th><th>Fix it with</th></tr>
+  <tr><td>The agent took a long time to find a file or fact</td><td>A <strong>navigation pointer</strong> in a file it already reads</td></tr>
+  <tr><td>It made a mistake a tool could have caught</td><td>An <strong>automated check</strong>: a lint rule, a type, a test, a hook, or a CI job</td></tr>
+  <tr><td>The reviewer missed a judgement-call mistake</td><td>A rule in <code>CODING_STANDARDS.md</code></td></tr>
+  <tr><td>It needed information it couldn't reach</td><td>Wider <strong>access</strong>: tee the dev-server log to a file, give read-only access to a service</td></tr>
+  <tr><td><code>AGENTS.md</code>/<code>CLAUDE.md</code> is large, or full of lines that change nothing</td><td>Move steering into standards or checks, and delete the <strong>no-ops</strong></td></tr>
+</table></div>
+
+<p>One rule sits under the table: <strong>classify the violation first.</strong> A <strong>mechanical</strong> one, such as a banned API, an import shape, or a file-location rule, <em>"gets a deterministic check, full stop,"</em> because a check can fail and a sentence can't. Only real <strong>judgement calls</strong> become prose.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/retro/SKILL.md">[5]</a></p>
+
+<p>That prose goes to the <strong>reviewer</strong>, not the implementer. The implementing agent <em>"has the most context pressure"</em>, because it explores, writes code, and debugs. The reviewer gets a diff and nothing else, so it has room to apply standards. This is why <code>CODING_STANDARDS.md</code> is read during review (Lesson 4's Standards axis), and why <code>CLAUDE.md</code> is kept <em>"incredibly sparingly, usually only for navigation pointers."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/retro/SKILL.md">[5]</a></p>
+
+<ul>
+  <li><strong>Check what's already there first.</strong> If a lint script exists but nothing runs it, the finding is to wire it up, not to build a new one. A repo with no guardrail at all is itself a finding.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/retro/SKILL.md">[5]</a></li>
+  <li><strong>Run it while the struggles are still in context.</strong> Run it in the same session by default. If you're past the smart zone, <code>/clear</code> and point a fresh <code>/retro</code> at the old session's log.</li>
+  <li><strong>Discard any candidate you can't trace to a specific moment.</strong> Generic advice that fills the categories is its known weakness. Skip it after a smooth build, because smooth sessions teach little.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/retro.md">[6]</a></li>
+</ul>
+
+<p class="muted" style="font-size:.9rem">The two skills side by side: <code>/improve-codebase-architecture</code> takes <em>code</em> as input and improves the code. <code>/retro</code> takes a <em>session</em> as input and improves the environment. <em>"You use both; neither replaces the other."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/retro.md">[6]</a></p>
+
+<h2>4. Practice</h2>
+
+<h3>Drill A: run the deletion test</h3>
+<p>These come from a BullMQ job system. Decide what you'd do with each module.</p>
+<div class="sort" data-sort="deletion"></div>
+
+<h3>Drill B: where does the retro fix go?</h3>
+<div class="sort" data-sort="retro"></div>
+
+<h3>Drill C: which skill now? (all on-ramps, interleaved)</h3>
+<p>Walk each scenario down the ladder. The first <em>yes</em> wins. <span class="muted">This ladder is my study aid built from Lessons 6–7, not a sequence Pocock publishes.</span></p>
+<div class="walk" data-walk="next"></div>
+
+<h3>Drill D: inside the two skills</h3>
+<div class="quiz" data-quiz="inside"></div>
+
+<h3>Drill E: from memory</h3>
+<p>Write the four <code>codebase-design</code> principles. Then write where a <em>mechanical</em> retro finding goes and where a <em>judgement-call</em> one goes, and why the second goes there.</p>
+<div class="recall">
+  <textarea aria-label="Your answer"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <p>1. <strong>The deletion test</strong>: if complexity vanishes, the module was a pass-through; if it reappears in callers, it earns its keep. 2. <strong>The interface is the test surface.</strong> 3. <strong>One adapter is a hypothetical seam; two is a real one.</strong> 4. <strong>Depth is a property of the interface</strong>, not the implementation.</p>
+    <p>A mechanical finding becomes a <strong>deterministic check</strong> (lint, hook, or CI). A judgement call goes in <strong><code>CODING_STANDARDS.md</code></strong>, which the <strong>reviewer</strong> reads, because the reviewer has the least context pressure. Never put either in <code>CLAUDE.md</code>.</p>
+  </div>
+</div>
+
+<h3>Optional: feel it for real (10 min, no plugin needed)</h3>
+<p>In <code>learn-bullmq</code> (or your Go project), run <code>git log --name-only --format= | grep . | sort | uniq -c | sort -rn | head</code> to find the hot spots. Pick the top file and run the deletion test on one module in it, out loud: would its complexity vanish, or reappear across its callers? You'll install the plugin and do the real run in <a href="0008-capstone.html">Lesson 8</a>.</p>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md"><code>codebase-design/SKILL.md</code></a> in full (6 minutes). It's the vocabulary every other design skill uses. Then read the <a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/retro.md"><code>retro</code> guide</a>, especially "Where the findings land" and its "Common questions."</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. Good questions: "deletion-test this module in learn-bullmq with me", "is this Redis wrapper a real seam or a hypothetical one?", or "what would a retro on my last session find?"</p>
+</div>
+
+<p>The <a href="../reference/health-card.html">Health Card</a> has all of this on one page. See also the <a href="../reference/on-ramps-card.html">On-ramps Card</a>, the <a href="../reference/build-card.html">Build Card</a>, and the <a href="../reference/skill-map.html">Skill Map</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0006-on-ramps.html">← Lesson 6: On-ramps</a>
+  <a href="0008-capstone.html">Lesson 8: Capstone →</a>
+</nav>
+
+</main>
+<script src="0007-codebase-health.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+Sort.register("deletion", {
+  buckets: ["Shallow: deepen or delete", "Deep: leave it", "Fake seam: inline it"],
+  items: [
+    { text: "<code>retryDelay(attempt)</code>: 40 lines of backoff, jitter, and caps, called by six workers through that one function.", bucket: 1,
+      why: "Delete it and the backoff logic reappears in six places. It earns its keep: a small interface with a lot behind it." },
+    { text: "<code>QueueService.add(name, data, opts)</code>, which only calls <code>queue.add(name, data, opts)</code> with the same arguments.", bucket: 0,
+      why: "A pass-through. Delete it and nothing is lost, because the interface is as wide as the implementation. Merge it into something that hides real work." },
+    { text: "A <code>NotifierPort</code> with one adapter, <code>SlackNotifier</code>. Tests never swap it, and nothing else varies.", bucket: 2,
+      why: "One adapter means a hypothetical seam. It's indirection with nothing varying across it, so inline it until a second adapter is real." },
+    { text: "To understand job dedupe you open <code>dedupeKey</code>, <code>dedupeStore</code>, <code>dedupeCheck</code>, and <code>dedupeConfig</code>. Each is 10 lines, and every caller calls all four in order.", bucket: 0,
+      why: "A concept spread over many shallow modules, with no locality. Deepen them into one dedupe module whose interface is a single call." },
+    { text: "An <code>EmailSender</code> port with <code>SesAdapter</code> in production and <code>InMemoryEmail</code> in tests.", bucket: 1,
+      why: "Two adapters make it a real seam, and the right shape for a true-external dependency." },
+    { text: "A pure <code>parseCron()</code>, pulled out only so it could be unit-tested. The real bugs come from how five callers combine it with timezone config.", bucket: 0,
+      why: "Extracted for testability with no locality. The bugs live in the calling code, so deepen it to own the timezone handling as well." }
+  ]
+});
+
+Sort.register("retro", {
+  buckets: ["Automated check", "CODING_STANDARDS.md", "Navigation pointer", "Information access"],
+  items: [
+    { text: "The agent imported from <code>src/queue/internal/*</code> again, bypassing the module's <code>index.ts</code>.", bucket: 0,
+      why: "An import shape is mechanical, so it gets a check (for example a dependency-cruiser rule), not a sentence." },
+    { text: "It took 25 tool calls to find where job payload schemas are defined.", bucket: 2,
+      why: "A navigation failure. Put a pointer in a file the agent already reads." },
+    { text: "The worker crashed, and the agent couldn't see why: the dev server logs only to your terminal.", bucket: 3,
+      why: "Crucial information it couldn't reach. Tee the logs to a file the agent can read." },
+    { text: "The reviewer passed new error messages whose wording doesn't match the existing ones.", bucket: 1,
+      why: "\"Matches the surrounding style\" is a judgement call no linter can make. It's a standard for the reviewer." },
+    { text: "<code>package.json</code> has a <code>lint</code> script, but no hook or CI job runs it, and the agent shipped a lint error.", bucket: 0,
+      why: "The trap: a check exists but isn't wired up. The finding is to wire it into a hook or CI, not to write a new rule." },
+    { text: "The agent called <code>new Redis()</code> inside a job handler instead of taking the injected connection.", bucket: 0,
+      why: "A banned API in a fixed location is mechanical, so a custom lint rule can fail on it every time." },
+    { text: "The reviewer missed that a new module names things differently from the rest of the queue code.", bucket: 1,
+      why: "Cross-file consistency is the example the skill itself gives of a judgement call." }
+  ]
+});
+
+Walk.register("next", {
+  steps: [
+    { q: "Did <em>someone else</em> file it, and nobody has checked it yet?", outcome: "/triage" },
+    { q: "Is something broken in a way a first look didn't explain?", outcome: "/diagnosing-bugs" },
+    { q: "Did a session just end that was harder than it should have been?", outcome: "/retro" },
+    { q: "Is the code's <em>shape</em> the friction: no clean seam, or a big build about to land on messy code?", outcome: "/improve-codebase-architecture" },
+    { q: "Is it too big and foggy to hold in one session?", outcome: "/wayfinder" },
+    { q: "Is it your own idea, small enough for one session?", outcome: "Main flow: /grill-with-docs" }
+  ],
+  scenarios: [
+    { text: "Your agent just shipped the retry feature. On the way, it took 30 tool calls to find the queue config and twice reintroduced a banned import.", stop: 2,
+      why: { 0: "You started this work. Nobody filed it.", 1: "Nothing is broken now. The feature shipped.", 2: "A hard session with traceable struggles is exactly what /retro is for." } },
+    { text: "A teammate opened an issue: \"dashboard job counts are off by one.\" Nobody has read it yet.", stop: 0,
+      why: { 0: "Raw work from someone else. Triage verifies and categorises it first." } },
+    { text: "Your own worker silently drops about 1 job in 50. A quick look found nothing.", stop: 1,
+      why: { 0: "It's yours, not filed by someone else.", 1: "Broken, intermittent, and it resisted a first look. Build the red loop first." } },
+    { text: "<code>/diagnosing-bugs</code> finished: the cause is known, but no correct seam exists to lock the race down with a test.", stop: 3,
+      why: { 0: "Nothing new was filed.", 1: "The diagnosis is done. What's left is structural.", 2: "This is a finding, not a struggle in the session.", 3: "\"No correct seam\" is the hand-off from Lesson 6. Survey and deepen." } },
+    { text: "Next week you'll add priority lanes to the job system. The spec is ready, and every past change there touched seven files.", stop: 3,
+      why: { 0: "It's your own work.", 1: "Nothing is broken.", 2: "No hard session is involved yet.", 3: "A big build on messy code. Point it at the spec: \"how can we make this change easy?\"" } },
+    { text: "\"Replace the homegrown scheduler with BullMQ across four services.\" You can't see the steps yet.", stop: 4,
+      why: { 0: "Your own initiative.", 1: "Nothing is broken.", 2: "No session to look back on.", 3: "Shape may matter later, but the real problem is that the effort itself is foggy.", 4: "Huge and foggy: chart the decisions first." } },
+    { text: "\"Add a pause-queue toggle to the admin page.\" Small and clear.", stop: 5,
+      why: { 0: "Your idea.", 1: "Nothing is broken.", 2: "No session to review.", 3: "No structural friction is named.", 4: "One session holds it.", 5: "The main flow, with no on-ramp needed." } }
+  ]
+});
+
+Quiz.register("inside", window.QUIZ.filter((q) => q.section === "inside"));
+</script>
+</body>
+</html>

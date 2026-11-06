@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grilling Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>Grilling Card</h1>
+<p class="subtitle">How <code>/grill-me</code> and <code>/grill-with-docs</code> run, and what they leave behind.</p>
+<p class="muted" style="font-size:.85rem">Sources: <a href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"><code>grilling</code></a>, <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/SKILL.md"><code>domain-modeling</code></a>, commit <code>5beb35b</code>.</p>
+
+<h2>Which entry point</h2>
+<div class="table-wrap"><table>
+  <tr><th>Skill</th><th>Is</th><th>Use when</th></tr>
+  <tr><td><code>/grill-with-docs</code></td><td><code>grilling</code> + <code>domain-modeling</code></td><td>You're in a repo (always the better choice there)</td></tr>
+  <tr><td><code>/grill-me</code></td><td><code>grilling</code> only, stateless</td><td>No repo: plans, writing, designs</td></tr>
+</table></div>
+
+<h2>The interview loop</h2>
+<ol>
+  <li>Map the idea as a <strong>design tree</strong>: decisions branch into the decisions that depend on them.</li>
+  <li><strong>Frontier</strong> = decisions whose prerequisites are settled. Ask <em>all</em> of them in one <strong>round</strong>.</li>
+  <li>Each question is numbered, has a <strong>recommended answer</strong>, and is worded so <strong>"yes" accepts it</strong>.</li>
+  <li><strong>Facts → agent</strong> (subagent lookup, never ask the user). <strong>Decisions → user</strong>. A pending lookup only blocks the questions that depend on it.</li>
+  <li>Recompute the frontier after each round's answers.</li>
+  <li>Done = frontier empty <strong>and</strong> user confirms shared understanding. No action before that.</li>
+</ol>
+<pre><code>❓ Q1 - &lt;title&gt;: &lt;question, choices&gt;
+➡️ &lt;recommended answer&gt;
+---
+❓ Q2 - …</code></pre>
+
+<h2>GLOSSARY.md (updated during the interview)</h2>
+<ul>
+  <li><strong>Challenge</strong> terms that conflict with the glossary. <strong>Sharpen</strong> overloaded words. <strong>Invent</strong> edge-case scenarios. <strong>Cross-check</strong> claims against the code.</li>
+  <li>Write a term in the moment it's resolved, not in a batch at the end.</li>
+  <li>Only project-specific terms. No implementation details or general programming concepts.</li>
+</ul>
+<pre><code>**Order**:
+A one- or two-sentence definition of what it IS.
+_Avoid_: Purchase, transaction</code></pre>
+<p style="font-size:.9rem">Multiple contexts? Use a root <code>GLOSSARY-MAP.md</code> pointing to one <code>GLOSSARY.md</code> per context.</p>
+
+<h2>ADR test: all three, or skip it</h2>
+<ol>
+  <li><strong>Hard to reverse</strong></li>
+  <li><strong>Surprising without context</strong></li>
+  <li><strong>A real trade-off</strong></li>
+</ol>
+<p style="font-size:.9rem">Typical ADRs: architectural shape, integration patterns between contexts, lock-in tech choices, boundary decisions, deliberate deviations, constraints you can't see in the code, rejected alternatives that aren't obvious. Location: <code>docs/adr/0001-slug.md</code>. A single paragraph (context, decision, why) is enough.</p>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a> · <a href="skill-map.html">Skill Map</a></p>
+</main>
+</body>
+</html>

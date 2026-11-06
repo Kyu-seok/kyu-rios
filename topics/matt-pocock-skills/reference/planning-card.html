@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planning Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<p class="kicker">Reference · Matt Pocock's Skills</p>
+<h1>Planning Card</h1>
+<p class="subtitle"><code>/to-spec</code> and <code>/to-tickets</code>: the multi-session branch of the flow.</p>
+<p class="muted" style="font-size:.85rem">Sources: <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-spec/SKILL.md"><code>to-spec</code></a> (<a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md">guide</a>), <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md"><code>to-tickets</code></a> (<a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md">guide</a>), commit <code>5beb35b</code>.</p>
+
+<h2>Do I need a spec and tickets?</h2>
+<div class="table-wrap"><table>
+  <tr><th>Where you are</th><th>Run</th></tr>
+  <tr><td>Nothing decided</td><td><code>/grill-with-docs</code></td></tr>
+  <tr><td>Decided, and it fits in one context window</td><td><code>/implement</code> here, with no spec and no tickets</td></tr>
+  <tr><td>Decided, and it spans several sessions</td><td><code>/to-spec</code> → <code>/to-tickets</code>, <strong>in the same window</strong></td></tr>
+  <tr><td>Plan is only in the conversation</td><td><code>/to-tickets</code> can read the thread directly</td></tr>
+  <tr><td>A wayfinder map has cleared</td><td><code>/to-spec #&lt;map_issue&gt;</code>, then <code>/to-tickets</code></td></tr>
+</table></div>
+
+<h2><code>/to-spec</code>: a decision record</h2>
+<ul>
+  <li><strong>No interview.</strong> It synthesizes the conversation, the codebase, <code>GLOSSARY.md</code> and the ADRs. Anything in it you never said is a <strong>defect</strong>.</li>
+  <li><strong>Seams first.</strong> It prefers existing seams, uses the highest one, and the ideal number is <strong>one</strong>. You confirm them. <code>/tdd</code> and <code>/code-review</code> build on them later.</li>
+  <li>Sections: Problem Statement · Solution · User Stories (a long list) · Implementation Decisions · Testing Decisions · Out of Scope · Further Notes.</li>
+  <li>No file paths or code snippets, except a snippet a prototype produced that encodes a decision.</li>
+  <li><strong>Read closely:</strong> the seams and Out of Scope.</li>
+  <li>The spec is a snapshot that goes stale and can be thrown away after the work ships. What should last goes in <code>GLOSSARY.md</code> and ADRs.</li>
+</ul>
+
+<h2><code>/to-tickets</code>: tracer bullets</h2>
+<ol>
+  <li>A narrow but complete path through <strong>every layer</strong> (schema, API, UI, tests)</li>
+  <li><strong>Demoable or verifiable</strong> on its own</li>
+  <li>Fits in <strong>one fresh context window</strong></li>
+  <li><strong>Prefactoring first</strong>: make the change easy, then make the easy change</li>
+</ol>
+<p><strong>Ask about every ticket: "What can I demo when this is done?"</strong> If the answer is a layer, it's a horizontal slice. If you have too many tickets, merge them.</p>
+<p style="font-size:.9rem"><strong>Wide refactor exception</strong> (one mechanical change with a huge blast radius): <em>expand</em> by adding the new form beside the old, <em>migrate</em> in batches with one ticket each, all blocked by the expand, then <em>contract</em> by deleting the old form in a ticket blocked by every batch.</p>
+
+<h2>Blocking edges</h2>
+<ul>
+  <li>Each ticket says <strong>Blocked by: …</strong> or <em>"None (can start immediately)"</em>.</li>
+  <li><strong>Frontier</strong> = tickets whose blockers are all done. Open one fresh session per frontier ticket.</li>
+  <li>The agent quizzes you before publishing. Check the granularity, whether each edge is real, and what to merge or split.</li>
+  <li>Local tracker: <code>.scratch/&lt;feature&gt;/issues/NN-slug.md</code>, blockers first, so <code>/implement 03</code> works. GitHub: native <code>--blocked-by</code> links, with tickets as sub-issues of the spec.</li>
+  <li>Every acceptance criterion must <strong>fail at the base commit</strong>. Name the observation that would show it false.</li>
+</ul>
+
+<h2>Gotchas</h2>
+<ul>
+  <li>Don't clear or compact between <code>/to-spec</code> and <code>/to-tickets</code>, because a big spec can truncate when it's fetched back.</li>
+  <li>The spec also gets <code>ready-for-agent</code>. AFK pollers will try to build the whole thing, so exclude it or remove the label.</li>
+  <li>Dispatch is manual, and <code>/implement</code> doesn't reliably close tickets. Update their state yourself.</li>
+  <li>Don't run <code>/triage</code> on tickets <code>/to-tickets</code> made. They're agent-ready by construction.</li>
+</ul>
+
+<p class="muted" style="font-size:.85rem"><a href="../index.html">← Course index</a> · <a href="skill-map.html">Skill Map</a> · <a href="grilling-card.html">Grilling Card</a></p>
+</main>
+</body>
+</html>

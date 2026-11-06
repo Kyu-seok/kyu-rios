@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviewing a Pull Request</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 4 · Git workflow in the age of agents</p>
+<h1>Read the diff as if it will break production</h1>
+<p class="subtitle">Swap roles: an AI agent opened a PR in your sandbox, and you’re the reviewer. About 30 minutes.</p>
+
+<p><strong>Today’s win:</strong> you’ll find real problems in an agent’s PR, leave line comments and a suggested fix on GitHub, submit a review, and learn the one GitHub rule that affects solo developers who work with agents.</p>
+
+<h2>What a review is</h2>
+
+<p>A review is a set of comments plus one <strong>decision</strong>. GitHub has three:
+<span class="sidenote">Decision wording: <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/about-pull-request-reviews">GitHub Docs, “About pull request reviews”</a>. Steps: <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/reviewing-proposed-changes-in-a-pull-request">“Reviewing proposed changes in a pull request”</a>.</span></p>
+
+<table class="ref-inline">
+  <tr><th>Decision</th><th>Means</th><th><code>gh pr review</code></th></tr>
+  <tr><td><strong>Comment</strong></td><td>“Leaves general feedback without explicitly approving or requesting changes.”</td><td><code>--comment -b "…"</code></td></tr>
+  <tr><td><strong>Approve</strong></td><td>“Signals that the changes are ready to merge.”</td><td><code>--approve</code></td></tr>
+  <tr><td><strong>Request changes</strong></td><td>“Flags feedback that the author should address before merging.”</td><td><code>--request-changes -b "…"</code></td></tr>
+</table>
+
+<p>On GitHub you add <em>line comments</em> from the <strong>Files changed</strong> tab. Hover over a line, click the blue <code>+</code>, write your comment, and click <strong>Start a review</strong>. Those comments are drafts: “Before you submit your review, your line comments are pending and only visible to you.” Nothing reaches the author until you click <strong>Submit review</strong>. Two extras are worth using. A <strong>suggestion</strong> is a block containing the exact replacement code, which the author can commit with one click. <strong>Viewed</strong> checkboxes track which files you’ve finished reviewing. “If the file changes after you view the file, it will be unmarked as viewed.”</p>
+
+<h3>What to look for</h3>
+
+<p>Google’s public code-review guide is the most widely cited checklist. These four questions catch most problems in agent PRs:
+<span class="sidenote">Quotes: <a href="https://google.github.io/eng-practices/review/reviewer/looking-for.html">Google Engineering Practices, “What to look for in a code review”</a>. The guide also covers design, complexity, naming, and comments.</span></p>
+
+<ol>
+  <li><strong>Functionality:</strong> “Does this CL do what the developer intended?” Compare the code with the task <em>and</em> with the PR description. Agents often describe what they meant to do, not what the code actually does.</li>
+  <li><strong>Scope:</strong> does every changed file belong to this task? Look at the file list before reading any code.</li>
+  <li><strong>Tests:</strong> “Will the tests actually fail when the code is broken?” A test that can’t fail only makes the PR look tested.</li>
+  <li><strong>Every line:</strong> “look at every line of code that you have been assigned to review.” That includes leftover debug output.</li>
+</ol>
+
+<div class="box misconception">
+<p>“Reviewing means reading the code.” Reading is only part of it. You can also <em>run</em> the code. <code>gh pr checkout</code> puts the PR on your laptop in one command. One concrete input that gives the wrong answer is worth more than a lot of reading.</p>
+</div>
+
+<h2>Warm-up: spot the issues</h2>
+<p>An agent was asked to <em>“add retries to fetch_user”</em>. Click every line you would comment on, then press <em>Submit review</em>. There are three planted problems.</p>
+
+<div class="diff-review" id="warmup"></div>
+
+<h2>Review a real agent PR</h2>
+
+<p>I opened <strong>PR #6</strong> in your sandbox, acting as an agent. It was given this task: <em>“Add a small script that counts the words in a text file.”</em> The PR has <strong>at least four problems</strong>. Your job is to find them and report them as a reviewer would.</p>
+
+<ol class="steps" data-checklist="lesson-0004">
+  <li>
+    <div class="step-title">Read the task and the description first</div>
+<pre><code>cd ~/Work/git-sandbox
+git switch main &amp;&amp; git pull
+gh pr view 6</code></pre>
+    <p>Note what the description <em>claims</em>. You’ll check each claim against the code.</p>
+  </li>
+  <li>
+    <div class="step-title">Check scope: which files changed?</div>
+<pre><code>gh pr diff 6 --name-only
+gh pr diff 6</code></pre>
+    <p>Before reading the code, ask whether every file in that list belongs to a word-count task.</p>
+  </li>
+  <li>
+    <div class="step-title">Run it: predict, then test the description’s claims</div>
+<pre><code>gh pr checkout 6
+python3 -c "from wordcount import count_words; print(count_words('one  two three'))"
+python3 -c "from wordcount import count_words; print(count_words('one\ntwo'))"
+python3 wordcount.py README.md
+git switch main</code></pre>
+    <p>Write down the correct answer for each input <strong>before</strong> you run it. The first input has two spaces after <code>one</code>. <code>gh pr checkout</code> creates a local branch with the PR’s commits, so you’re testing exactly what would be merged.
+    <span class="sidenote"><code>gh pr checkout</code>: <a href="https://cli.github.com/manual/gh_pr_checkout">gh manual</a>.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Leave line comments on GitHub, including one suggestion</div>
+<pre><code>gh pr view 6 --web</code></pre>
+    <p>Open <strong>Files changed</strong>. For each problem, comment on the exact line, then click <strong>Start a review</strong> (and <strong>Add review comment</strong> after that). Say what’s wrong and why it matters. For at least one problem, click the suggestion icon (±) and write the fixed line. Tick <strong>Viewed</strong> on each file when you’re done with it.</p>
+  </li>
+  <li>
+    <div class="step-title">Submit, and find GitHub’s self-review rule</div>
+    <p>Click <strong>Review changes</strong>, write a one-line summary, and try to choose <strong>Request changes</strong>. You’ll find you can’t. Submit it as <strong>Comment</strong> instead. Then try to approve from the terminal:</p>
+<pre><code>gh pr review 6 --approve</code></pre>
+    <p>That fails too. “Pull request authors cannot approve their own pull requests.” I pushed this PR with <em>your</em> <code>gh</code> login, so GitHub sees you as its author.
+    <span class="sidenote">Quote: <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/approving-a-pull-request-with-required-reviews">GitHub Docs, “Approving a pull request with required reviews”</a>. The same page says you can’t approve a PR that Copilot raised if you were the one who assigned the task to Copilot.</span></p>
+  </li>
+  <li>
+    <div class="step-title">Get graded, then have the agent fix it</div>
+    <p>In Claude Code, say <strong>“check my review on PR #6”</strong>. I’ll read your comments through the GitHub API and tell you which planted problems you caught and which you missed. Then say <strong>“address the review”</strong>, and I’ll push fix commits as the agent. Next, re-review: GitHub unticks <em>Viewed</em> on every file that changed, so you can see what to look at again. Finish with <code>gh pr merge 6 --merge --delete-branch</code> and sync <code>main</code>.</p>
+  </li>
+</ol>
+
+<div class="box agent">
+<p><strong>The solo-agent catch:</strong> when an agent uses your <code>gh</code> login, every PR it opens is <em>your</em> PR. You can’t formally approve it, and a rule like “require one approval before merging” would block you on your own repo. For now, your review is a <em>Comment</em> followed by your merge. Lesson 5 covers the alternatives: required checks, rulesets, and giving agents their own identity.</p>
+</div>
+
+<h2>Recall it</h2>
+<p>No scrolling up.
+<span class="sidenote">Spaced review: retry the <a href="0003-merge-conflicts.html">Lesson 3 quiz</a> and its Drill 3 before this one.</span></p>
+
+<div class="quiz" data-quiz-id="0004"></div>
+
+<h2>Go deeper</h2>
+<p><strong>Primary source:</strong> <a href="https://google.github.io/eng-practices/review/reviewer/looking-for.html">Google, “What to look for in a code review”</a> (about 10 minutes). Then read <a href="https://google.github.io/eng-practices/review/reviewer/comments.html">“How to write code review comments”</a> for wording comments that get acted on.</p>
+<p><strong>Reference:</strong> <a href="../reference/github-flow-cheatsheet.html">Cheat sheet</a> (new review section) · <a href="../reference/glossary.html">Glossary</a>.</p>
+
+<p class="ask">Not sure whether something is worth a comment, or how to word one so an agent acts on it? Ask me in Claude Code. I’m playing the agent this time, so I can also show you how I read your comments.</p>
+
+<nav class="lesson-nav">
+  <a href="0003-merge-conflicts.html">← Lesson 3: merge conflicts</a>
+  <a href="0005-checks-and-rulesets.html">Lesson 5: checks and rulesets →</a>
+</nav>
+
+</main>
+
+<script src="../assets/checklist.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/diff-review.js"></script>
+<script src="0004-reviewing-a-pr.quiz.js"></script>
+<script>
+  DiffReview.mount('#warmup', {
+    title: 'PR #12 · Add retries to fetch_user',
+    lines: [
+      { t: 'file', s: 'api.py' },
+      { t: ' ', s: 'import requests' },
+      { t: '+', s: 'import time', issue: 'delay' },
+      { t: ' ', s: '' },
+      { t: ' ', s: 'def fetch_user(user_id):' },
+      { t: '-', s: '    resp = requests.get(f"{API}/users/{user_id}")' },
+      { t: '-', s: '    resp.raise_for_status()', issue: 'test' },
+      { t: '-', s: '    return resp.json()' },
+      { t: '+', s: '    for attempt in range(3):', issue: 'delay' },
+      { t: '+', s: '        try:' },
+      { t: '+', s: '            resp = requests.get(f"{API}/users/{user_id}", timeout=5)' },
+      { t: '+', s: '            return resp.json()' },
+      { t: '+', s: '        except Exception:', issue: 'swallow' },
+      { t: '+', s: '            pass', issue: 'swallow' },
+      { t: 'file', s: 'tests/test_api.py' },
+      { t: ' ', s: 'from api import fetch_user' },
+      { t: ' ', s: '' },
+      { t: '-', s: 'def test_fetch_user_404_raises():', issue: 'test' },
+      { t: '-', s: '    with pytest.raises(HTTPError):', issue: 'test' },
+      { t: '-', s: '        fetch_user(-1)', issue: 'test' }
+    ],
+    issues: {
+      swallow: '<code>except Exception: pass</code> hides every error, including real bugs, and after three failures the function silently returns <code>None</code>. Catch the specific network errors and re-raise on the last attempt.',
+      delay: '<code>time</code> is imported but never used, so the three retries run back to back with no delay. That probably isn’t what was intended. It suggests a missing <code>time.sleep(…)</code> backoff.',
+      test: 'The agent removed <code>raise_for_status()</code>, so a 404 no longer raises. It then <em>deleted the test</em> that caught this. When an agent deletes a failing test, always ask why.'
+    }
+  });
+
+  Quiz.mount('[data-quiz-id="0004"]', window.QUIZ);
+</script>
+</body>
+</html>

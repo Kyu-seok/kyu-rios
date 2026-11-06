@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spec to Tickets</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sort.js"></script>
+<script src="../assets/flow.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 3 · Matt Pocock's Skills</p>
+<h1>From Spec to Tickets</h1>
+<p class="subtitle">The spec records what you decided. The tickets are the steps that get you there.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Given a breakdown the agent proposes, you can tell a <strong>tracer bullet</strong> from a <strong>horizontal slice</strong>, see which tickets are on the <strong>frontier</strong>, and know what to push back on before anything gets published.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<p class="muted" style="font-size:.9rem">From Lessons 1 and 2, answered from memory.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<p>Here's where we are in the flow. Grilling is done. This lesson covers the two steps on the multi-session branch.</p>
+<div class="flow" data-highlight="spec tickets"></div>
+
+<h2>1. Idea one: the spec is a decision record</h2>
+
+<p>Your snooze grilling is over. You decided on a <strong>Channel</strong> snooze with fixed presets, decided urgent alerts always get through, and decided to reuse the existing scheduler. All of that lives in one context window that you're about to throw away. <code>/to-spec</code> exists <em>"because context windows end"</em>: it writes those decisions down, in your glossary's vocabulary, so a fresh session can pick up the work.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md">[1]</a></p>
+
+<p>It <strong>does not interview you</strong>. The skill says <em>"Do NOT interview the user; just synthesize what you already know."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-spec/SKILL.md">[2]</a> The spec records decisions. It doesn't make them. So <em>"if the spec states something you never said, that is a defect."</em><a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md">[1]</a></p>
+
+<h3>Seams come first</h3>
+<p>Before writing any prose, the agent sketches the <strong>seams</strong>: the places where the feature will be tested. It prefers existing seams, picks the highest one available, and <em>"the ideal number is one."</em> Then it checks the seams with you.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-spec/SKILL.md">[2]</a> For snooze, one good seam is the Notification delivery entry point: given a Notification and its Channel's snooze state, it either sends the Notification or holds it. Take this conversation seriously, because <code>/tdd</code> only tests at seams agreed in advance, and <code>/code-review</code> flags any seam nobody agreed to.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md">[1]</a> You'll see both of those in Lesson 4.</p>
+
+<h3>When to skip it, and what to read</h3>
+<div class="table-wrap"><table>
+  <tr><th>Where you are</th><th>Run</th></tr>
+  <tr><td>Nothing decided yet</td><td><code>/grill-with-docs</code> first</td></tr>
+  <tr><td>Decided, and it fits in one context window</td><td><code>/implement</code>, with no spec</td></tr>
+  <tr><td>Decided, and it spans several sessions</td><td><code>/to-spec</code>, then <code>/to-tickets</code></td></tr>
+</table></div>
+<p>On a single-session change, the spec gives you nothing: it's <em>"an extra synthesis step where the model can drift."</em> When you do get a spec, you don't need to read every line. Read <strong>the seams</strong> and <strong>Out of Scope</strong>, because a wrong decision in those two places is cheapest to catch now. If the spec surprises you, the grilling wasn't deep enough.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md">[1]</a></p>
+
+<h2>2. Idea two: tracer bullets, not layers</h2>
+
+<p><code>/to-tickets</code> splits the work into <strong>tracer bullets</strong>, a term from <em>The Pragmatic Programmer</em>. Each slice obeys four rules:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md">[3]</a></p>
+<ol>
+  <li>It cuts a narrow but <strong>complete path through every layer</strong>: schema, API, UI, and tests.</li>
+  <li>It is <strong>demoable or verifiable on its own</strong>.</li>
+  <li>It <strong>fits in a single fresh context window</strong>.</li>
+  <li><strong>Prefactoring goes first</strong>: <em>"make the change easy, then make the easy change."</em></li>
+</ol>
+
+<div class="slices">
+  <div class="slab">
+    <div class="cap">Horizontal ✗</div>
+    <div class="lyr">Schema</div><div class="cell on"></div><div class="cell on"></div><div class="cell on"></div><div class="cell on"></div>
+    <div class="lyr">API</div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="lyr">UI</div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="lyr">Tests</div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="verdict">Ticket 1: "all the snooze schema." Nothing works until every row has landed.</div>
+  </div>
+  <div class="slab">
+    <div class="cap">Vertical (tracer bullet) ✓</div>
+    <div class="lyr">Schema</div><div class="cell on"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="lyr">API</div><div class="cell on"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="lyr">UI</div><div class="cell on"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="lyr">Tests</div><div class="cell on"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="verdict">Ticket 1: "snooze a Channel for 1 hour." You can demo it the moment it lands.</div>
+  </div>
+</div>
+<p class="muted" style="font-size:.82rem;font-style:italic">Columns: 1h snooze, presets, urgent bypass, digest. Each highlighted block is one ticket.</p>
+
+<p>Slicing by layer is the rule people break most often. One team ran a 26-ticket stack sliced by layer and needed <strong>about twenty agent runs per closed ticket</strong>, roughly three-quarters of them rework. Their post-mortem traced every class of failure back to the horizontal slicing.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md">[4]</a></p>
+
+<div class="note">
+  <p class="label">The one question to ask about every ticket</p>
+  <p><strong>"What can I demo when this is done?"</strong> If the only answer is a layer ("the table exists"), it's a horizontal slice.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md">[4]</a> The opposite failure is the <em>most reported</em> one: twelve tickets for a three-line change. Ask the agent to merge them. If the whole change fits in one context window, you don't need tickets at all.</p>
+</div>
+
+<p class="muted" style="font-size:.88rem">One exception: a <strong>wide refactor</strong>, like renaming a column used in thousands of places, can't land green as a vertical slice. It's sequenced as <em>expand → migrate in batches → contract</em> instead.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md">[3]</a> You only need to recognise it for now.</p>
+
+<h2>3. Idea three: blocking edges and the frontier</h2>
+
+<p>Every ticket declares its <strong>blocking edges</strong>: the tickets that must be done before it can start. The <strong>frontier</strong> is the same idea you met in grilling. Any ticket whose blockers are all done can be picked up now.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md">[3]</a> Here's the snooze breakdown:</p>
+
+<ol class="tickets">
+  <li><span class="id">01</span><span>Prefactor: the existing scheduler accepts any delivery callback. No behaviour change.</span><span class="by">Blocked by: none (can start immediately)</span></li>
+  <li><span class="id">02</span><span>Snooze a Channel for 1 hour. Held Notifications arrive when the snooze ends.</span><span class="by">Blocked by: 01</span></li>
+  <li><span class="id">03</span><span>All presets (1h, 8h, 1 week), plus a "snoozed until" label.</span><span class="by">Blocked by: 02</span></li>
+  <li><span class="id">04</span><span>Urgent alerts bypass a Channel snooze.</span><span class="by">Blocked by: 02</span></li>
+  <li><span class="id">05</span><span>A snoozed Channel can be un-snoozed early.</span><span class="by">Blocked by: 02</span></li>
+  <li><span class="id">06</span><span>The settings page lists every snoozed Channel and its end time.</span><span class="by">Blocked by: 03</span></li>
+</ol>
+
+<p>Before publishing anything, the agent <strong>quizzes you</strong> on the numbered list. Is the granularity right? Does each ticket depend only on tickets that <em>genuinely</em> gate it? Should anything be merged or split? <em>"Iterate until the user approves the breakdown."</em> This is the last cheap place to push back.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md">[3]</a></p>
+
+<p>Where the tickets end up depends on the tracker you configured. In local mode, each ticket is its own file, <code>.scratch/&lt;feature&gt;/issues/NN-slug.md</code>, numbered with blockers first, so <code>/implement 03</code> works. On GitHub, each ticket is an issue with a native blocked-by link, created as a sub-issue of the spec.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md">[4]</a> Some practical notes from the docs:</p>
+<ul>
+  <li><strong>Run <code>/to-spec</code> and <code>/to-tickets</code> in the same window.</strong> Don't clear or compact between them, because a big spec issue can truncate when the agent fetches it back.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md">[4]</a></li>
+  <li><strong>Dispatch is manual.</strong> Count the tickets on the frontier and open that many fresh sessions. <code>/implement</code> doesn't reliably close tickets, so you update their state yourself.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md">[4]</a></li>
+  <li><strong>The spec gets a <code>ready-for-agent</code> label too.</strong> An AFK agent polling that label will try to build the <em>whole spec</em> in one run. Exclude the spec in its prompt, or remove the label.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md">[1]</a></li>
+</ul>
+
+<h2>4. Practice</h2>
+
+<h3>Drill A: what kind of ticket is this?</h3>
+<p>These are proposed tickets for snooze. Ask "what can I demo?" about each one.</p>
+<div class="sort" data-sort="slice"></div>
+
+<h3>Drill B: read the edges</h3>
+<p>Use the six-ticket snooze list in section 3.</p>
+<div class="quiz" data-quiz="edges"></div>
+
+<h3>Drill C: at the boundary</h3>
+<div class="quiz" data-quiz="boundary"></div>
+
+<h3>Drill D: from memory</h3>
+<p>Without scrolling up, write the four vertical-slice rules. Then write the one question you'll ask about every ticket.</p>
+<div class="recall">
+  <textarea aria-label="Your answer"></textarea>
+  <button type="button">Reveal answer</button>
+  <div class="answer">
+    <ol>
+      <li>A narrow but complete path through <strong>every layer</strong> (schema, API, UI, tests)</li>
+      <li><strong>Demoable or verifiable</strong> on its own</li>
+      <li>Fits in <strong>one fresh context window</strong></li>
+      <li><strong>Prefactoring first</strong></li>
+    </ol>
+    <p>The question: <strong>"What can I demo when this is done?"</strong></p>
+  </div>
+</div>
+
+<h3>Optional: feel it for real (10 min)</h3>
+<p>Keep going in the session where you grilled the git-log CLI (or grill a small idea now). Copy the <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md">to-tickets SKILL.md</a> into <code>~/.claude/skills/to-tickets/</code>, run <code>/to-tickets</code>, and tell it <em>"tracker: local files under .scratch."</em> When it quizzes you, ask "what can I demo?" about every ticket, and check that ticket 01 has no blockers.</p>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read the <a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md"><code>to-tickets</code> guide</a>, especially "Common questions": it's the skill's field notes from real use. Then read the <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md">SKILL.md</a> itself and the <a href="https://github.com/mattpocock/skills/blob/main/docs/engineering/to-spec.md"><code>to-spec</code> guide</a>. To see slicing done live, watch the vertical-slice part of Pocock's <a href="https://www.youtube.com/watch?v=-QFHIoCo-Ko">AI Engineer workshop</a>, which uses the older names <code>write-a-prd</code> and <code>prd-to-issues</code>.</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. Good questions: "how is a seam different from an interface?", "slice my own feature idea and let me critique it", or "how would expand–contract look for a Kafka topic rename?"</p>
+</div>
+
+<p>The <a href="../reference/planning-card.html">Planning Card</a> has all of this on one page. See also the <a href="../reference/grilling-card.html">Grilling Card</a> and the <a href="../reference/skill-map.html">Skill Map</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0002-grilling.html">← Lesson 2: Grilling</a>
+  <a href="0004-build.html">Lesson 4: Build →</a>
+</nav>
+
+</main>
+<script src="0003-spec-to-tickets.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+Sort.register("slice", {
+  buckets: ["Vertical slice", "Horizontal slice", "Prefactor"],
+  items: [
+    { text: "Add the <code>snoozed_until</code> column and migration to Channels.", bucket: 1,
+      why: "The only thing you can demo is \"the column exists.\" That's one layer, and nobody can use it yet." },
+    { text: "Snooze a Channel for 1 hour. Held Notifications arrive when it ends.", bucket: 0,
+      why: "A user can do this end to end, and you can demo it the moment it lands. That's a tracer bullet." },
+    { text: "Let the existing scheduler accept any delivery callback, with no behaviour change.", bucket: 2,
+      why: "\"Make the change easy\" first. It ships before the feature tickets and blocks them." },
+    { text: "Build every snooze API endpoint.", bucket: 1,
+      why: "One whole layer. Its acceptance criteria can only be checked once the UI ticket lands, and that's how rework starts." },
+    { text: "Urgent alerts bypass a Channel snooze, with a test that proves it.", bucket: 0,
+      why: "A thin, complete behaviour: you can demo it by sending an urgent alert to a snoozed Channel." },
+    { text: "Write all the snooze tests after the UI is finished.", bucket: 1,
+      why: "Tests are a layer too. In a vertical slice, every ticket carries its own tests." },
+    { text: "Rename the internal <code>mute</code> flag to <code>snooze</code> so the code matches <code>GLOSSARY.md</code>.", bucket: 2,
+      why: "A small, behaviour-preserving cleanup that makes the feature tickets easier to write and read. It goes at the front." }
+  ]
+});
+
+Quiz.register("edges", window.QUIZ.filter((q) => q.section === "edges"));
+
+Quiz.register("boundary", window.QUIZ.filter((q) => q.section === "boundary"));
+</script>
+</body>
+</html>

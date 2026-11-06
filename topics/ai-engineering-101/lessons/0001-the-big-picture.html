@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Big Picture</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .stack text { font-family: var(--sans); }
+  .stack .lbl { font-size: 15px; font-weight: 600; fill: #fff; }
+  .stack .sub { font-size: 12px; fill: #fff; opacity: .92; }
+  .stack .ch  { font-size: 12px; font-weight: 600; fill: var(--fg); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>The Big Picture</h1>
+<p class="subtitle">What AI engineering is, and the one diagram that organizes the whole book.</p>
+<p class="meta">Lesson 1 · Previews Chapter 1 · about 12 min</p>
+
+<div class="box win">
+  <span class="box-label">Your win today</span>
+  You'll be able to take any AI-engineering task (“the bot's answers are slow,” “it ignores our docs,” “how do we know it's good?”), say which layer of the stack it belongs to, and name the chapter that covers it.
+</div>
+
+<details class="box predict">
+  <summary>Predict first (30 seconds, don't skip)</summary>
+  <p>In one sentence, how do you think an <em>AI engineer's</em> job differs from a traditional <em>ML engineer's</em>? Say it out loud or jot it down. Guessing before you read, even wrongly, makes the answer stick better. You'll check yourself in section 3.</p>
+</details>
+
+<h2>1 · A language model is a completion machine</h2>
+
+<p>A language model encodes statistics about language: given some context, how likely each next piece of text is. Its basic unit is the <strong>token</strong>, which can be a word, part of a word, or a character. For GPT-4 a token averages about ¾ of a word, so <strong>100 tokens ≈ 75 words</strong>. <a class="cite" href="#src">Ch1 · Language models</a></p>
+
+<p>The models this book is about are <strong>autoregressive</strong>: they predict the <em>next</em> token, append it, and repeat. That makes them completion machines. Give one a prompt and it continues the text. Many tasks fit this shape:</p>
+
+<blockquote>Question: Is this email likely spam? Here's the email: &lt;email&gt;<br>Answer: <strong>Likely spam</strong>
+<cite>Ch. 1's example of turning a completion machine into a spam classifier</cite></blockquote>
+
+<p>One consequence runs through the whole book. Completions are <em>predictions based on probabilities</em>, so they aren't guaranteed to be correct. That probabilistic nature makes these models “both so exciting and frustrating to use.” <a class="cite" href="#src">Ch1</a> Chapter 2 explains the mechanism (sampling) and Chapters 3–4 explain how to live with it (evaluation).</p>
+
+<h2>2 · Why they got so big: self-supervision</h2>
+
+<p>Older successes such as the AlexNet image classifier needed <strong>supervision</strong>: humans labeling every example. Labeling costs money, and that capped how big the datasets could get. Language modeling is <strong>self-supervised</strong>, because any text already contains its own labels. Each next token is the answer for the tokens before it:</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Input (context)</th><th>Label (next token)</th></tr></thead>
+<tbody>
+<tr><td><code>&lt;BOS&gt;</code></td><td>I</td></tr>
+<tr><td><code>&lt;BOS&gt;</code> I</td><td>love</td></tr>
+<tr><td><code>&lt;BOS&gt;</code> I love</td><td>street</td></tr>
+<tr><td>… I love street food .</td><td><code>&lt;EOS&gt;</code></td></tr>
+</tbody></table></div>
+<p style="font:.8rem var(--sans);color:var(--muted);margin-top:-.6rem">Adapted from Table 1-1: one sentence gives six free training examples.</p>
+
+<p>The internet is full of text, so training data could grow enormously, and models grew with it into <strong>LLMs</strong>. Add images, audio, and other modalities and you get a <strong>foundation model</strong>: a general-purpose model that you <em>build on</em> instead of training a new model for each task. <a class="cite" href="#src">Ch1 · From LLMs to Foundation Models</a></p>
+
+<h2>3 · AI engineering vs ML engineering</h2>
+
+<p><strong>AI engineering is building applications on top of foundation models.</strong> Huyen names three big shifts from traditional ML engineering: <a class="cite" href="#src">Ch1 · AI Engineering Versus ML Engineering</a></p>
+<ol>
+  <li><strong>Adapt, don't train.</strong> Someone else trained the model. Your work is <em>model adaptation</em>.</li>
+  <li><strong>Bigger, slower, costlier models.</strong> That puts more pressure on <em>inference optimization</em> and more need for engineers who can work with GPUs.</li>
+  <li><strong>Open-ended outputs.</strong> A spam filter is either right or wrong. A chatbot answer has endless valid forms, which makes <em>evaluation</em> a much bigger problem.</li>
+</ol>
+<blockquote>AI engineering differs from ML engineering in that it's less about model development and more about adapting and evaluating models.<cite>Chip Huyen, <em>AI Engineering</em>, Ch. 1</cite></blockquote>
+<p>Now check your prediction from the top. Did you mention adaptation? Evaluation?</p>
+
+<h2>4 · Two ways to adapt a model</h2>
+<p>All adaptation techniques fall into two families, split by one question: <strong>do the model's weights change?</strong></p>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Prompt-based</th><th>Finetuning</th></tr></thead>
+<tbody>
+<tr><td>Weights</td><td>Unchanged; you supply instructions and context</td><td>Updated by further training</td></tr>
+<tr><td>Examples</td><td>Prompt engineering, RAG</td><td>Finetuning, incl. parameter-efficient methods such as LoRA</td></tr>
+<tr><td>Trade-off</td><td>Easy to start, needs little data, lets you try many models</td><td>More complex, needs more data; can improve quality, latency, and cost</td></tr>
+</tbody></table></div>
+
+<p>Huyen's running example is generating product descriptions for a retailer. You can <em>write detailed instructions with examples</em> (prompt engineering), <em>connect the model to a database of customer reviews</em> (RAG), or <em>further train it on great descriptions</em> (finetuning). Adapting an existing model instead of building one is the difference between “ten examples and one weekend” and “1 million examples and six months.” <a class="cite" href="#src">Ch1</a></p>
+
+<p class="box"><span class="box-label">Watch your words</span>Pasting your journal into ChatGPT so it “sounds like you” is <em>not</em> training or finetuning. Teaching a model through its context is <strong>prompt engineering</strong>. Huyen calls out this mix-up explicitly. <a class="cite" href="#src">Ch1 · Training vs Pre-Training vs Finetuning vs Post-Training</a></p>
+
+<h2>5 · The map: three layers of the AI stack</h2>
+<p>Every AI application has three layers. You usually <strong>start at the top and move down only as needed</strong>. <a class="cite" href="#src">Ch1 · Three Layers of the AI Stack</a> The book's chapters map onto them like this:</p>
+
+<figure>
+<svg class="stack" viewBox="0 0 680 290" role="img" aria-label="Three stacked layers: application development, model development, infrastructure, with chapters mapped to each">
+  <rect x="0" y="0"   width="520" height="86" rx="6" style="fill:var(--app)"/>
+  <text class="lbl" x="18" y="32">Application development</text>
+  <text class="sub" x="18" y="56">Evaluation · Prompt engineering &amp; context construction</text>
+  <text class="sub" x="18" y="74">AI interface</text>
+
+  <rect x="0" y="100" width="520" height="86" rx="6" style="fill:var(--model)"/>
+  <text class="lbl" x="18" y="132">Model development</text>
+  <text class="sub" x="18" y="156">Modeling &amp; training (incl. finetuning) · Dataset engineering</text>
+  <text class="sub" x="18" y="174">Inference optimization</text>
+
+  <rect x="0" y="200" width="520" height="70" rx="6" style="fill:var(--infra)"/>
+  <text class="lbl" x="18" y="230">Infrastructure</text>
+  <text class="sub" x="18" y="252">Model serving · Data &amp; compute management · Monitoring</text>
+
+  <text class="ch" x="540" y="38">Ch 3–4 evaluation</text>
+  <text class="ch" x="540" y="56">Ch 5 prompts</text>
+  <text class="ch" x="540" y="74">Ch 6 RAG &amp; agents</text>
+  <text class="ch" x="540" y="130">Ch 2 how models work</text>
+  <text class="ch" x="540" y="148">Ch 7 finetuning</text>
+  <text class="ch" x="540" y="166">Ch 8 datasets</text>
+  <text class="ch" x="540" y="184">Ch 9 inference</text>
+  <text class="ch" x="540" y="238">Ch 10 ties it</text>
+  <text class="ch" x="540" y="256">all together</text>
+</svg>
+<figcaption>Layers and responsibilities follow Fig. 1-14 and the section “Three Layers of the AI Stack.” The chapter labels are this course's mapping. Keep the <a href="../reference/book-map.html">Book Map</a> open while you read.</figcaption>
+</figure>
+
+<p>The order of work has flipped too. Traditional ML went <strong>data → model → product</strong>. With foundation models you can go <strong>product → data → model</strong>: build a demo first, and invest in data and models only once the product shows promise. That favors people from web and full-stack backgrounds who can iterate fast, which is good news for you. <a class="cite" href="#src">Ch1 · AI Engineering Versus Full-Stack Engineering (Fig. 1-16)</a></p>
+
+<h2>Check yourself</h2>
+<p>Answer from memory without scrolling up. The effort of recalling is what makes this stick.</p>
+
+<div class="quiz" data-quiz="check-1"></div>
+
+<div class="box source" id="src">
+  <span class="box-label">Primary source</span>
+  <p><strong>Read next:</strong> Chip Huyen, <em>AI Engineering</em>, Chapter 1, sections <em>“The Rise of AI Engineering”</em> and <em>“The AI Engineering Stack.”</em> Every claim in this lesson cites a section from those two parts. Skim “Foundation Model Use Cases” and “Planning AI Applications” for now. They make more sense once you have a product idea.</p>
+  <p><strong>Optional, 15 min:</strong> <a href="https://www.latent.space/p/ai-engineer">“The Rise of the AI Engineer”</a> (swyx, Latent Space, 2023), the essay behind the job title and the source of Fig. 1-16. Chapter summaries are also in the book's <a href="https://github.com/chiphuyen/aie-book">companion repo</a>.</p>
+</div>
+
+<div class="box ask">
+  <span class="box-label">Stuck or curious?</span>
+  Ask me, your teacher in this terminal, anything that's unclear, e.g. “why is a token smaller than a word?” or “is RAG really not finetuning?”. When you finish the quiz, tell me your score and which ones you missed, so I can pitch Lesson 2 at the right level.
+</div>
+
+<nav class="lesson-nav">
+  <a href="../reference/book-map.html">Reference: Book Map</a>
+  <a href="0002-inside-a-foundation-model.html">Next: Lesson 2, Inside a Foundation Model →</a>
+</nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="0001-the-big-picture.quiz.js"></script>
+<script>
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-1"]'), window.QUIZ);
+</script>
+</body>
+</html>

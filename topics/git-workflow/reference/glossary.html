@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git Workflow Glossary</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body class="ref">
+<main>
+<p class="kicker">Reference · Git workflow in the age of agents</p>
+<h1>Glossary</h1>
+<p class="subtitle">The course uses these words consistently. Grows with each lesson.</p>
+
+<table>
+  <tr><th>Term</th><th>Meaning</th><th>From</th></tr>
+  <tr><td><strong>commit</strong></td><td>A saved snapshot of the project, identified by a hash such as <code>f83f85a</code>.</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong>branch</strong></td><td>A movable pointer (label) to one commit. Committing moves the branch HEAD is on. It is not a copy of files.</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong><code>HEAD</code></strong></td><td>Pointer to the branch you currently have checked out (<code>*</code> in <code>git branch</code>).</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong>diff</strong></td><td>The lines added (green) and removed (red) by a change. On GitHub it’s the PR’s <em>Files changed</em> tab.</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong>pull request (PR)</strong></td><td>A request on GitHub to merge one branch into another, with discussion, review, and checks.</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong>merge commit</strong></td><td>A commit with two parents that joins two lines of history.</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong>GitHub flow</strong></td><td>Branch → commit → push → PR → review → merge → delete branch.</td><td><a href="../lessons/0001-branches-and-your-first-pr.html">L1</a></td></tr>
+  <tr><td><strong>remote</strong> / <strong><code>origin</code></strong></td><td>Another copy of the repo that you sync with. <code>origin</code> is the default name, here your GitHub repo.</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>remote-tracking branch</strong></td><td>A bookmark such as <code>origin/main</code>: where a GitHub branch was the last time you talked to GitHub. It moves only on fetch, pull, or push.</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>upstream</strong></td><td>The remote-tracking branch a local branch is linked to (set by <code>push -u</code>). <code>git status</code> compares against it.</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>ahead / behind</strong></td><td>Commits your branch has that its upstream lacks, and the reverse.</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>diverged</strong></td><td>Both ahead and behind: each side has commits the other lacks.</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>fast-forward</strong></td><td>Moving a branch label forward along existing commits, with no merge commit. Only possible when you have no commits of your own.</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>prune</strong></td><td>Delete remote-tracking branches whose GitHub branch no longer exists (<code>git fetch --prune</code>).</td><td><a href="../lessons/0002-remotes-fetch-pull-push.html">L2</a></td></tr>
+  <tr><td><strong>merge conflict</strong></td><td>Both sides changed the same part of the same file (or one edited what the other deleted). Git marks it and waits for you.</td><td><a href="../lessons/0003-merge-conflicts.html">L3</a></td></tr>
+  <tr><td><strong>conflict markers</strong></td><td><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> (your side) · <code>=======</code> · <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; name</code> (their side). Delete them when you resolve.</td><td><a href="../lessons/0003-merge-conflicts.html">L3</a></td></tr>
+  <tr><td><strong>resolve</strong></td><td>Edit the conflicted region into the intended result, then <code>git add</code> to mark it resolved.</td><td><a href="../lessons/0003-merge-conflicts.html">L3</a></td></tr>
+  <tr><td><strong>abort</strong></td><td><code>git merge --abort</code>: return to the pre-merge state.</td><td><a href="../lessons/0003-merge-conflicts.html">L3</a></td></tr>
+  <tr><td><strong>review</strong></td><td>Line comments plus one decision: Comment, Approve, or Request changes.</td><td><a href="../lessons/0004-reviewing-a-pr.html">L4</a></td></tr>
+  <tr><td><strong>pending review</strong></td><td>Line comments you’ve drafted but not submitted. Only you can see them.</td><td><a href="../lessons/0004-reviewing-a-pr.html">L4</a></td></tr>
+  <tr><td><strong>suggestion</strong></td><td>A line comment containing replacement code that the author can commit with one click.</td><td><a href="../lessons/0004-reviewing-a-pr.html">L4</a></td></tr>
+  <tr><td><strong>scope creep</strong></td><td>Changes in a PR that don’t belong to its task, common in agent PRs.</td><td><a href="../lessons/0004-reviewing-a-pr.html">L4</a></td></tr>
+  <tr><td><strong>workflow</strong></td><td>A YAML file in <code>.github/workflows/</code> that GitHub Actions runs on events such as <code>pull_request</code> or <code>push</code>.</td><td><a href="../lessons/0005-checks-and-rulesets.html">L5</a></td></tr>
+  <tr><td><strong>job</strong></td><td>One unit of work in a workflow, run on its own fresh machine (the <em>runner</em>). Each job appears on a PR as one check.</td><td><a href="../lessons/0005-checks-and-rulesets.html">L5</a></td></tr>
+  <tr><td><strong>check (status check)</strong></td><td>A pass/fail result attached to a commit, shown on the PR as a tick or a cross.</td><td><a href="../lessons/0005-checks-and-rulesets.html">L5</a></td></tr>
+  <tr><td><strong>required check</strong></td><td>A check that must pass before a ruleset allows the PR to merge. You refer to it by the job’s name.</td><td><a href="../lessons/0005-checks-and-rulesets.html">L5</a></td></tr>
+  <tr><td><strong>ruleset</strong></td><td>Named rules on GitHub that apply to target branches, e.g. “require a PR” and “block force pushes” on <code>main</code>.</td><td><a href="../lessons/0005-checks-and-rulesets.html">L5</a></td></tr>
+  <tr><td><strong>bypass list</strong></td><td>The people or apps exempt from a ruleset. Empty by default, which includes admins.</td><td><a href="../lessons/0005-checks-and-rulesets.html">L5</a></td></tr>
+</table>
+</main>
+</body>
+</html>

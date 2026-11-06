@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Reads Which Partition</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+<p class="kicker">CCDAK · Lesson 2 · About 15 minutes</p>
+<h1>Who reads which partition?</h1>
+<p class="lede">By the end, you can look at a group, its consumers and its topics, and work out who reads what, who sits idle, and what forces a reshuffle.</p>
+<p><a href="0001-where-does-an-event-land.html">Lesson 1</a> decided where an event lands. This lesson decides who reads it.</p>
+
+<h2>The four rules</h2>
+<div class="rule">
+  <strong>1. Within a group, each partition has exactly one consumer.</strong>
+  One consumer may own many partitions, but a partition is never shared inside a group. That's what keeps a key's events in order as they're read.
+  <span class="cite"><a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html">KafkaConsumer Javadoc</a></span>
+</div>
+<div class="rule">
+  <strong>2. Partition count caps a group's parallelism.</strong>
+  With more consumers than partitions, the extras get nothing and sit idle. To read in parallel beyond that limit, add partitions, and remember from Lesson 1 that doing so remaps keys.
+  <span class="cite">Confirmed on a 4.4.0 broker: 4 consumers on 3 partitions left one with 0 partitions. You'll reproduce it below.</span>
+</div>
+<div class="rule">
+  <strong>3. Each group gets its own full copy of the stream.</strong>
+  Groups don't affect each other, and adding a group doesn't duplicate data on the broker. Same group means share the work. Different groups means each one reads everything.
+  <span class="cite"><a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html">KafkaConsumer Javadoc</a></span>
+</div>
+<div class="rule">
+  <strong>4. Four things trigger a rebalance.</strong>
+  A member joins. A member leaves or fails. A subscribed topic's partition count changes. A subscribed topic is created or deleted. Producers aren't on the list.
+  <span class="cite"><a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html">KafkaConsumer Javadoc: subscribe</a></span>
+</div>
+
+<h3>How the default assignor divides partitions</h3>
+<p>By default, the client's <code>partition.assignment.strategy</code> is <code>RangeAssignor,CooperativeStickyAssignor</code>, and Range is the one used. Range works <em>one topic at a time</em>: sort the consumers by name, divide the partitions, and give any remainder to the first consumers. Because it does this for each topic, the same consumer gets the extra partition every time. <a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/RangeAssignor.html">Apache's example</a> has 2 consumers and 2 topics of 3 partitions each:</p>
+<pre><code>C0: t0-0, t0-1, t1-0, t1-1     (4 partitions)
+C1: t0-2, t1-2                 (2 partitions)</code></pre>
+<div class="callout"><strong>Two newer features this lesson sets aside.</strong> The <a href="https://kafka.apache.org/44/operations/consumer-rebalance-protocol/">consumer rebalance protocol</a> (<code>group.protocol=consumer</code>) moves assignment to the broker and doesn't use <code>partition.assignment.strategy</code>. In 4.4 the client default is still <code>classic</code>, which is what this lesson teaches. Share groups are also separate: they <a href="https://kafka.apache.org/44/design/design/">can have more consumers than partitions</a>, so rule 2 applies only to ordinary consumer groups.</div>
+
+<h2>Try it: predict, then click</h2>
+<p>Partitions here are assigned with Range. Decide the answer before each click.</p>
+<ol>
+  <li><code>billing</code> has 2 consumers on 3 partitions. Who has the extra one, and why?</li>
+  <li>Add two consumers to <code>billing</code>. Who ends up idle?</li>
+  <li>Add a consumer to <code>analytics</code>. Does <code>billing</code>'s rebalance count change?</li>
+  <li>Stop the first consumer in <code>billing</code>. Does the idle consumer get work? Do the others keep their partitions?</li>
+  <li>Click <b>Reset</b>, then <b>Add topic refunds</b>. How many partitions does each consumer have now?</li>
+</ol>
+<div id="sim"></div>
+
+<h2>Now on a real broker</h2>
+<p>Run this from the <code>learn-kafka</code> folder with Docker running. Start four consumers on three partitions, then look at who owns what.</p>
+<pre><code>source assets/kafka-lab.sh
+kafka_lab_up
+k kafka-topics.sh --create --topic orders \
+  --partitions 3 --replication-factor 1
+
+for c in c1 c2 c3 c4; do k_consumer_start $c billing orders; done
+sleep 12
+k_members billing</code></pre>
+<p>Now stop <code>c1</code>. Before running this, predict who picks up its partition.</p>
+<pre><code>k_consumer_stop c1
+sleep 8
+k_members billing</code></pre>
+<p>Send three events, then read them with a brand-new group. It should get all three, even though <code>billing</code> has already read them.</p>
+<pre><code>printf 'alice:o1\nbob:o2\ncarol:o3\n' | \
+  k kafka-console-producer.sh --topic orders \
+  --reader-property parse.key=true --reader-property key.separator=:
+
+k kafka-console-consumer.sh --topic orders --group analytics \
+  --from-beginning --timeout-ms 6000 2&gt;/dev/null</code></pre>
+<p>Finally, reproduce the uneven Range split with two topics and two consumers.</p>
+<pre><code>k kafka-topics.sh --create --topic refunds \
+  --partitions 3 --replication-factor 1
+k_consumer_start a shipping 'orders|refunds'
+k_consumer_start b shipping 'orders|refunds'
+sleep 12
+k_members shipping
+kafka_lab_down</code></pre>
+<p>You should see <code>c4</code> idle at first, then working after <code>c1</code> leaves. <code>c2</code> and <code>c3</code> also change partitions, even though they never left. At the end, <code>a</code> has 4 partitions and <code>b</code> has 2. To see the real tool underneath <code>k_members</code>, run <code>kafka-consumer-groups.sh --describe --group billing --members --verbose</code> through <code>k</code>.</p>
+
+<h2>Check yourself</h2>
+<p>Answer from memory. Two questions go back to Lesson 1 on purpose, because returning to old material after a gap is what makes it last.</p>
+<div id="quiz"></div>
+
+<h2>Keep going</h2>
+<p><strong>Read next:</strong> the "Consumer Groups and Topic Subscriptions" section of the <a href="https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html">KafkaConsumer Javadoc</a>. It comes from the project itself, and it also previews the next lesson.</p>
+<p><strong>Keep for review:</strong> <a href="../reference/consumer-groups.html">Consumer groups cheat sheet</a>, <a href="../reference/keys-and-partitions.html">Keys and partitions cheat sheet</a> and the <a href="../reference/ccdak-roadmap.html">roadmap</a>.</p>
+<p><strong>Ask your teacher:</strong> anything unclear is worth asking about in the chat, however small. When you finish, send your quiz score, which questions you missed, and whether you ran the broker lab.</p>
+<footer>Next up: the poll loop and offset commits, and how a slow consumer gets kicked out of its group.</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/group-sim.js"></script>
+<script src="0002-who-reads-which-partition.quiz.js"></script>
+<script>
+GroupSim.mount(document.getElementById('sim'));
+const CONSUMER = 'https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html';
+const RANGE = 'https://kafka.apache.org/44/javadoc/org/apache/kafka/clients/consumer/RangeAssignor.html';
+const OPS = 'https://kafka.apache.org/44/operations/basic-kafka-operations/';
+Quiz.mount(document.getElementById('quiz'), window.QUIZ);
+</script>
+</body>
+</html>

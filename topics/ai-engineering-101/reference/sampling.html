@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sampling Cheat Sheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+<h1>Models &amp; Sampling</h1>
+<p class="subtitle">How a model is made, how it picks each token, and how to tame the randomness.</p>
+<p class="meta">Reference · Chapter 2</p>
+
+<h2>Training pipeline</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Stage</th><th>Data</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Pre-training</td><td>Web-scale text, self-supervised</td><td>A text completer; ~98% of compute (InstructGPT)</td></tr>
+<tr><td>Supervised finetuning (SFT)</td><td>(prompt, response) demonstrations</td><td>Converses instead of just completing</td></tr>
+<tr><td>Preference finetuning</td><td>(prompt, winner, loser) comparisons → reward model (RLHF), or DPO / RLAIF</td><td>Responses people prefer</td></tr>
+</tbody></table></div>
+<p>SFT + preference finetuning = <strong>post-training</strong>. Memory napkin math: <strong>parameters × 2 bytes</strong> (16-bit) ≥ inference memory, so 7B → 14 GB.</p>
+
+<h2>Sampling pipeline</h2>
+<p><code>logits ÷ temperature → softmax → top-k → top-p → sample</code></p>
+<div class="table-wrap"><table>
+<thead><tr><th>Need</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td>Consistent output (grading, classification, extraction)</td><td>Temperature 0 (greedy), fixed seed, cache answers</td></tr>
+<tr><td>Creative output (taglines, brainstorming)</td><td>Temperature ≈ 0.7 as a starting point, top-p 0.9–0.95</td></tr>
+<tr><td>Smaller, cheaper softmax</td><td>Top-k (50–500)</td></tr>
+<tr><td>Context-sized candidate pool</td><td>Top-p (nucleus)</td></tr>
+<tr><td>Cap latency and cost</td><td>Max tokens or stop tokens, with enough headroom for structured output</td></tr>
+<tr><td>Higher quality, more money</td><td>Test-time compute: best-of-N (cost ≈ N×)</td></tr>
+</tbody></table></div>
+<p>Worked example: logits [1, 2]. At T = 1, B = 73%. At T = 0.5, B = 88%. As T → 0, B → 100%.</p>
+
+<h2>Probabilistic failure modes</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Problem</th><th>Cause</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Inconsistency (same input)</td><td>Sampling randomness; hardware</td><td>Fix sampling variables and seed; cache. Still not guaranteed.</td></tr>
+<tr><td>Inconsistency (slightly different input)</td><td>Model sensitivity</td><td>Careful prompts (Ch 5), memory (Ch 6)</td></tr>
+<tr><td>Hallucination</td><td>Self-delusion (treats its own output as fact; snowballs) · knowledge mismatch with SFT labelers</td><td>Concise answers, “say I don't know,” grounding with context (Ch 5–6), detection (Ch 4)</td></tr>
+</tbody></table></div>
+
+<p class="lesson-nav"><a href="../lessons/0002-inside-a-foundation-model.html">← Lesson 2</a><a href="book-map.html">Book Map</a></p>
+</main>
+</body>
+</html>

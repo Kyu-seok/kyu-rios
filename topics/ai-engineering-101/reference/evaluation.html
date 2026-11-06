@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Cheat Sheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+<h1>Evaluation Methods</h1>
+<p class="subtitle">Which method fits which feature, how to choose a model, and how to build a pipeline you can trust.</p>
+<p class="meta">Reference · Chapters 3–4</p>
+
+<h2>Method chooser</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Method</th><th>Needs reference?</th><th>Use when</th><th>Trap</th></tr></thead>
+<tbody>
+<tr><td><strong>Functional correctness</strong></td><td>No (needs tests)</td><td>Output can be executed or checked: code, SQL, game score, task completed</td><td>Hard to automate outside code-like tasks</td></tr>
+<tr><td><strong>Exact match</strong></td><td>Yes</td><td>Short, unambiguous answers (math, trivia)</td><td>The “contains” variant accepts wrong answers; fails on long or varied outputs</td></tr>
+<tr><td><strong>Lexical similarity</strong></td><td>Yes, many references</td><td>Wording matters (BLEU, ROUGE, edit distance)</td><td>Penalizes valid phrasings; BLEU barely separates correct from incorrect code</td></tr>
+<tr><td><strong>Semantic similarity</strong></td><td>Yes, fewer references</td><td>Meaning matters, many phrasings are valid</td><td>Only as good as the embedding model; costs compute</td></tr>
+<tr><td><strong>AI as a judge</strong></td><td>Optional</td><td>Subjective criteria; production without references</td><td>Inconsistency, non-standard criteria, cost and latency, biases</td></tr>
+<tr><td><strong>Comparative evaluation</strong></td><td>No</td><td>Ranking models on subjective quality</td><td>Not for correctness questions; quadratic pairs; tells you which is better, not how good</td></tr>
+<tr><td><strong>Perplexity</strong></td><td>No</td><td>Training signal, data contamination checks, abnormal-text detection</td><td>Rises after post-training, so a weak proxy for chat models</td></tr>
+</tbody></table></div>
+
+<h2>Key numbers and definitions</h2>
+<ul>
+  <li><strong>pass@k</strong> = fraction of problems where any of k samples passes all tests.</li>
+  <li><strong>Cosine similarity</strong>: 1 = identical direction, −1 = opposite.</li>
+  <li><strong>Embedding size</strong>: typically 100–10,000 numbers; <code>text-embedding-3-small</code> = 1,536.</li>
+  <li><strong>Perplexity</strong>: lower = more confident. It's lower for structured text and longer context, higher for bigger vocabularies.</li>
+</ul>
+
+<h2>AI-judge checklist</h2>
+<ul>
+  <li>The prompt states the <strong>task</strong>, the <strong>criteria</strong>, and the <strong>scoring system</strong>.</li>
+  <li>Prefer <strong>classification labels</strong> over numbers, and a discrete <strong>1–5</strong> scale over a continuous one. Include an example per score.</li>
+  <li>Pin the judge's <strong>model, prompt, and sampling settings</strong>, and version them. A judge change can look like an app change.</li>
+  <li>Mitigate biases: <strong>swap positions</strong> (first-position bias), watch for <strong>length</strong> (verbosity bias), avoid <strong>self-judging</strong> (self-bias).</li>
+  <li>Control cost with a weaker judge or <strong>spot-checking</strong>, and back the judge up with exact methods or human review.</li>
+  <li>Specialized judges: reward model (prompt, response → score), reference-based judge, preference model (two responses → which one is preferred).</li>
+</ul>
+
+<h2>What to evaluate (Ch4)</h2>
+<ul>
+  <li><strong>Evaluation-driven development</strong>: define criteria before building.</li>
+  <li>Four buckets: <strong>domain-specific</strong> capability, <strong>generation</strong> capability (fluency, coherence, factual consistency, safety), <strong>instruction-following</strong> (format, length, structured output), <strong>cost and latency</strong>.</li>
+  <li>Factual consistency is <strong>local</strong> (against given context; easier) or <strong>global</strong> (against open knowledge).</li>
+</ul>
+
+<h2>Choosing a model</h2>
+<ol>
+  <li><strong>Filter</strong> by hard attributes (licence, privacy, size, and latency if someone else hosts the model).</li>
+  <li><strong>Narrow</strong> with public benchmarks and leaderboards. They are a filter, not a verdict, and likely contaminated.</li>
+  <li><strong>Experiment</strong> with your own eval pipeline.</li>
+  <li><strong>Monitor</strong> in production. The process is iterative.</li>
+</ol>
+<p>API vs. self-host: weigh <em>privacy · lineage · performance · functionality · cost · control · on-device</em>. Contamination checks: n-gram overlap (accurate, needs training data) or perplexity (cheap, needs only the model).</p>
+
+<h2>Pipeline checklist</h2>
+<ul>
+  <li>Evaluate <strong>each component</strong> and the end-to-end output, both per turn and per task.</li>
+  <li>Write a <strong>guideline</strong> that covers what the app should and shouldn't do, with a rubric that has examples. Map the metric to a <strong>business metric</strong> and set a usefulness threshold.</li>
+  <li><strong>Mix methods</strong> (cheap scorer on 100% of traffic, judge on 1%), and add human review as the North Star.</li>
+  <li><strong>Slice</strong> the data (tiers, sources, typos, out-of-scope). Watch for Simpson's paradox.</li>
+  <li>Sample size: a score from N examples is only accurate to about <strong>±1/√N</strong> (100 → ±10 pts, 1,000 → ±3, 10,000 → ±1), so <strong>3× smaller gap → 10× more examples</strong> (30 pts ≈ 10, 10 ≈ 100, 3 ≈ 1,000, 1 ≈ 10,000). <strong>Bootstrap</strong> to check stability.</li>
+  <li>Evaluate the evaluator: right signal? reproducible (judge temperature 0)? correlated metrics? added cost? Log everything.</li>
+</ul>
+
+<p class="lesson-nav"><a href="../lessons/0003-evaluation-methodology.html">← Lesson 3</a><a href="../lessons/0004-evaluating-ai-systems.html">Lesson 4</a><a href="book-map.html">Book Map</a></p>
+</main>
+</body>
+</html>

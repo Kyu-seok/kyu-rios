@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Flow Cheatsheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body class="ref">
+<main>
+<p class="kicker">Reference · Git workflow in the age of agents</p>
+<h1>GitHub flow cheat sheet</h1>
+<p class="subtitle">The commands for one trip around the loop. Grows with each lesson: <a href="../lessons/0001-branches-and-your-first-pr.html">Lesson 1</a> · <a href="../lessons/0002-remotes-fetch-pull-push.html">Lesson 2</a> · <a href="../lessons/0003-merge-conflicts.html">Lesson 3</a> · <a href="../lessons/0004-reviewing-a-pr.html">Lesson 4</a>. Terms: <a href="glossary.html">glossary</a>.</p>
+
+<div class="box">
+<p><strong>Model:</strong> a branch is a movable pointer to a commit. <code>HEAD</code> points to the branch you’re on. A commit moves only the branch HEAD points to. (<a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell">Pro Git §3.1</a>)</p>
+</div>
+
+<h2>The loop</h2>
+<table>
+  <tr><th>Step</th><th>Command</th><th>What it does</th></tr>
+  <tr><td>0. Start fresh</td><td><code>git switch main</code> · <code>git pull</code></td><td>Branch from an up-to-date <code>main</code></td></tr>
+  <tr><td>1. Branch</td><td><code>git switch -c &lt;name&gt;</code></td><td>Create a label at the current commit and move HEAD to it</td></tr>
+  <tr><td>2. Commit</td><td><code>git add &lt;files&gt;</code> · <code>git commit -m "…"</code></td><td>One self-contained change per commit</td></tr>
+  <tr><td>2. Push (first time)</td><td><code>git push -u origin &lt;name&gt;</code></td><td>Publish the branch and link it to <code>origin/&lt;name&gt;</code></td></tr>
+  <tr><td>2. Push (later)</td><td><code>git push</code></td><td>Send new commits to the linked remote branch</td></tr>
+  <tr><td>3. Open PR</td><td><code>gh pr create --fill</code></td><td>Title and body come from your commits (<code>--draft</code> for early feedback)</td></tr>
+  <tr><td>3. Inspect PR</td><td><code>gh pr view --web</code></td><td>Open the PR in the browser; read <em>Files changed</em></td></tr>
+  <tr><td>4. Address review</td><td>commit · <code>git push</code></td><td>The PR updates itself</td></tr>
+  <tr><td>5–6. Merge &amp; clean up</td><td><code>gh pr merge --merge --delete-branch</code></td><td>Merge on GitHub, delete the branch locally and remotely</td></tr>
+  <tr><td>7. Sync</td><td><code>git switch main</code> · <code>git pull</code></td><td>Bring the merge down to local <code>main</code></td></tr>
+</table>
+
+<h2>Look around</h2>
+<div class="cols">
+<table>
+  <tr><th>Command</th><th>Answers</th></tr>
+  <tr><td><code>git status</code></td><td>What branch am I on, and what’s changed?</td></tr>
+  <tr><td><code>git branch</code></td><td>Which local branches exist? (<code>*</code> = HEAD)</td></tr>
+  <tr><td><code>git branch -a</code></td><td>…including remote-tracking branches</td></tr>
+  <tr><td><code>git log --oneline --graph --all</code></td><td>Where does every label point?</td></tr>
+</table>
+<table>
+  <tr><th>Command</th><th>Answers</th></tr>
+  <tr><td><code>gh pr list</code></td><td>Which PRs are open?</td></tr>
+  <tr><td><code>gh pr status</code></td><td>What’s the state of my PRs?</td></tr>
+  <tr><td><code>gh pr diff</code></td><td>Show this PR’s diff in the terminal</td></tr>
+  <tr><td><code>gh pr checks</code></td><td>Have the CI checks passed?</td></tr>
+</table>
+</div>
+
+<h2>Sync with GitHub</h2>
+<div class="box">
+<p><strong>Model:</strong> there are three <code>main</code>s: GitHub’s, your bookmark <code>origin/main</code>, and your local <code>main</code>. <code>git status</code> compares the last two and never contacts GitHub. (<a href="https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches">Pro Git §3.5</a>; <a href="../lessons/0002-remotes-fetch-pull-push.html">Lesson 2</a>)</p>
+</div>
+<table>
+  <tr><th>Command</th><th>Network</th><th>Moves</th></tr>
+  <tr><td><code>git fetch</code></td><td>download</td><td><code>origin/*</code> only. Files and local branches are untouched</td></tr>
+  <tr><td><code>git fetch --prune</code></td><td>download</td><td>…and deletes bookmarks for branches gone from GitHub</td></tr>
+  <tr><td><code>git pull</code></td><td>download</td><td>fetch, then integrate <code>origin/&lt;branch&gt;</code> into the current branch (fast-forward only by default)</td></tr>
+  <tr><td><code>git pull --no-rebase</code></td><td>download</td><td>fetch, then merge even if both sides have new commits (creates a merge commit)</td></tr>
+  <tr><td><code>git push</code></td><td>upload</td><td>GitHub’s branch and your <code>origin/&lt;branch&gt;</code>. Rejected if GitHub has commits you lack</td></tr>
+</table>
+<table>
+  <tr><th><code>git status</code> says</th><th>Meaning</th><th>Do</th></tr>
+  <tr><td>up to date with ‘origin/main’</td><td>matches your <em>last-known</em> GitHub</td><td><code>git fetch</code> if unsure</td></tr>
+  <tr><td>ahead by N</td><td>N commits only on your laptop</td><td><code>git push</code></td></tr>
+  <tr><td>behind by N, can be fast-forwarded</td><td>bookmark has N commits you lack</td><td><code>git pull</code></td></tr>
+  <tr><td>have diverged</td><td>both sides have new commits</td><td><code>git pull --no-rebase</code>, then push (or rebase: Lesson 6)</td></tr>
+  <tr><td><code>! [rejected] (fetch first)</code> on push</td><td>GitHub has commits you lack</td><td>pull, then push again</td></tr>
+</table>
+<p class="progress">Sources: <a href="https://git-scm.com/docs/git-fetch">git-fetch</a>, <a href="https://git-scm.com/docs/git-pull">git-pull</a>.</p>
+
+<h2>Merge conflicts</h2>
+<div class="cols">
+<pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+your side (branch you're on)
+=======
+their side (branch you merged in)
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; origin/main</code></pre>
+<table>
+  <tr><th>Step</th><th>Command</th></tr>
+  <tr><td>Update branch from main</td><td><code>git fetch</code> · <code>git merge origin/main</code></td></tr>
+  <tr><td>What’s conflicted?</td><td><code>git status</code> (look for “both modified”)</td></tr>
+  <tr><td>Back out, nothing lost</td><td><code>git merge --abort</code></td></tr>
+  <tr><td>Resolve</td><td>edit to the intended result, delete all 3 marker lines</td></tr>
+  <tr><td>No markers left?</td><td><code>grep -nE '^(&lt;{7}|={7}|&gt;{7})' &lt;file&gt;</code></td></tr>
+  <tr><td>Mark resolved · finish</td><td><code>git add &lt;file&gt;</code> · <code>git commit --no-edit</code></td></tr>
+  <tr><td>Is the PR mergeable?</td><td><code>gh pr view --json mergeable</code></td></tr>
+</table>
+</div>
+<p class="progress">Resolving isn’t picking a winner: check that both sides’ intent survived. Sources: <a href="https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging">Pro Git §3.2</a>, <a href="https://git-scm.com/docs/git-merge">git-merge</a>. <a href="../lessons/0003-merge-conflicts.html">Lesson 3</a>.</p>
+
+<h2>Reviewing a PR</h2>
+<div class="cols">
+<table>
+  <tr><th>Step</th><th>Command / place</th></tr>
+  <tr><td>Read claims</td><td><code>gh pr view &lt;n&gt;</code></td></tr>
+  <tr><td>Check scope</td><td><code>gh pr diff &lt;n&gt; --name-only</code></td></tr>
+  <tr><td>Read every line</td><td><code>gh pr diff &lt;n&gt;</code> · <em>Files changed</em> tab</td></tr>
+  <tr><td>Run it</td><td><code>gh pr checkout &lt;n&gt;</code> … <code>git switch main</code></td></tr>
+  <tr><td>Line comment</td><td>hover line → <code>+</code> → <em>Start a review</em> (pending, only you see it)</td></tr>
+  <tr><td>Suggest a fix</td><td>± icon → edit the suggestion block</td></tr>
+  <tr><td>Submit</td><td><em>Review changes</em> → Comment / Approve / Request changes</td></tr>
+  <tr><td>From terminal</td><td><code>gh pr review &lt;n&gt; -c|-a|-r -b "…"</code></td></tr>
+</table>
+<table>
+  <tr><th>Look for</th><th>Ask</th></tr>
+  <tr><td>Functionality</td><td>Does the code do what the task <em>and the description</em> claim?</td></tr>
+  <tr><td>Scope</td><td>Does every changed file belong to this task?</td></tr>
+  <tr><td>Tests</td><td>Would they fail if the code broke? Were any deleted?</td></tr>
+  <tr><td>Every line</td><td>Debug output, unused imports, swallowed errors?</td></tr>
+</table>
+</div>
+<p class="progress">Authors can’t approve their own PRs, including agent PRs opened with your login. Sources: <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/reviewing-proposed-changes-in-a-pull-request">GitHub Docs</a>, <a href="https://google.github.io/eng-practices/review/reviewer/looking-for.html">Google eng-practices</a>. <a href="../lessons/0004-reviewing-a-pr.html">Lesson 4</a>.</p>
+
+<h2>Checks and rulesets</h2>
+<div class="cols">
+<table>
+  <tr><th>Task</th><th>Command / place</th></tr>
+  <tr><td>Add a check</td><td>YAML in <code>.github/workflows/</code>; one job = one check</td></tr>
+  <tr><td>Watch checks</td><td><code>gh pr checks --watch</code></td></tr>
+  <tr><td>Why it failed</td><td><code>gh run view --log-failed</code></td></tr>
+  <tr><td>Create ruleset</td><td>Settings → Rules → Rulesets → New branch ruleset</td></tr>
+  <tr><td>See rules on a branch</td><td><code>gh ruleset check main</code></td></tr>
+  <tr><td>Rejected push to main</td><td><code>git switch -c topic</code> → <code>git branch -f main origin/main</code></td></tr>
+</table>
+<table>
+  <tr><th>Solo ruleset on <code>main</code></th><th>Setting</th></tr>
+  <tr><td>Restrict deletions</td><td>on (default)</td></tr>
+  <tr><td>Block force pushes</td><td>on (default)</td></tr>
+  <tr><td>Require a PR</td><td>on, <strong>0</strong> approvals</td></tr>
+  <tr><td>Require status checks</td><td>the job id, e.g. <code>test</code></td></tr>
+  <tr><td>Bypass list</td><td><strong>empty</strong> (you = your agents)</td></tr>
+</table>
+</div>
+<p class="progress">A green check proves only what the tests test, and the PR supplies both the tests and the workflow. Review changes to <code>.github/workflows/</code> and the tests. Free plan: rulesets work on public repos only. Sources: <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets">GitHub Docs, rulesets</a>, <a href="https://docs.github.com/en/actions/get-started/quickstart">Actions quickstart</a>. <a href="../lessons/0005-checks-and-rulesets.html">Lesson 5</a>.</p>
+
+<h2>Merge methods on GitHub</h2>
+<table>
+  <tr><th>Method</th><th><code>gh pr merge</code> flag</th><th>History result</th></tr>
+  <tr><td>Merge commit</td><td><code>--merge</code></td><td>All branch commits kept, plus a merge commit marking the join (always: GitHub merges with <code>--no-ff</code>)</td></tr>
+  <tr><td>Squash and merge</td><td><code>--squash</code></td><td>The PR becomes one commit on <code>main</code>; individual commits are lost</td></tr>
+  <tr><td>Rebase and merge</td><td><code>--rebase</code></td><td>Commits replayed onto <code>main</code> as new commits (new SHAs), with no merge commit</td></tr>
+</table>
+<p class="progress">Source: <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github">GitHub Docs, “About merge methods on GitHub”</a>. Flags: <a href="https://cli.github.com/manual/gh_pr_merge">gh manual</a>.</p>
+
+<h2>Agent rule of thumb</h2>
+<p>One task means one branch, and <code>main</code> moves only through a reviewed PR. That applies to agents too. (<a href="https://docs.github.com/en/get-started/using-github/github-flow">GitHub flow</a>; <a href="https://code.claude.com/docs/en/worktrees">Claude Code worktrees</a>)</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retrieval-Augmented Generation</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .flow text { font: 13px var(--sans); fill: var(--fg); }
+  .flow .n { font: 600 13px var(--sans); fill: var(--accent); }
+  .flow .sub { fill: var(--muted); }
+  .flow rect { fill: var(--card); stroke: var(--rule); }
+  .flow rect.gen { fill: var(--model); stroke: none; }
+  .flow .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; marker-end: url(#ah6); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Retrieval-Augmented Generation</h1>
+<p class="subtitle">Give the model the right facts at question time, and know which half to fix when it still gets things wrong.</p>
+<p class="meta">Lesson 6 · Previews Chapter 6, first half · about 20 min</p>
+
+<div class="box win">
+  <span class="box-label">Your win today</span>
+  When a RAG app gives a bad answer, you'll be able to tell whether retrieval or generation failed, measure it with context precision and recall, and pick the retrieval fix: hybrid search, chunking, reranking, query rewriting or contextual retrieval.
+</div>
+
+<h2>Warm-up · spaced review</h2>
+<div class="quiz" data-quiz="check-1"></div>
+
+<h2>1 · Why retrieve at all?</h2>
+<p><strong>RAG</strong> retrieves the information relevant to <em>this</em> query from an external source (your docs, a database, the web, past chats) and puts it in the prompt. The term comes from Lewis et al. (2020), who found that it produces more detailed answers and fewer hallucinations. Huyen calls it per-query <strong>context construction</strong>, the AI-engineering equivalent of feature engineering. <a class="cite" href="#src">Ch6 · RAG</a></p>
+<p>Will huge context windows make RAG obsolete? Huyen says no, for two reasons. Data keeps growing faster than context windows. And models <em>use</em> long context badly: remember the lost middle from Lesson 5, plus every extra token costs money and time. But for small knowledge bases, skip RAG at first. Anthropic's guidance for Claude, which Huyen quotes, is that under about 200K tokens (roughly 500 pages) you can put the whole knowledge base in the prompt. <a class="cite" href="#src">Ch6 · RAG, Note</a></p>
+
+<figure>
+<svg class="flow" viewBox="0 0 680 200" role="img" aria-label="RAG architecture. Indexing: documents are split into chunks and stored in an index. Querying: the user query goes to the retriever, which fetches the top k chunks from the index; the query plus chunks go to the generator, which writes the answer.">
+  <defs><marker id="ah6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
+  <text class="sub" x="0" y="14">INDEXING (ahead of time)</text>
+  <rect x="0" y="24" width="140" height="44" rx="6"/><text x="12" y="51">Documents</text>
+  <rect x="190" y="24" width="140" height="44" rx="6"/><text x="202" y="51">Split into chunks</text>
+  <rect x="380" y="24" width="140" height="44" rx="6"/><text x="392" y="51">Index</text>
+  <path class="arrow" d="M141,46 L186,46"/><path class="arrow" d="M331,46 L376,46"/>
+  <text class="sub" x="0" y="106">QUERYING (per request)</text>
+  <rect x="0" y="116" width="140" height="44" rx="6"/><text x="12" y="143">User query</text>
+  <rect x="190" y="116" width="140" height="44" rx="6"/><text class="n" x="202" y="143">Retriever</text>
+  <rect x="380" y="116" width="140" height="44" rx="6" class="gen"/><text class="n" x="392" y="135">Generator</text><text x="392" y="152">query + top-k</text>
+  <rect x="560" y="116" width="120" height="44" rx="6"/><text x="572" y="143">Answer</text>
+  <path class="arrow" d="M141,138 L186,138"/><path class="arrow" d="M331,138 L376,138"/><path class="arrow" d="M521,138 L556,138"/>
+  <path class="arrow" d="M450,69 L450,90 L260,90 L260,112"/>
+  <text class="sub" x="270" y="86">fetch top-k chunks</text>
+  <text class="sub" x="0" y="190">A RAG system is only as good as its retriever. If the right chunk isn't fetched, the generator can't use it.</text>
+</svg>
+</figure>
+
+<h2>2 · Two ways to retrieve</h2>
+<p><strong>Term-based retrieval</strong> matches words. TF-IDF weights a term up when it appears often in a document (term frequency) and down when it appears in many documents (inverse document frequency), so “for” counts for nothing and “Vietnamese” counts for a lot. <strong>BM25</strong> adds a correction for document length. Elasticsearch serves this kind of search from an <em>inverted index</em>, a map from each term to the documents that contain it. <a class="cite" href="#src">Ch6 · Term-based retrieval</a></p>
+<p><strong>Embedding-based retrieval</strong> matches meaning. Each chunk is embedded once and stored in a <strong>vector database</strong>. Each query is embedded with the <em>same</em> model, and the database returns the k nearest vectors. Exact nearest-neighbor search is slow at scale, so real systems use approximate search (ANN) algorithms such as HNSW or IVF. You'll pick a library rather than write one. <a class="cite" href="#src">Ch6 · Embedding-based retrieval</a></p>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>Term-based (BM25)</th><th>Embedding-based</th></tr></thead>
+<tbody>
+<tr><td>Speed and cost</td><td>Much faster and cheaper</td><td>Embedding and vector search add latency; vector DB bills can reach ⅕–½ of model-API spend</td></tr>
+<tr><td>Quality</td><td>Strong out of the box, hard to improve; confused by ambiguous terms</td><td>Can beat BM25 with finetuning; handles natural phrasing</td></tr>
+<tr><td>Blind spot</td><td>Synonyms and paraphrases</td><td>Exact strings such as error codes and product names</td></tr>
+</tbody></table></div>
+<p>So production systems combine them in a <strong>hybrid search</strong>. There are two ways. <em>In sequence</em>: a cheap retriever fetches candidates and a precise one <strong>reranks</strong> them. <em>In parallel</em>: run both and merge the rankings with <strong>reciprocal rank fusion</strong>, where each retriever contributes 1/rank, so a document ranked 1st by one and 2nd by the other scores 1 + 0.5 = 1.5 in the simplified version. <a class="cite" href="#src">Ch6 · Combining retrieval algorithms</a></p>
+
+<h2>3 · Try it: a real BM25 retriever</h2>
+<p>Below is a support knowledge base for a fictional robot company, searched with the actual BM25 formula. Click a preset query and <em>predict</em> what comes first before you look. Top-3 results count as “retrieved.” For presets, the widget knows which articles are truly relevant and computes the two retrieval metrics. <strong>Context precision</strong> asks what share of what you retrieved is relevant. <strong>Context recall</strong> asks what share of the relevant documents you retrieved. <a class="cite" href="#src">Ch6 · Comparing retrieval algorithms</a></p>
+
+<div class="retriever" data-k="3"
+  data-docs='[
+    {"id":"pw","title":"Reset your password","text":"Go to Settings → Security and choose Reset password. We email a reset link that expires in 30 minutes.","extra":"Questions it answers: Help, I can’t log in. I forgot my password. I can’t find my account."},
+    {"id":"port","title":"Controller fails with EADDRNOTAVAIL (99)","text":"The robot controller cannot bind its network address. Check the interface IP in controller.yaml, then restart the service.","extra":"Questions it answers: Controller won’t start. Network error on boot."},
+    {"id":"tfml","title":"Transformer models in the Vision API","text":"The Vision API uses a transformer architecture to detect objects in camera frames.","extra":"Context: machine learning, neural networks, object detection."},
+    {"id":"tfpower","title":"Replacing the dock’s power transformer","text":"If the charging dock hums or overheats, its transformer may need replacing. Unplug the dock first.","extra":"Context: hardware repair, electricity, charging dock."},
+    {"id":"bill","title":"Update your payment card","text":"Billing → Payment methods lets you add a new card or remove an expired one.","extra":"Questions it answers: My card was declined. How do I change billing details?"},
+    {"id":"2fa","title":"Set up two-factor authentication","text":"Protect your account with an authenticator app. You’ll enter a code each time you log in.","extra":"Questions it answers: How do I turn on 2FA? Where do I get a login code?"},
+    {"id":"battery","title":"Battery drains overnight","text":"Robots in standby keep their sensors powered. Turn on deep sleep in Settings → Power to save battery.","extra":"Questions it answers: My robot won’t hold a charge. Battery dies fast."}
+  ]'
+  data-queries='[
+    {"q":"EADDRNOTAVAIL","relevant":["port"]},
+    {"q":"help I can’t log in","relevant":["pw"]},
+    {"q":"robot won’t hold a charge","relevant":["battery"]},
+    {"q":"transformer","relevant":["tfml"]}
+  ]'
+  data-challenges='[
+    {"text":"Query “EADDRNOTAVAIL” with contextual retrieval <em>off</em>: get the right article to #1. (Easy, and that’s the point: exact strings are BM25’s strength.)","q":"EADDRNOTAVAIL","target":"port","augment":false},
+    {"text":"Query “help I can’t log in”: get “Reset your password” to #1. You can’t edit the articles, but you can change what gets indexed.","q":"help I can’t log in","target":"pw"},
+    {"text":"Query “robot won’t hold a charge”: get the battery article to #1.","q":"robot won’t hold a charge","target":"battery"}
+  ]'></div>
+
+<details class="predict">
+<summary>What did you just see? (open after the challenges)</summary>
+<ul>
+  <li><strong>“help I can’t log in”</strong> first retrieved the 2FA article: it contains “log”, while the password article never says “log in.” Precision and recall were both 0%. BM25 can't know that “log in” relates to “password.”</li>
+  <li><strong>“robot won’t hold a charge”</strong> matched the controller article on the word “robot.” The battery article says “Robots” and “battery,” and with no stemming, those don't match.</li>
+  <li>Ticking <strong>contextual retrieval</strong> added each article's “questions it answers” to the index, and both queries recovered. Embedding-based retrieval would also catch these paraphrases, but it might fumble “EADDRNOTAVAIL.” That's why hybrid search exists.</li>
+  <li><strong>“transformer”</strong> is ambiguous: the ML article and the power-supply article both match. Two words of meaning would fix it, which is where query rewriting helps.</li>
+</ul>
+</details>
+
+<h2>4 · Making retrieval better</h2>
+<p>Precision and recall don't cost the same to measure. <strong>Precision</strong> only needs a judge to look at what was retrieved. <strong>Recall</strong> needs every document labeled for every test query, so in production many teams track only precision. As in Lesson 4, evaluate retrieval and the final answer <em>separately</em>, and for embedding search, also the embeddings themselves. <a class="cite" href="#src">Ch6 · Comparing retrieval algorithms</a></p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tactic</th><th>What it does</th><th>Huyen's example</th></tr></thead>
+<tbody>
+<tr><td><strong>Chunking</strong></td><td>Split by size or recursively (sections, then paragraphs, then sentences), with a little overlap. Smaller chunks mean more variety fits in the context, but also more vectors to store, and context can be lost.</td><td>“I left my wife a note” split into “I left my wife” + “a note.”</td></tr>
+<tr><td><strong>Reranking</strong></td><td>Reorder candidates with a more precise (or recency-aware) scorer, then keep only what fits.</td><td>Chat-with-your-email ranks recent threads higher.</td></tr>
+<tr><td><strong>Query rewriting</strong></td><td>Have a model turn a context-dependent turn into a standalone query.</td><td>“How about Emily Doe?” → “When did Emily Doe last buy something?”</td></tr>
+<tr><td><strong>Contextual retrieval</strong></td><td>Add to each chunk the context it lacks: tags, the questions it answers, a 50–100-token summary of where it sits in the document.</td><td>Anthropic's method, which cut retrieval failures by up to 67% when combined with reranking.</td></tr>
+</tbody></table></div>
+<p class="cite-line" style="font:.85rem var(--sans);color:var(--muted)">Sources: <a class="cite" href="#src">Ch6 · Retrieval Optimization</a>; Anthropic, <a href="https://www.anthropic.com/news/contextual-retrieval">“Introducing Contextual Retrieval”</a> (2024).</p>
+
+<p><strong>Practice:</strong> each problem has one best first fix.</p>
+<div class="sorter"
+  data-categories='["Hybrid search","Chunking (size / overlap)","Reranking","Query rewriting","Contextual retrieval"]'
+  data-items='[
+    {"text":"Since moving to pure embedding search, queries for exact error codes come back wrong","answer":"Hybrid search","why":"Embeddings blur exact strings. Adding a BM25 retriever brings keyword precision back."},
+    {"text":"Mid-conversation, the user asks “How about Emily Doe?” and retrieval returns junk","answer":"Query rewriting","why":"The query only makes sense with the conversation. Rewrite it into a standalone question before retrieving."},
+    {"text":"The retriever returns 50 candidates, but only 5 fit in your context budget","answer":"Reranking","why":"Use a more precise but more expensive scorer on the 50, and keep the best 5."},
+    {"text":"A chunk reads “Revenue grew 3% over the previous quarter” with no company or date","answer":"Contextual retrieval","why":"The chunk lost its document’s context. Prepend a short generated summary (which company, which quarter) before indexing."},
+    {"text":"Answers miss facts that sat right at the boundary between two chunks","answer":"Chunking (size / overlap)","why":"Add overlap, or split along natural boundaries (sections, paragraphs) so related text stays together."},
+    {"text":"An email assistant surfaces a 2019 thread instead of last week’s update","answer":"Reranking","why":"Rerank by time as well as relevance for time-sensitive data."}
+  ]'></div>
+
+<h3>Beyond text</h3>
+<p>RAG isn't only for documents. <strong>Multimodal RAG</strong> retrieves images too, by caption or with a joint text-image embedding model such as CLIP. <strong>Tabular RAG</strong> works differently. For “How many Fruity Fedoras sold in the last 7 days?” the system writes SQL from the table schema (<em>text-to-SQL</em>), executes it, and then generates the answer from the result. Retrieval becomes a <em>tool call</em>, which is exactly where agents begin (Lesson 7). <a class="cite" href="#src">Ch6 · RAG Beyond Texts</a></p>
+
+<h2>Check yourself</h2>
+<div class="quiz" data-quiz="check-2"></div>
+
+<div class="box source" id="src">
+  <span class="box-label">Primary source</span>
+  <p><strong>Read next:</strong> Huyen, <em>AI Engineering</em>, Chapter 6, the <em>RAG</em> half, up to “Agents.” Read <em>“RAG,” “RAG Architecture,” “Comparing retrieval algorithms,” “Combining retrieval algorithms”</em> and all of <em>“Retrieval Optimization.”</em> Skim the vector-search algorithm list (LSH, HNSW, IVF…) and the TF-IDF math.</p>
+  <p><strong>From a practitioner, about 15 min:</strong> Anthropic, <a href="https://www.anthropic.com/news/contextual-retrieval">“Introducing Contextual Retrieval”</a> (Sept 2024). Huyen cites it. It shows the full stack you just played with (BM25 + embeddings + contextual chunks + reranking), with measured gains at each step.</p>
+</div>
+
+<div class="box ask">
+  <span class="box-label">Stuck or curious?</span>
+  Ask me anything. For example: “Sketch a RAG design for my product idea,” “What does a vector DB actually store?” or “Show me hybrid search in 30 lines of Python.” When you're done, send your first-try scores: the warm-up, the retriever challenges, the practice sorter and the quiz.
+</div>
+
+<nav class="lesson-nav">
+  <a href="0005-prompt-engineering.html">← Lesson 5: Prompt Engineering</a>
+  <span><a href="../reference/rag.html">Reference: RAG</a> · <a href="../reference/glossary.html">Glossary</a></span>
+</nav>
+<p style="font:.85rem var(--sans);color:var(--muted);text-align:right">Next: Lesson 7, Agents &amp; Memory (Ch. 6)</p>
+
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="0006-rag.quiz.js"></script>
+<script>
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-1"]'), window.QUIZ.filter((q) => q.section === "check-1"));
+Quiz.mount(document.querySelector('.quiz[data-quiz="check-2"]'), window.QUIZ.filter((q) => q.section === "check-2"));
+</script>
+<script src="../assets/sorter.js"></script>
+<script src="../assets/retriever.js"></script>
+</body>
+</html>

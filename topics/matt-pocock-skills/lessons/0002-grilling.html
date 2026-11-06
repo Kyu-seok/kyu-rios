@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grilling</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sort.js"></script>
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 2 · Matt Pocock's Skills</p>
+<h1>Grilling: Walk the Design Tree</h1>
+<p class="subtitle">The agent asks the questions. You make the decisions.</p>
+
+<div class="win">
+  <p class="label">Your win for this lesson</p>
+  <p>Given a feature idea, you can tell which questions belong in <strong>this round</strong>, which ones <strong>wait</strong>, and which ones the <strong>agent should look up</strong> instead of asking you. You can also tell when a decision deserves an <strong>ADR</strong>.</p>
+</div>
+
+<h2>0. Warm-up</h2>
+<p class="muted" style="font-size:.9rem">From Lesson 1, answered from memory. Spacing practice out like this is what makes it stick.</p>
+<div class="quiz" data-quiz="warmup"></div>
+
+<h2>1. Idea one: rounds and the frontier</h2>
+
+<p><code>/grill-me</code> and <code>/grill-with-docs</code> are thin wrappers. The actual interview is the model-invoked <code>/grilling</code> skill, and it's short enough to read in two minutes.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md">[1]</a> It turns your idea into a <strong>design tree</strong>, where each decision branches into the decisions that hang off it.</p>
+
+<p>The <strong>frontier</strong> is every decision whose prerequisites are already settled. These are the questions the agent can ask <em>now</em> without guessing at answers it hasn't heard yet. Each <strong>round</strong> asks the whole frontier at once, then waits for you.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md">[1]</a></p>
+
+<p>Here's a running example. You ask for <em>"let users snooze notifications."</em></p>
+
+<ul class="tree">
+  <li><span class="k">D1</span>Does a snooze apply to one <strong>Notification</strong>, or to a whole <strong>Channel</strong>?
+    <ul>
+      <li><span class="k">D3</span>When the snooze ends, deliver each held Notification, or one digest?</li>
+      <li><span class="k">D4</span>Can a Channel snooze let urgent alerts through?</li>
+    </ul>
+  </li>
+  <li><span class="k">D2</span>How long can a snooze last: fixed presets, or any time?</li>
+  <li><span class="k">F1</span><em>Fact:</em> does the code already have delayed delivery?
+    <ul>
+      <li><span class="k">D5</span>Reuse that scheduler, or build a new delay queue?</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Round 1 asks <strong>D1 and D2</strong>. D3 and D4 can't be asked yet, because whether they even make sense depends on D1. The format is fixed:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md">[1]</a></p>
+
+<pre><code>❓ Q1 - Snooze scope: Should a snooze apply to a whole Channel,
+   rather than one Notification at a time?
+➡️ Yes. Users snooze sources of noise, not single messages.
+
+---
+
+❓ Q2 - Duration: Should snooze offer fixed presets (1h, 8h, 1 week)?
+➡️ Yes. Presets keep the UI simple and the scheduling bounded.</code></pre>
+
+<p>Two details make it fast. Each question comes with the agent's <strong>recommended answer</strong>, and each is worded so that <strong>"yes" accepts the recommendation</strong>. Often you can answer a whole round with "yes, yes, no: urgent alerts always get through." Every answer pushes the frontier outward. The session is done when <strong>the frontier is empty</strong>, and the agent must not act until <strong>you confirm</strong> you share an understanding.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md">[1]</a></p>
+
+<h2>2. Idea two: facts are the agent's job</h2>
+
+<p>The skill draws a hard line between two kinds of question:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md">[1]</a></p>
+<ul>
+  <li><strong>Facts</strong> (what's in the code, the files, the tools) are the agent's job. It "dispatches a sub-agent to find it" and must not ask you anything it could look up.</li>
+  <li><strong>Decisions</strong> are yours. The agent puts each one to you and waits.</li>
+</ul>
+<p>A lookup that's still running counts as an <em>unsettled prerequisite</em>. In the example, F1 goes to a subagent. Only D5 waits for its answer, and D1 and D2 get asked meanwhile. This is the subagent pattern from your context-engineering lesson: exploration happens in a separate context window, and only the summary comes back.</p>
+
+<div class="note">
+  <p class="label">How to spot a bad grilling</p>
+  <p>If the agent asks <em>"which ORM do you use?"</em> or <em>"where is the notification model?"</em>, it's asking you for facts. Push back: "look it up."</p>
+</div>
+
+<h2>3. Idea three: grilling that leaves docs</h2>
+
+<p><code>/grill-with-docs</code> is two calls: <code>/grilling</code> plus <code>/domain-modeling</code>.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md">[2]</a> The second one makes the interview leave two kinds of document behind:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/SKILL.md">[3]</a></p>
+
+<h3><code>GLOSSARY.md</code>: updated during the interview</h3>
+<p>The agent challenges terms that conflict with the glossary, sharpens fuzzy words ("by <em>account</em>, do you mean the Customer or the User?"), invents edge-case scenarios, and checks your claims against the code. When a term is settled, it goes into the glossary straight away, in the same <code>**Term**:</code> definition + <code>_Avoid_:</code> format this course's glossary uses. The glossary is <strong>only</strong> for terms specific to this project. Implementation details and general programming concepts like "timeout" don't belong in it.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/GLOSSARY-FORMAT.md">[4]</a></p>
+
+<h3>ADRs: offered sparingly</h3>
+<p>The agent offers an ADR in <code>docs/adr/</code> <strong>only when all three tests pass</strong>:<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/ADR-FORMAT.md">[5]</a></p>
+<ol>
+  <li><strong>Hard to reverse</strong>: changing your mind later costs something real</li>
+  <li><strong>Surprising without context</strong>: a future reader would wonder "why on earth?"</li>
+  <li><strong>A real trade-off</strong>: there were genuine alternatives</li>
+</ol>
+<p>If any one is missing, there's no ADR. An ADR can be a single paragraph: <em>context, decision, why</em>.</p>
+
+<hr>
+
+<h2>4. Practice</h2>
+
+<h3>Drill A: sort the snooze questions</h3>
+<p>The tree has grown. D1 and D2 are <strong>not answered yet</strong>, so it's still before Round 1. Where does each question go?</p>
+<div class="sort" data-sort="frontier"></div>
+
+<h3>Drill B: ADR or not?</h3>
+<p>Apply all three tests.</p>
+<div class="sort" data-sort="adr"></div>
+
+<h3>Drill C: in the session</h3>
+<div class="quiz" data-quiz="session"></div>
+
+<h3>Optional: feel it for real (5 min)</h3>
+<p>No plugin needed for this. Copy the <a href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md">grilling SKILL.md</a> into <code>~/.claude/skills/grilling/</code>, open Claude Code anywhere, and say: <em>"grill me on: a CLI that summarises my git log each Friday."</em> Look for three things: numbered rounds, a recommended answer on each question, and the agent looking things up instead of asking you.</p>
+
+<hr>
+
+<div class="source">
+  <p class="label">Primary source</p>
+  <p>Read <a href="https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"><code>grilling/SKILL.md</code></a> (2 minutes, every word counts), then <a href="https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/SKILL.md"><code>domain-modeling/SKILL.md</code></a>. For a real glossary, see Pocock's <a href="https://github.com/mattpocock/course-video-manager/blob/076a5a7a182db0fe1e62971dd7a68bcadf010f1c/CONTEXT.md"><code>course-video-manager</code> glossary</a> (named <code>CONTEXT.md</code> back then).</p>
+</div>
+
+<div class="ask">
+  <p class="label">Stuck on something?</p>
+  <p>Ask me in Claude Code. Good questions: "how is grilling different from plan mode?", "what does a good ADR look like for my Kafka work?", or "grill me on a real feature now."</p>
+</div>
+
+<p>The <a href="../reference/grilling-card.html">Grilling Card</a> has all of this on one page. See also the <a href="../reference/skill-map.html">Skill Map</a>.</p>
+
+<nav class="lesson-nav">
+  <a href="0001-the-map.html">← Lesson 1: The Map</a>
+  <a href="0003-spec-to-tickets.html">Lesson 3: From Spec to Tickets →</a>
+</nav>
+
+</main>
+<script src="0002-grilling.quiz.js"></script>
+<script>
+Quiz.register("warmup", window.QUIZ.filter((q) => q.section === "warmup"));
+
+Sort.register("frontier", {
+  buckets: ["Round 1", "Later round", "Agent looks it up"],
+  items: [
+    { text: "D1: Does a snooze apply to one Notification, or a whole Channel?", bucket: 0,
+      why: "It has no prerequisites, so it's on the frontier now." },
+    { text: "D3: When a Channel snooze ends, deliver each held Notification, or one digest?", bucket: 1,
+      why: "It only makes sense once D1 is settled. Asking it now would mean guessing D1's answer." },
+    { text: "Where is the Notification model defined?", bucket: 2,
+      why: "That's a fact about the code. A subagent finds it, and you're never asked." },
+    { text: "Should snoozing be available on the free plan, or only on paid plans?", bucket: 0,
+      why: "It's a product decision with no prerequisites. Decisions are yours, so it goes in this round." },
+    { text: "D5: Reuse the existing scheduler, or build a new delay queue?", bucket: 1,
+      why: "It depends on F1 (does a scheduler exist?). It waits for the subagent's report, but the rest of the round doesn't." },
+    { text: "Which message queue library does the repo already use?", bucket: 2,
+      why: "A fact. It's in package.json or the imports. Asking you would be a bad grilling." }
+  ]
+});
+
+Sort.register("adr", {
+  buckets: ["Write an ADR", "Skip the ADR"],
+  items: [
+    { text: "Snooze state lives in Redis with a TTL, not in Postgres, because of the write volume.", bucket: 0,
+      why: "Hard to reverse (data migration), surprising (everything else is in Postgres), and a real trade-off. All three tests pass." },
+    { text: "Use <code>date-fns</code> to format the \"snoozed until\" label.", bucket: 1,
+      why: "Easy to reverse. You'd just swap the library, so there's nothing worth recording." },
+    { text: "Notifications and Billing talk only through domain events, never synchronous HTTP.", bucket: 0,
+      why: "An integration pattern between contexts: costly to undo, and a future reader might \"fix\" it." },
+    { text: "Store notifications in Postgres, like every other service in the company.", bucket: 1,
+      why: "Hard to reverse, but not surprising and not a real trade-off. It's the obvious path." },
+    { text: "Push goes through our own gateway, because data residency rules forbid third-party push providers.", bucket: 0,
+      why: "A constraint you can't see in the code. Without an ADR, someone will propose a third-party provider in six months." }
+  ]
+});
+
+Quiz.register("session", window.QUIZ.filter((q) => q.section === "session"));
+</script>
+</body>
+</html>

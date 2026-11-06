@@ -1,0 +1,18 @@
+# OS
+.DS_Store
+
+# Teacher-facing /teach material stays on this laptop: it is about the learner, not for readers
+topics/*/NOTES.md
+topics/*/RESOURCES.md
+topics/*/learning-records/
+
+# Copyrighted or binary source material inside /teach workspaces is never committed
+*.epub
+*.pdf
+
+# Node / Astro
+node_modules/
+site/dist/
+site/.astro/
+site/test-results/
+site/playwright-report/
