@@ -26,6 +26,10 @@ The set of retrieval-practice questions that belong to one Lesson.
 The state of a Topic or Lesson that the author has explicitly chosen to make public. Nothing is Published by default.
 _Avoid_: live, visible
 
+**About**:
+A Topic's short, reader-facing description (`ABOUT.md`): what it covers and what a reader can do afterwards. Optional. Distinct from the Mission, which `/teach` writes about the learner and which is never Published.
+_Avoid_: mission, why, intro
+
 ## Graph
 
 **Graph**:

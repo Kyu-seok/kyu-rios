@@ -1,7 +1,7 @@
 ---
 import Graph from '../../../components/Graph.astro';
 import Site from '../../../layouts/Site.astro';
-import { base, getSite, getTopic, missionHtml } from '../../../lib/site';
+import { base, getSite, getTopic, aboutHtml } from '../../../lib/site';
 
 export function getStaticPaths() {
   return getSite().topics.map((t) => ({ params: { topic: t.slug } }));
@@ -20,10 +20,10 @@ const cards = getSite().review.cards.filter((c) => c.topic === topic.slug).lengt
     <span class="muted"> {cards} Review cards</span>
   </p>
 
-  {topic.mission && (
+  {topic.about && (
     <>
-      <h2>Mission</h2>
-      <section class="mission" aria-label="Mission: why this Topic" set:html={missionHtml(topic)} />
+      <h2>About</h2>
+      <section class="about" aria-label="About this Topic" set:html={aboutHtml(topic)} />
     </>
   )}
 

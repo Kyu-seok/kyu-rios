@@ -37,12 +37,12 @@ function loadTopics(topicsDir: string): Topic[] {
     if (!existsSync(manifestPath)) continue;
     const manifest = readManifest(manifestPath);
     if (!manifest.published) continue;
-    const missionPath = join(dir, 'MISSION.md');
+    const aboutPath = join(dir, 'ABOUT.md');
     topics.push({
       slug,
       title: manifest.title,
       summary: manifest.summary,
-      mission: existsSync(missionPath) ? readFileSync(missionPath, 'utf8') : '',
+      about: existsSync(aboutPath) ? readFileSync(aboutPath, 'utf8') : '',
       dir,
       lessons: loadDocuments(slug, dir, 'lesson', new Set(manifest.exclude)),
       references: loadDocuments(slug, dir, 'reference', new Set(manifest.exclude)),

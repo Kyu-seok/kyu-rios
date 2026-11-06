@@ -35,10 +35,9 @@ export function getTopic(slug: string): Topic {
   return topic;
 }
 
-/** MISSION.md as HTML, with the leading "# Mission: …" heading dropped since the page already has a title. */
-export function missionHtml(topic: Topic): string {
-  const body = topic.mission.replace(/^#\s[^\n]*\n/, '');
-  return marked.parse(body, { async: false }) as string;
+/** ABOUT.md as HTML. */
+export function aboutHtml(topic: Topic): string {
+  return marked.parse(topic.about, { async: false }) as string;
 }
 
 /** The site's base path with a trailing slash, e.g. `/kyu-rios/`. */

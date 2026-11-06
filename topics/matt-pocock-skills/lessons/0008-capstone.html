@@ -26,14 +26,7 @@
 
 <h2>1. The target: why <code>habit-tracker</code></h2>
 
-<p>I looked at the four candidates in <code>~/Work/project</code>:</p>
-<div class="table-wrap"><table>
-  <tr><th>Candidate</th><th>What's there</th><th>Verdict</th></tr>
-  <tr><td><code>learn-bullmq</code></td><td>A teaching workspace (lessons and notes), not code</td><td>Nothing to build in</td></tr>
-  <tr><td><code>Go/</code></td><td>Eleven separate exercise folders</td><td>No single app to grow</td></tr>
-  <tr><td><code>LLD/</code></td><td>One source file</td><td>Too thin</td></tr>
-  <tr><td><code>Flask/habit-tracker</code></td><td>A 17-line Flask app: two routes, templates, and a venv with Flask 3.0. No storage and no tests.</td><td><strong>Pick this</strong></td></tr>
-</table></div>
+<p>A good target is a small app you own, with nothing to lose: a stub, not a finished project. Finished code has history to respect, exercise folders have no single app to grow, and a teaching workspace has no code at all. The target here is <code>habit-tracker</code>, a 17-line Flask app: two routes, templates, and a venv with Flask 3.0. No storage and no tests.</p>
 
 <p>It's a stub with a clear domain (<em>habits</em>, <em>check-ins</em>, <em>streaks</em>). That gives grilling real decisions to make, gives <code>/tdd</code> a real seam (the streak logic), and makes the feature big enough for a few tracer-bullet tickets. It also has no test runner and no guardrail, which <code>/retro</code> will rightly flag. That's useful for you to see.</p>
 
@@ -49,14 +42,14 @@
     <pre><code>claude plugin install mattpocock-skills@claude-plugins-official</code></pre>
     Check it with <code>claude plugin list</code>. You'll now see a second <code>teach</code>, because the plugin ships one too. That's harmless.</li>
   <li><strong>Open Claude Code in the project:</strong>
-    <pre><code>cd ~/Work/project/Flask/habit-tracker &amp;&amp; claude</code></pre></li>
-  <li><strong>Run <code>/setup-matt-pocock-skills</code></strong>. It explores, proposes, waits for you, then writes.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/setup-matt-pocock-skills/SKILL.md">[2]</a> Start with one sentence of context: <em>"Treat <code>Flask/habit-tracker</code> as the project root."</em> The git root is <code>~/Work/project</code>, the parent repo with a GitHub remote, so without that sentence it may write its files there.</li>
+    <pre><code>cd habit-tracker &amp;&amp; claude</code></pre></li>
+  <li><strong>Run <code>/setup-matt-pocock-skills</code></strong>. It explores, proposes, waits for you, then writes.<a class="cite" href="https://github.com/mattpocock/skills/blob/main/skills/engineering/setup-matt-pocock-skills/SKILL.md">[2]</a> Start with one sentence of context: <em>"Treat <code>Flask/habit-tracker</code> as the project root."</em> If the app lives inside a larger repo, the git root is that parent, so without that sentence it may write its files there.</li>
 </ol>
 
 <p>Your expected answers:</p>
 <div class="table-wrap"><table>
   <tr><th>It asks</th><th>It will propose</th><th>Your answer</th></tr>
-  <tr><td>Issue tracker</td><td>GitHub (it sees the parent's remote)</td><td><strong>Local markdown</strong>. A solo project inside a shared learning repo shouldn't fill <code>parent-repo</code>'s issues. Tickets go to <code>.scratch/&lt;feature&gt;/issues/</code>, as in Lesson 3.</td></tr>
+  <tr><td>Issue tracker</td><td>GitHub (it sees the parent's remote)</td><td><strong>Local markdown</strong>. A solo project inside a shared learning repo shouldn't fill the parent repo's issues. Tickets go to <code>.scratch/&lt;feature&gt;/issues/</code>, as in Lesson 3.</td></tr>
   <tr><td>Triage labels</td><td>Keep the five defaults</td><td><strong>Yes</strong>. With a local tracker there's nothing to create.</td></tr>
   <tr><td>Domain docs</td><td>Single-context (it shouldn't ask)</td><td>Accept. One <code>GLOSSARY.md</code> plus <code>docs/adr/</code>.</td></tr>
   <tr><td>Which instruction file</td><td>Neither file exists, so it asks</td><td><strong><code>CLAUDE.md</code></strong>, because you're on Claude Code.</td></tr>

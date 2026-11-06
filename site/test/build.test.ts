@@ -18,7 +18,8 @@ describe('publishing', () => {
   it('a Published Topic emits its pages, assets and quiz files, and never its private files', () => {
     const dir = topicsTree({
       'kafka/topic.yaml': manifest({ title: 'Kafka', summary: 'Pass CCDAK.', published: true }),
-      'kafka/MISSION.md': '# Mission: Pass CCDAK\n\n## Why\nEarn it.\n',
+      'kafka/MISSION.md': '# Mission: Pass CCDAK\n\n## Why\nKyu wants to earn it.\n',
+      'kafka/ABOUT.md': 'Kafka for the CCDAK exam.\n\nAfter this Topic you can:\n\n- predict where an event lands\n',
       'kafka/NOTES.md': 'private teacher notes',
       'kafka/RESOURCES.md': 'private resources',
       'kafka/book.epub': 'binary',
@@ -53,7 +54,12 @@ describe('publishing', () => {
       { id: 'kafka/0002-who', kind: 'lesson', topic: 'kafka', title: 'Who reads which partition?', summary: '', url: 'topics/kafka/lessons/0002-who.html' },
       { id: 'kafka/reference/keys', kind: 'reference', topic: 'kafka', title: 'Keys and partitions', summary: 'Cheat sheet.', url: 'topics/kafka/reference/keys.html' },
     ]);
-    expect(site.topics[0]!.mission).toContain('## Why');
+    expect(site.topics[0]!.about).toContain('After this Topic you can');
+    // MISSION.md, NOTES.md, RESOURCES.md and learning-records/ are about the learner: nothing of them reaches the Site.
+    const everything = JSON.stringify(site);
+    for (const secret of ['Kyu wants to earn it', 'private teacher notes', 'private resources', 'learning-records']) {
+      expect(everything).not.toContain(secret);
+    }
   });
 
   it('an excluded Lesson is absent from the pages, the Graph and the Review', () => {

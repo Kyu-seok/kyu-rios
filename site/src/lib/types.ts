@@ -59,7 +59,8 @@ export interface Topic {
   slug: string;
   title: string;
   summary: string;
-  mission: string;
+  /** ABOUT.md, the reader-facing description, as Markdown; empty when the Topic has none. */
+  about: string;
   /** Absolute path of the Topic directory. */
   dir: string;
   lessons: Document[];

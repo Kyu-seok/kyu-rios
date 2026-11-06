@@ -75,9 +75,9 @@ h2 { font-size: 1.3rem; margin: 2rem 0 0.75rem; }
 .doc-list li { margin: 0.3rem 0; }
 .doc-list .summary { color: var(--muted); font-size: 0.9rem; }
 
-.mission { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 0.25rem 1.25rem 1rem; }
-.mission h2 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
-.mission ul { padding-left: 1.2rem; }
+.about { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 0.25rem 1.25rem 1rem; }
+.about h2 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+.about ul { padding-left: 1.2rem; }
 
 /* Graph */
 .graph { position: relative; border: 1px solid var(--rule); border-radius: 8px; background: #fff; overflow: hidden; }

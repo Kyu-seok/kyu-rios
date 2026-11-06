@@ -16,7 +16,7 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/ag
 
 - `topics/<slug>/` is one `/teach` workspace per Topic. Run `/teach` inside it as usual; the site reads these files and never writes to them.
 - `site/` is the Astro generator for https://kyu-seok.github.io/kyu-rios/. `npm test` there runs the build-seam tests, `npm run test:browser` the Playwright tests, `npm run check` the typecheck.
-- `topics/<slug>/topic.yaml` is the Topic manifest: `title`, `summary`, `published`, `exclude`, `relationships`, `review.exclude`. Nothing is Published until `published: true`. Within a Published Topic only `MISSION.md`, `lessons/*.html` with their `.quiz.js`, `reference/*.html` and `assets/*` are Published; `NOTES.md`, `RESOURCES.md`, `learning-records/`, the `index.html` course index and anything else (such as an epub) never are.
+- `topics/<slug>/topic.yaml` is the Topic manifest: `title`, `summary`, `published`, `exclude`, `relationships`, `review.exclude`. Nothing is Published until `published: true`. Within a Published Topic only `ABOUT.md` (the reader-facing description, optional), `lessons/*.html` with their `.quiz.js`, `reference/*.html` and `assets/*` are Published; `MISSION.md`, `NOTES.md`, `RESOURCES.md`, `learning-records/`, the `index.html` course index and anything else (such as an epub) never are. `MISSION.md`, `NOTES.md`, `RESOURCES.md` and `learning-records/` are gitignored because they are about the learner and the repo is public.
 
 ## Instructions for `/teach` in this repo
 
