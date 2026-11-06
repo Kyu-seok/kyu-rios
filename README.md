@@ -16,6 +16,10 @@ npm test              # build-seam tests (vitest)
 npm run test:browser  # browser-seam tests (Playwright; builds and serves the site)
 ```
 
+## Day-to-day skills
+
+Type `/rios` in Claude Code for the list: `/new-topic`, `/teach`, `/publish-topic`, `/ship`, `/propose-relationships`, `/backup-teach-notes`.
+
 ## Publishing a Topic
 
 1. Put the workspace in `topics/<slug>/` and add `topic.yaml` with `title`, `summary` and `published: true`.
