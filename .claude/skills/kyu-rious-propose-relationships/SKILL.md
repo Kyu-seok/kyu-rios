@@ -1,5 +1,5 @@
 ---
-name: kyu-rios-propose-relationships
+name: kyu-rious-propose-relationships
 description: Propose typed Relationships (requires, extends, contrasts-with, applies) between Topics only, never between Lessons or Reference sheets; ask the author to accept or reject each, and append accepted ones to the Topic's topic.yaml. Use when the user says "propose relationships", "connect the topics", or has just published a Topic in this repo.
 ---
 
@@ -43,7 +43,7 @@ A Topic's id is its slug, the directory name under `topics/`: `kafka`, `agent-or
 3. Ask the author to accept or reject **each candidate individually** with `AskUserQuestion` (multi-select, the candidates as options, at most four per question; ask several questions when there are more). Include the reason in each option's description.
 4. Append the accepted Relationships to the `relationships:` list of the **from** Topic's `topic.yaml`, keeping the existing YAML style (`- { from: "<slug>", to: "<slug>", type: ... }`). Add a `relationships: []` key first if the manifest has none.
 5. Verify: run `cd site && npm test`. A dangling endpoint or an unknown type fails the build with a message naming the manifest; fix it before finishing.
-6. Report what was added, in the `from → to (type)` form, and what the author rejected. Then offer `/kyu-rios-ship` in one line; the Relationships reach the live Graph only when pushed.
+6. Report what was added, in the `from → to (type)` form, and what the author rejected. Then offer `/kyu-rious-ship` in one line; the Relationships reach the live Graph only when pushed.
 
 ## Rules
 

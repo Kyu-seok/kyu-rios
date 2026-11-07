@@ -214,15 +214,15 @@ describe('Lesson pages', () => {
 
   it('serves the Lesson verbatim with a header linking to its Topic and the previous and next Lessons', () => {
     const site = buildSite(dir);
-    const page = renderDocument(site, 'kafka/0002-who', '/kyu-rios/');
+    const page = renderDocument(site, 'kafka/0002-who', '/kyu-rious/');
     const original = site.topics[0]!.lessons[1]!.html;
     const header = page.slice(page.indexOf('<body>') + '<body>'.length, page.indexOf('<main>'));
-    expect(header).toContain('href="/kyu-rios/topics/kafka/"');
-    expect(header).toContain('href="/kyu-rios/topics/kafka/lessons/0001-where.html"');
-    expect(header).toContain('href="/kyu-rios/topics/kafka/lessons/0003-when.html"');
+    expect(header).toContain('href="/kyu-rious/topics/kafka/"');
+    expect(header).toContain('href="/kyu-rious/topics/kafka/lessons/0001-where.html"');
+    expect(header).toContain('href="/kyu-rious/topics/kafka/lessons/0003-when.html"');
     expect(header).toContain('Kafka');
     const graph = page.slice(page.lastIndexOf('</script>') + '</script>'.length, page.indexOf('</body>'));
-    expect(graph).toContain('src="/kyu-rios/embed/graph/?focus=kafka%2F0002-who"');
+    expect(graph).toContain('src="/kyu-rious/embed/graph/?focus=kafka%2F0002-who"');
     // Everything of the original document is still there, in order.
     const injected = /\n<(nav|section) class="rios-[\s\S]*?<\/\1>\n/g;
     expect(page.replace(injected, '')).toBe(original);
@@ -230,17 +230,17 @@ describe('Lesson pages', () => {
 
   it('omits the previous link on the first Lesson and the next link on the last', () => {
     const site = buildSite(dir);
-    const first = renderDocument(site, 'kafka/0001-where', '/kyu-rios/');
+    const first = renderDocument(site, 'kafka/0001-where', '/kyu-rious/');
     expect(first).not.toContain('rel="prev"');
     expect(first).toContain('rel="next"');
-    const last = renderDocument(site, 'kafka/0003-when', '/kyu-rios/');
+    const last = renderDocument(site, 'kafka/0003-when', '/kyu-rious/');
     expect(last).toContain('rel="prev"');
     expect(last).not.toContain('rel="next"');
   });
 
   it('a Reference sheet page links back to its Topic and has no previous or next Lesson', () => {
-    const page = renderDocument(buildSite(dir), 'kafka/reference/keys', '/kyu-rios/');
-    expect(page).toContain('href="/kyu-rios/topics/kafka/"');
+    const page = renderDocument(buildSite(dir), 'kafka/reference/keys', '/kyu-rious/');
+    expect(page).toContain('href="/kyu-rious/topics/kafka/"');
     expect(page).not.toContain('rel="prev"');
     expect(page).not.toContain('rel="next"');
     expect(page).toContain('focus=kafka%2Freference%2Fkeys');

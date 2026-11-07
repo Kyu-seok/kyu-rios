@@ -1,6 +1,6 @@
-# kyu-rios
+# kyu-rious
 
-A public second brain, generated from `/teach` workspaces: a Graph of every Published Topic, Lesson and Reference sheet with typed Relationships, and spaced-repetition Review of every Lesson's quiz questions, running in the reader's browser. Static site on GitHub Pages: https://kyu-seok.github.io/kyu-rios/
+A public second brain, generated from `/teach` workspaces: a Graph of every Published Topic, Lesson and Reference sheet with typed Relationships, and spaced-repetition Review of every Lesson's quiz questions, running in the reader's browser. Static site on GitHub Pages: https://kyu-seok.github.io/kyu-rious/
 
 - `topics/<slug>/`: one `/teach` workspace per Topic, with a `topic.yaml` manifest that decides what is Published.
 - `site/`: the Astro generator. `npm run dev` for a local preview, `npm run build` for `dist/`.
@@ -18,7 +18,7 @@ npm run test:browser  # browser-seam tests (Playwright; builds and serves the si
 
 ## Day-to-day skills
 
-Type `/kyu-rios` in Claude Code for the list: `/kyu-rios-new-topic`, `/teach`, `/kyu-rios-publish-topic`, `/kyu-rios-ship`, `/kyu-rios-propose-relationships`, `/kyu-rios-backup-teach-notes`.
+Type `/kyu-rious` in Claude Code for the list: `/kyu-rious-new-topic`, `/teach`, `/kyu-rious-publish-topic`, `/kyu-rious-ship`, `/kyu-rious-propose-relationships`, `/kyu-rious-backup-teach-notes`.
 
 ## Publishing a Topic
 

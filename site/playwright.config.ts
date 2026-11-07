@@ -8,12 +8,12 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:4321/kyu-rios/',
+    baseURL: 'http://localhost:4321/kyu-rious/',
     trace: 'retain-on-failure',
   },
   webServer: {
     command: 'npm run build && npm run preview -- --port 4321 --host localhost',
-    url: 'http://localhost:4321/kyu-rios/',
+    url: 'http://localhost:4321/kyu-rious/',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

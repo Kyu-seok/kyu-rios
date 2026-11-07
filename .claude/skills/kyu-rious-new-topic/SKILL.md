@@ -1,5 +1,5 @@
 ---
-name: kyu-rios-new-topic
+name: kyu-rious-new-topic
 description: Scaffold a new Topic directory and manifest, then hand off to /teach.
 disable-model-invocation: true
 argument-hint: "What do you want to learn? e.g. 'the Node.js event loop'"
@@ -26,9 +26,9 @@ Vocabulary follows `GLOSSARY.md`. A Topic is one subject learned as a whole; its
 3. **Hand off.** `/teach` treats the directory it runs in as its workspace, so the session that teaches must start there. Tell the user, in one line, to run:
 
    ```bash
-   cd ~/Work/kyu-rios/topics/<slug> && claude
+   cd ~/Work/kyu-rious/topics/<slug> && claude
    ```
 
    and then `/teach <what they want to learn>`. The repo's `CLAUDE.md` is loaded from the parent directory, so the Quiz convention applies without further instruction.
 
-Done when the directory and manifest exist and the user has the hand-off command. Publishing comes later, with `/kyu-rios-publish-topic`.
+Done when the directory and manifest exist and the user has the hand-off command. Publishing comes later, with `/kyu-rious-publish-topic`.

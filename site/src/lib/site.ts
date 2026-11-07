@@ -6,10 +6,10 @@ import { buildSite } from './build';
 import type { Site, Topic } from './types';
 
 /**
- * Where the `/teach` workspaces live: `KYU_RIOS_TOPICS_DIR`, or the nearest `topics/` directory above the
+ * Where the `/teach` workspaces live: `KYU_RIOUS_TOPICS_DIR`, or the nearest `topics/` directory above the
  * working directory (the repo root when building from `site/`). Overridable so tests can use a fixture tree.
  */
-export const topicsDir = process.env.KYU_RIOS_TOPICS_DIR ?? findTopicsDir(process.cwd());
+export const topicsDir = process.env.KYU_RIOUS_TOPICS_DIR ?? findTopicsDir(process.cwd());
 
 function findTopicsDir(from: string): string {
   let dir = resolve(from);
@@ -17,7 +17,7 @@ function findTopicsDir(from: string): string {
     const candidate = join(dir, 'topics');
     if (existsSync(candidate)) return candidate;
     const parent = dirname(dir);
-    if (parent === dir) throw new Error(`No topics/ directory found above ${from}; set KYU_RIOS_TOPICS_DIR`);
+    if (parent === dir) throw new Error(`No topics/ directory found above ${from}; set KYU_RIOUS_TOPICS_DIR`);
     dir = parent;
   }
 }
@@ -40,5 +40,5 @@ export function aboutHtml(topic: Topic): string {
   return marked.parse(topic.about, { async: false }) as string;
 }
 
-/** The site's base path with a trailing slash, e.g. `/kyu-rios/`. */
+/** The site's base path with a trailing slash, e.g. `/kyu-rious/`. */
 export const base: string = normalizeBase(import.meta.env.BASE_URL);

@@ -1,4 +1,4 @@
-# kyu-rios Glossary
+# kyu-rious Glossary
 
 The language of a public second brain: a site that shows what its author has learned, how the pieces connect, and that helps readers keep the knowledge from fading.
 

@@ -45,7 +45,7 @@ function siteHeader(topic: Topic, doc: Document, base: string): string {
 .rios-nav .rios-nav-topic{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .rios-nav .rios-nav-gap{display:inline-block;min-width:4rem}
 </style>
-<a class="rios-nav-home" href="${url('')}">kyu-rios</a>
+<a class="rios-nav-home" href="${url('')}">kyu-rious</a>
 <a class="rios-nav-topic" href="${url(`topics/${topic.slug}/`)}">↑ ${escapeHtml(topic.title)}</a>
 ${link(prev, 'prev', '← Previous')}
 ${link(next, 'next', 'Next →')}

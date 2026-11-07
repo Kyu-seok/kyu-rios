@@ -5,7 +5,7 @@ import type { Question } from '../src/lib/types';
 
 /** Writes a `topics/` tree into a fresh temp dir and returns its path. Keys are paths relative to the topics dir. */
 export function topicsTree(files: Record<string, string>): string {
-  const dir = mkdtempSync(join(tmpdir(), 'kyu-rios-topics-'));
+  const dir = mkdtempSync(join(tmpdir(), 'kyu-rious-topics-'));
   for (const [rel, content] of Object.entries(files)) {
     const abs = join(dir, rel);
     mkdirSync(dirname(abs), { recursive: true });

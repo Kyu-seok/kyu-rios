@@ -15,7 +15,7 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/ag
 ## Repository layout
 
 - `topics/<slug>/` is one `/teach` workspace per Topic. Run `/teach` inside it as usual; the site reads these files and never writes to them.
-- `site/` is the Astro generator for https://kyu-seok.github.io/kyu-rios/. `npm test` there runs the build-seam tests, `npm run test:browser` the Playwright tests, `npm run check` the typecheck.
+- `site/` is the Astro generator for https://kyu-seok.github.io/kyu-rious/. `npm test` there runs the build-seam tests, `npm run test:browser` the Playwright tests, `npm run check` the typecheck.
 - `topics/<slug>/topic.yaml` is the Topic manifest: `title`, `summary`, `published`, `exclude`, `relationships`, `review.exclude`. Nothing is Published until `published: true`. Within a Published Topic only `ABOUT.md` (the reader-facing description, optional), `lessons/*.html` with their `.quiz.js`, `reference/*.html` and `assets/*` are Published; `MISSION.md`, `NOTES.md`, `RESOURCES.md`, `learning-records/`, the `index.html` course index and anything else (such as an epub) never are. `MISSION.md`, `NOTES.md`, `RESOURCES.md` and `learning-records/` are gitignored because they are about the learner and the repo is public.
 
 ## Instructions for `/teach` in this repo
@@ -41,4 +41,4 @@ When writing or editing a Lesson under `topics/<slug>/lessons/`:
 
 4. **Lessons and Reference sheets are Published on a public site.** Write about the learner's own projects, folders, accounts and circumstances generically ("a small app you own", "the parent repo"); the learner's context belongs in `MISSION.md` and `NOTES.md`, which stay on this machine. `npm test` in `site/` fails on home paths and on the strings in the gitignored `topics/.private-strings`.
 
-5. **Relationships** are authored between Topics only, in `topic.yaml` under `relationships` as `{ from, to, type }` where `from` and `to` are Topic slugs and `type` is one of `requires`, `extends`, `contrasts-with`, `applies`. The build accepts Lesson and Reference sheet ids too (`<topic-slug>/<lesson-stem>`, `<topic-slug>/reference/<stem>`), but they make the Graph too dense, so leave them unused. Links inside Lessons become `mentions` automatically. Run `/kyu-rios-propose-relationships` after publishing a Topic to connect it to the others.
+5. **Relationships** are authored between Topics only, in `topic.yaml` under `relationships` as `{ from, to, type }` where `from` and `to` are Topic slugs and `type` is one of `requires`, `extends`, `contrasts-with`, `applies`. The build accepts Lesson and Reference sheet ids too (`<topic-slug>/<lesson-stem>`, `<topic-slug>/reference/<stem>`), but they make the Graph too dense, so leave them unused. Links inside Lessons become `mentions` automatically. Run `/kyu-rious-propose-relationships` after publishing a Topic to connect it to the others.

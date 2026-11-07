@@ -176,7 +176,7 @@ export async function mountReview(root: HTMLElement, base: string): Promise<void
       const blob = new Blob([serializeProgress(progress)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `kyu-rios-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `kyu-rious-progress-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(a.href);
     });

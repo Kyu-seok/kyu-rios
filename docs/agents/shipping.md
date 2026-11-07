@@ -1,6 +1,6 @@
 # Shipping a change to the site
 
-The one procedure that takes work in `topics/` or `site/` from this laptop to https://kyu-seok.github.io/kyu-rios/. Skills point here instead of restating it.
+The one procedure that takes work in `topics/` or `site/` from this laptop to https://kyu-seok.github.io/kyu-rious/. Skills point here instead of restating it.
 
 1. **Validate.** In `site/`, run `npm test`. It builds the Site from `topics/` against the build seam: manifests, Relationships, quiz ids, exclusions. Done when it passes. A failure names the file and the mistake; fix the file, never the test.
 2. **Look at what will ship.** `git status --short` and `git diff --stat`. Done when every changed file is one you meant to change. (Teacher-facing files and epubs are gitignored, and the Test workflow fails if one is ever tracked, so that is not something to check by eye.)

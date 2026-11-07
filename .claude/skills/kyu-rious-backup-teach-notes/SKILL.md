@@ -1,15 +1,15 @@
 ---
-name: kyu-rios-backup-teach-notes
+name: kyu-rious-backup-teach-notes
 description: Copy the gitignored teacher-facing files (MISSION.md, NOTES.md, RESOURCES.md, learning-records/) of every Topic to a backup folder.
 disable-model-invocation: true
-argument-hint: "[backup directory, default ~/Backups/kyu-rios-teach-notes]"
+argument-hint: "[backup directory, default ~/Backups/kyu-rious-teach-notes]"
 ---
 
 # Back up the teacher's notes
 
 `topics/*/MISSION.md`, `topics/*/NOTES.md`, `topics/*/RESOURCES.md` and `topics/*/learning-records/` are gitignored because the repo is public, so they exist only on this laptop. They are the teacher's memory of the learner; losing them means `/teach` starts every Topic from scratch.
 
-1. **Pick the destination.** The argument, else `~/Backups/kyu-rios-teach-notes`. Create it if needed. Done when the directory exists and is outside the repo.
+1. **Pick the destination.** The argument, else `~/Backups/kyu-rious-teach-notes`. Create it if needed. Done when the directory exists and is outside the repo.
 2. **Copy.** From the repo root:
 
    ```bash

@@ -3,8 +3,11 @@ import type { Card } from 'ts-fsrs';
 /** A reader's Progress: FSRS card state per question id. Lives in this browser's localStorage only. */
 export type Progress = Record<string, Card>;
 
+/** Keeps the pre-rename spelling on purpose: changing the key would wipe every reader's saved Progress. */
 export const STORAGE_KEY = 'kyu-rios.progress.v1';
-const FORMAT = 'kyu-rios-progress';
+const FORMAT = 'kyu-rious-progress';
+/** Files exported before the rename from kyu-rios still import. */
+const FORMATS = new Set([FORMAT, 'kyu-rios-progress']);
 const VERSION = 1;
 
 export function loadProgress(): Progress {
@@ -34,7 +37,7 @@ export function parseProgress(text: string): Progress {
   const parsed: unknown = JSON.parse(text);
   if (typeof parsed !== 'object' || parsed === null) throw new Error('not a Progress file');
   const rec = parsed as Record<string, unknown>;
-  if (rec.format !== FORMAT || typeof rec.cards !== 'object' || rec.cards === null) throw new Error('not a kyu-rios Progress file');
+  if (typeof rec.format !== 'string' || !FORMATS.has(rec.format) || typeof rec.cards !== 'object' || rec.cards === null) throw new Error('not a kyu-rious Progress file');
   const out: Progress = {};
   for (const [id, value] of Object.entries(rec.cards as Record<string, unknown>)) {
     if (typeof value !== 'object' || value === null) continue;

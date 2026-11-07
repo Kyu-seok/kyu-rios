@@ -51,14 +51,14 @@ test.describe('Graph', () => {
     });
     expect(target).toBeTruthy();
     await page.mouse.click(target.x, target.y);
-    await expect(page).toHaveURL(/\/kyu-rios\/topics\/kafka\/$/);
+    await expect(page).toHaveURL(/\/kyu-rious\/topics\/kafka\/$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kafka');
   });
 
   test('a Lesson page keeps its own Quiz and gains the site header and local Graph', async ({ page }) => {
     await page.goto('./topics/kafka/lessons/0001-where-does-an-event-land.html');
     await expect(page.locator('.rios-nav a[rel="next"]')).toHaveAttribute('href', /0002-who-reads-which-partition\.html$/);
-    await expect(page.locator('.rios-nav .rios-nav-topic')).toHaveAttribute('href', /\/kyu-rios\/topics\/kafka\/$/);
+    await expect(page.locator('.rios-nav .rios-nav-topic')).toHaveAttribute('href', /\/kyu-rious\/topics\/kafka\/$/);
     await expect(page.locator('#quiz .q-opt').first()).toBeVisible();
     await page.locator('.rios-local-graph iframe').scrollIntoViewIfNeeded();
     const frame = page.frameLocator('.rios-local-graph iframe');

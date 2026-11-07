@@ -1,4 +1,4 @@
-/** The site's base path with a trailing slash, e.g. `/kyu-rios/`. Safe to import from browser code. */
+/** The site's base path with a trailing slash, e.g. `/kyu-rious/`. Safe to import from browser code. */
 export function normalizeBase(b: string | undefined): string {
   const s = b && b !== '' ? b : '/';
   return s.endsWith('/') ? s : `${s}/`;
